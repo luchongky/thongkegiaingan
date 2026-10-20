@@ -141,7 +141,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 .report-actions .quick.late{border-color:var(--line)}.report-actions .quick.late b{color:var(--amber)}
 .report-actions .quick.late[aria-pressed=true]{background:var(--amber-bg);border-color:var(--amber)}
 .report-source{margin-top:4px;font-size:9px;line-height:1.5;color:var(--muted)}
-.report-source.snapshot{color:var(--amber)}.report-source.source_data{color:var(--amber)}.report-source.unavailable{color:var(--risk)}
+.report-source.snapshot{color:var(--amber)}.report-source.unavailable{color:var(--risk)}
 .pill.late{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .report-explain{display:block;margin-top:7px;font-size:10px;color:var(--amber);line-height:1.6}
 .dialog-source{background:var(--soft);border-left:3px solid var(--amber);padding:9px 12px;margin:13px 0;border-radius:6px;font-size:11px;color:var(--text)}
@@ -169,6 +169,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 </defs></svg>
 <header class="topbar"><div class="wrap top-inner">
  <div class="brand"><div class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div><div><strong class="brand-title">SỞ TÀI CHÍNH TỈNH CAO BẰNG</strong><span class="brand-subtitle">Hệ thống theo dõi giải ngân</span></div></div>
+ <!-- Một thanh điều hướng duy nhất; không tạo thêm tab chuyển Giải ngân/Phân công trong phần nội dung. -->
  <nav class="nav" aria-label="Điều hướng chính"><a href="#main" data-nav="main">Tổng quan</a><a href="#assignments" data-nav="assign">Phân công</a><a href="#details" data-nav="details">Chi tiết đơn vị</a></nav>
  <div class="top-actions">
   <button class="btn" id="printBtn" type="button" aria-label="In báo cáo theo bộ lọc" title="In báo cáo theo bộ lọc" disabled><svg class="icon" aria-hidden="true"><use href="#i-print"/></svg><span>In báo cáo</span></button>
@@ -245,7 +246,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
   <div class="table-footnote"><span id="tableNote">Tỷ lệ tổng = tổng đã giải ngân / tổng dự toán.</span><span>Số tiền hiển thị tối đa 3 chữ số thập phân.</span></div>
   </div>
  </section>
- <footer class="footer"><div><strong>Sở Tài chính tỉnh Cao Bằng</strong><br>Số liệu do các đơn vị nhập trên hệ thống. Đơn vị tính: triệu đồng.</div><div class="footer-right">Biên tập: <strong>Phòng Ngân sách</strong><br>Phối hợp rà soát số liệu: <strong>Phòng Hành chính sự nghiệp</strong><br><span class="version">Giao diện 2.2 · Tự động đồng bộ mỗi 5 phút khi đang mở trang</span></div></footer>
+ <footer class="footer"><div><strong>Sở Tài chính tỉnh Cao Bằng</strong><br>Số liệu do các đơn vị nhập trên hệ thống. Đơn vị tính: triệu đồng.</div><div class="footer-right">Biên tập: <strong>Phòng Ngân sách</strong><br>Phối hợp rà soát số liệu: <strong>Phòng Hành chính sự nghiệp</strong><br><span class="version">Giao diện 2.3 · Tự động đồng bộ mỗi 5 phút khi đang mở trang</span></div></footer>
 </main>
 <dialog id="unitDialog" aria-labelledby="dialogTitle"><div class="dialog-body" id="dialogBody"></div></dialog>
 <script>'use strict';
@@ -304,7 +305,7 @@ function normalizePayload(data){
   const apiSubmitted=submission(u.submitted);
   const status=['on_time','late','not_submitted'].includes(u.status)?u.status:apiSubmitted===true?'submitted_unknown':apiSubmitted===false?'not_submitted':'unknown';
   const submitted=['on_time','late','submitted_unknown'].includes(status)?true:status==='not_submitted'?false:null;
-  const reportSource=['submitted','snapshot','draft','source_data','unavailable'].includes(u.reportSource)?u.reportSource:'legacy';
+  const reportSource=['submitted','snapshot','draft','unavailable'].includes(u.reportSource)?u.reportSource:'legacy';
   const decreaseCount=Number.isSafeInteger(u.decreaseCount)&&u.decreaseCount>=0?u.decreaseCount:0;
   return{id,name,short,kind,p,prev,submitted,status,reportSource,decreaseCount,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
  });
@@ -415,7 +416,6 @@ function subHTML(u){return `<span class="pill ${u.status==='late'?'late':u.submi
 function reportOrigin(u){
  if(u.reportSource==='snapshot')return 'Số chụp khi chốt · chưa gửi';
  if(u.reportSource==='draft')return 'Số đang nhập · chưa gửi';
- if(u.reportSource==='source_data')return 'Số liệu gốc Sở Tài chính tổng hợp · chưa gửi';
  if(u.reportSource==='unavailable')return 'Chưa có số liệu kỳ này';
  return '';
 }
@@ -486,11 +486,10 @@ function renderKpis(){
  $('#kSpentNote').textContent=state.period?.closed?'Theo kỳ đã chốt '+state.period.label:state.generatedAt?'Số liệu API cập nhật lúc '+dateLabel(state.generatedAt):'Theo dữ liệu hệ thống';
  $('#kLeftNote').textContent=g.L<0?'Số âm: cần đối chiếu dữ liệu':'Dự toán trừ số đã giải ngân';$('#rateMeter').style.width=clamp(g.rate)+'%';
  $('#kRateNote').innerHTML=g.delta!=null?deltaHTML(g.delta)+' so với mốc chụp':state.prevAt?'Chưa đủ số liệu để so sánh':'Tính trên tổng dự toán';
- const draftCount=rows.filter(v=>v.u.reportSource==='draft').length,snapshotCount=rows.filter(v=>v.u.reportSource==='snapshot').length,sourceCount=rows.filter(v=>v.u.reportSource==='source_data').length;
+ const draftCount=rows.filter(v=>v.u.reportSource==='draft').length,snapshotCount=rows.filter(v=>v.u.reportSource==='snapshot').length;
  const notes=[];
  if(g.missing)notes.push(g.missing+' đơn vị chưa có số liệu nguồn đang chọn; tổng quan chỉ cộng '+g.known+' đơn vị có số liệu.');
  if(snapshotCount)notes.push(snapshotCount+' đơn vị chưa gửi: số chụp khi chốt, chưa phải số đơn vị đã gửi chính thức.');
- if(sourceCount)notes.push(sourceCount+' đơn vị chưa gửi: dùng số liệu gốc do Sở Tài chính tổng hợp, chưa phải số đơn vị báo cáo.');
  if(draftCount)notes.push(draftCount+' đơn vị chưa gửi: số đang nhập, có thể thay đổi trước khi gửi.');
  if(state.reportSchema<2&&ready)notes.push('API chưa được nâng cấp để đối chiếu nguồn gốc số liệu của kỳ.');
  $('#qualityNote').hidden=!ready||!notes.length;$('#qualityNote').textContent=notes.join(' ');
@@ -596,7 +595,7 @@ function preparePrint(){
  const warning=!state.hasData?'CHƯA CÓ DỮ LIỆU ĐÃ XÁC NHẬN':state.source==='cache'?'BẢN LƯU TRÊN THIẾT BỊ — CHƯA ĐỒNG BỘ MỚI':'';
  $('#printHead').innerHTML=`<div class="print-org">SỞ TÀI CHÍNH TỈNH CAO BẰNG</div><h1>Báo cáo tình hình giải ngân vốn thường xuyên</h1>${warning?'<div class="print-state">'+warning+'</div>':''}<p>${state.period?'Kỳ báo cáo đến '+esc(state.period.label)+(state.period.cutoffText?' · Mốc chốt: '+esc(state.period.cutoffText):''):'Chưa có thông tin kỳ báo cáo từ API.'}</p><p><b>Phạm vi và bộ lọc:</b> ${esc(filterDescription())}</p><p>${state.generatedAt?'Số liệu lúc '+esc(dateLabel(state.generatedAt))+' · ':''}${state.receivedAt?'Tải dữ liệu lúc '+esc(dateLabel(state.receivedAt))+' · ':''}In lúc ${esc(dateLabel(new Date().toISOString()))} (giờ Việt Nam)</p><p><b>Tổng hợp riêng ${rows.length} đơn vị trong danh sách đang lọc.</b> Đơn vị tính: triệu đồng.${g.missing?' '+g.missing+' đơn vị chưa có số liệu, không tính phần thiếu là 0.':''}</p>${state.prevAt?'<p>So sánh tỷ lệ với mốc '+esc(state.prevAt)+'.</p>':''}`;
  $('#printHead').insertAdjacentHTML('beforeend','<p><b>Phân công:</b> theo phụ lục dự thảo; chỉ gắn phạm vi vốn sự nghiệp CTMTQG, chi thường xuyên chuyển đổi số. Nhãn địa bàn chỉ để tham chiếu, chưa xác nhận phạm vi vốn thường xuyên. Số tiền là số của đơn vị/nhóm nguồn từ API, không phải hạn mức giao cho lãnh đạo.</p>');
- $('#printHead').insertAdjacentHTML('beforeend',`<p><b>Nguồn số liệu:</b> ${rows.filter(v=>v.u.reportSource==='submitted').length} đơn vị đã gửi chính thức; ${rows.filter(v=>v.u.reportSource==='snapshot').length} đơn vị sử dụng số chụp khi chốt; ${rows.filter(v=>v.u.reportSource==='draft').length} đơn vị sử dụng số đang nhập; ${rows.filter(v=>v.u.reportSource==='source_data').length} đơn vị sử dụng số liệu gốc Sở Tài chính tổng hợp; ${rows.filter(v=>v.u.reportSource==='unavailable').length} đơn vị chưa có số liệu thuộc kỳ. Tổng cộng chỉ gồm các đơn vị có số liệu.</p>`);
+ $('#printHead').insertAdjacentHTML('beforeend',`<p><b>Nguồn số liệu:</b> ${rows.filter(v=>v.u.reportSource==='submitted').length} đơn vị đã gửi chính thức; ${rows.filter(v=>v.u.reportSource==='snapshot').length} đơn vị sử dụng số chụp khi chốt; ${rows.filter(v=>v.u.reportSource==='draft').length} đơn vị sử dụng số đang nhập; ${rows.filter(v=>v.u.reportSource==='unavailable').length} đơn vị chưa có số liệu thuộc kỳ. Tổng cộng chỉ gồm các đơn vị có số liệu.</p>`);
  $('#printSummary').innerHTML=[['Tổng dự toán',fmt(hasAmounts?g.P:null)],['Đã giải ngân',fmt(hasAmounts?g.S:null)],['Còn lại',fmt(hasAmounts?g.L:null)],['Tỷ lệ giải ngân',pct(hasAmounts?g.rate:null)]].map(([l,n])=>`<div><small>${l}</small><strong class="num">${n}</strong></div>`).join('');
 }
 
