@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d604f">
+<meta name="description" content="Hệ thống báo cáo giải ngân vốn thường xuyên xã Hà Quảng, chốt 10h thứ Sáu hằng tuần.">
+<title>Báo cáo giải ngân tuần · Xã Hà Quảng</title>
+<style>
+:root{--green:#0e6653;--deep:#064538;--mint:#e9f5ef;--bg:#f3f7f5;--card:#fff;--ink:#193a31;--muted:#647870;--line:#dce8e1;--warn:#9b620b;--error:#b43c34;--shadow:0 10px 30px rgba(17,70,52,.055)}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);font-family:system-ui,'Segoe UI',Arial,sans-serif;background:var(--bg);line-height:1.55}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.54;cursor:not-allowed}.hidden{display:none!important}
+.top{background:#fff;border-top:5px solid var(--green);border-bottom:1px solid var(--line)}.topin{max-width:1350px;margin:auto;padding:17px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:13px}.logo{width:44px;height:44px;background:var(--green);color:#fff;border-radius:13px;display:grid;place-items:center;font-weight:900;font-size:20px}.brand strong{font-size:15px;display:block}.brand small{color:var(--muted);display:block;font-size:12px}.topright{display:flex;align-items:center;gap:11px}.pill{background:var(--mint);color:var(--deep);font-size:11px;padding:6px 10px;border-radius:999px;font-weight:700}.pill.warn{background:#fff2d9;color:var(--warn)}
+.container{max-width:1350px;margin:auto;padding:27px 28px 60px}.intro{display:flex;justify-content:space-between;gap:25px;align-items:flex-end;margin-bottom:24px}.eyebrow{font-size:11px;color:var(--green);font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px}h1{font-size:clamp(23px,3vw,34px);line-height:1.27;margin:0;letter-spacing:-.03em}h2{font-size:19px;letter-spacing:-.02em;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px}.sub{color:var(--muted);font-size:13px;max-width:730px;margin:10px 0 0}.datebox{min-width:222px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 17px}.datebox small{color:var(--muted);font-size:11px}.datebox strong{display:block;font-size:17px}.datebox span{display:block;color:var(--green);font-size:12px;font-weight:650}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:23px;box-shadow:var(--shadow)}.two{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}.setup{border-left:4px solid #cb8a13;background:#fffdf7;margin-bottom:18px}.setup p{font-size:12px;color:var(--muted)}.setup-row{display:flex;gap:9px;align-items:center}.setup-row input{flex:1;min-width:0}.info-side{border:1px solid #c7dfd3;background:linear-gradient(145deg,#eff8f2,#fff);border-radius:16px;padding:22px}.info-side p,.info-side li{color:#48675b;font-size:13px}.info-side li{margin:9px 0}.info-side ul{padding-left:20px}.label{display:block;font-size:12px;font-weight:750;margin:15px 0 6px}.field{width:100%;border:1px solid #d1e0d8;background:#fff;padding:11px 13px;border-radius:9px;min-height:44px;color:var(--ink)}.field:focus{outline:2px solid #9cd8bd;border-color:var(--green)}textarea.field{resize:vertical;min-height:70px}.action{border:1px solid #bcd1c5;background:#fff;color:var(--green);padding:11px 15px;min-height:43px;border-radius:9px;font-weight:750;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}.action:hover{background:#edf6f0}.action.primary{background:var(--green);color:#fff;border-color:var(--green)}.action.primary:hover{background:var(--deep)}.action.danger{color:var(--error);border-color:#e9bdb7}.flex{display:flex;gap:11px;flex-wrap:wrap;align-items:center}.hint{font-size:11px;color:var(--muted);margin-top:7px}.alert{padding:12px 14px;border-radius:10px;font-size:12px;border:1px solid #bfdcce;background:#edf7f1;color:#17553f;margin:15px 0}.alert.error{border-color:#f1cbc7;background:#fff2ef;color:#982d29}.alert.warn{border-color:#f1d79d;background:#fff9e9;color:#80520b}.switch{display:inline-flex;gap:9px;align-items:center;margin-top:17px;font-size:12px;color:var(--muted)}.switch input{accent-color:var(--green)}.toolbar{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 15px}.toolbar-right{display:flex;gap:8px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 20px}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px 18px}.stat small{font-size:11px;color:var(--muted);display:block}.stat strong{font-size:clamp(18px,2.1vw,26px);display:block;letter-spacing:-.04em;margin:5px 0 2px;word-wrap:break-word}.stat strong.em{color:var(--green)}.stat em{font-style:normal;font-size:10px;color:var(--muted)}.bar{height:5px;background:#e7ede8;border-radius:999px;margin-top:11px;overflow:hidden}.bar i{display:block;background:var(--green);height:100%;max-width:100%}.status-row{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);font-size:12px}.status-row:last-child{border:0}.status-row b{font-size:12px}.status-row span{color:var(--muted)}.grid-head{display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap;margin:16px 0 13px}.searchbox{min-width:300px;max-width:470px;width:100%}.entries{display:grid;gap:14px}.entry{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}.entry-head{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:center;padding:17px 20px;border-bottom:1px solid var(--line);background:#fcfefd}.code{font-size:10px;color:var(--green);font-weight:800;letter-spacing:.06em}.entry-title{font-weight:750;font-size:14px;margin:5px 0;line-height:1.5;overflow-wrap:anywhere}.entry-sub{font-size:11px;color:var(--muted)}.entry-budget{text-align:right;font-size:11px;color:var(--muted)}.entry-budget strong{font-size:21px;color:var(--ink);display:block}.entry-body{padding:16px 20px}.entry-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 15px}.entry-fields .wide{grid-column:1 / -1}.entry-fields input.field,.entry-fields textarea.field{font-size:12px}.entry-fields .label{margin-top:8px}.entry-metrics{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:center;border:1px solid var(--line);background:#f7fbf8;border-radius:10px;padding:12px;margin-bottom:9px}.entry-metrics input{font-size:16px;font-weight:750}.metric-info{font-size:12px;color:var(--muted)}.metric-info strong{font-size:17px;color:var(--green);display:block}.metric-info .over{color:var(--error)}.entry[aria-readonly=true] .entry-body input,.entry[aria-readonly=true] .entry-body textarea{background:#f2f5f3;color:#5e6b64}.float-save{position:sticky;bottom:10px;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px 17px;background:#073f33;color:#eafff3;border-radius:12px;margin:17px 0 0;box-shadow:0 8px 28px #122d2252}.float-save .action{flex:none}.float-save span{font-size:12px}.summary-table-wrap{overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:10px}.summary-table{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}.summary-table th{background:#f0f6f2;color:var(--muted);text-align:left;font-size:11px;padding:12px;border-bottom:1px solid var(--line)}.summary-table td{padding:11px 12px;border-bottom:1px solid var(--line)}.summary-table tbody tr:last-child td{border-bottom:0}.summary-table tbody tr:hover{background:#f5f9f6}.summary-table .r{text-align:right;font-variant-numeric:tabular-nums}.linkunit{background:none;border:0;color:var(--green);font-weight:750;text-align:left}.footer{font-size:11px;color:var(--muted);margin-top:35px;padding-top:18px;border-top:1px solid var(--line)}
+@media(max-width:900px){.two{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.intro{align-items:start;flex-direction:column}.datebox{min-width:unset;width:100%}.entry-head{grid-template-columns:1fr}.entry-budget{text-align:left}}
+@media(max-width:600px){.topin,.container{padding-left:15px;padding-right:15px}.topin{align-items:start}.brand strong{font-size:13px}.topright{flex-direction:column;align-items:end}.stats{gap:9px}.stat{padding:12px}.card{padding:15px}.entry-fields{grid-template-columns:1fr}.entry-fields .wide{grid-column:1}.entry-metrics{grid-template-columns:1fr}.entry-head,.entry-body{padding:13px}.searchbox{min-width:0;max-width:100%}.setup-row{flex-direction:column;align-items:stretch}.float-save{flex-wrap:wrap}}
+@media print{.topright,.action,.setup,.toolbar-right,.float-save,.info-side,.searchbox{display:none!important}body{background:white}.card,.entry{break-inside:avoid;box-shadow:none}.container{max-width:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand"><div class="logo">HQ</div><div><strong>UBND XÃ HÀ QUẢNG</strong><small>Hệ thống báo cáo giải ngân vốn thường xuyên</small></div></div><div class="topright"><span class="pill">Năm 2026</span><span class="pill warn">Chốt 10:00 · Thứ Sáu</span></div></div></header>
+<main class="container">
+<div class="intro"><div><p class="eyebrow">Hệ thống theo dõi · Số liệu tập trung</p><h1>Báo cáo giải ngân hằng tuần</h1><p class="sub">Mỗi đơn vị chọn tên của mình và đăng nhập bằng mã truy cập riêng. Chỉ hiển thị các nhiệm vụ, dự toán đã phân công. Số liệu lưu trên Google Drive của đơn vị quản lý.</p></div><div class="datebox"><small>Kỳ báo cáo đang mở</small><strong id="headlinePeriod">—</strong><span>Khóa số liệu lúc 10:00 (giờ Việt Nam)</span></div></div>
+<section class="card setup" id="setup"><h2>Thiết lập kết nối dữ liệu</h2><p>Nhập đường dẫn Apps Script đã triển khai dạng <b>https://script.google.com/macros/s/.../exec</b>. Chỉ cần một lần trên trình duyệt này. Sau khi có đường dẫn chính thức, quản trị nên cấu hình cố định trong tệp <code>index.html</code> để các đơn vị không cần thực hiện bước này.</p><div class="setup-row"><input id="endpoint" class="field" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><button class="action primary" id="connectBtn" type="button">Kết nối</button></div><div class="hint">Không nhập mã tài khoản hoặc mật khẩu vào đường dẫn. Mã truy cập được gửi riêng ở bước đăng nhập.</div></section>
+<div id="notify" role="status" aria-live="polite" class="hidden"></div>
+<section id="loginPanel" class="two"><div class="card"><h2>Đơn vị đăng nhập báo cáo</h2><p class="sub">Tìm đúng tên đơn vị trong danh sách. Sau xác thực, hệ thống tự nạp những dòng thuộc đơn vị đó trong bảng phân công.</p><label class="switch"><input type="checkbox" id="adminMode"> Tôi đăng nhập tài khoản quản trị</label><div id="unitPicker"><label class="label" for="unitSearch">Tìm kiếm và lựa chọn đơn vị</label><input id="unitSearch" class="field" placeholder="Gõ tên trường học, phòng, trung tâm..." list="unitChoices" autocomplete="off"><datalist id="unitChoices"></datalist><div class="hint" id="unitCount">Đang chờ kết nối dữ liệu...</div></div><label class="label" for="accessKey">Mã truy cập</label><input id="accessKey" class="field" type="password" placeholder="Nhập mã riêng được quản trị cung cấp" autocomplete="off"><div class="flex" style="margin-top:20px"><button class="action primary" type="button" id="loginBtn">Mở biểu báo cáo</button><span class="hint">Không lưu mã truy cập trên GitHub.</span></div></div><aside class="info-side"><h3>Quy trình báo cáo tuần</h3><ul><li>Chọn đơn vị trong ô tìm kiếm và đăng nhập bằng mã riêng.</li><li>Rà soát các nhiệm vụ được giao, điền số giải ngân <b>lũy kế</b> đến thời điểm báo cáo.</li><li>Bổ sung tình hình, công việc còn lại, thời hạn và khó khăn nếu phát sinh.</li><li>Bấm <b>Lưu báo cáo</b> để ghi số liệu lên Google Sheets.</li><li>10 giờ thứ Sáu hệ thống đóng kỳ cũ, lưu bản chốt và mở kỳ mới.</li></ul><p>Đơn vị không sửa được dự toán đã giao; khi số giải ngân vượt dự toán hoặc giảm lũy kế phải ghi rõ nguyên nhân.</p></aside></section>
+<section id="workspace" class="hidden">
+<div class="toolbar"><div><div class="eyebrow" id="roleLabel">Đơn vị báo cáo</div><h2 id="workspaceTitle">—</h2><p class="hint" id="workspaceSubtitle"></p></div><div class="toolbar-right"><select id="periodSelect" class="field" aria-label="Chọn kỳ báo cáo" style="width:auto;max-width:210px"></select><button id="refreshBtn" class="action">Tải lại</button><button id="exportBtn" class="action">Xuất CSV</button><button id="logoutBtn" class="action">Đăng xuất</button></div></div>
+<div class="stats"><div class="stat"><small>Dự toán được giao</small><strong id="budgetKpi">0</strong><em>Triệu đồng</em></div><div class="stat"><small>Giải ngân lũy kế</small><strong class="em" id="paidKpi">0</strong><em>Triệu đồng</em></div><div class="stat"><small>Tỷ lệ giải ngân</small><strong id="rateKpi">0%</strong><div class="bar"><i id="paidBar"></i></div></div><div class="stat"><small>Tình trạng báo cáo</small><strong id="reportKpi">—</strong><em id="reportNote">—</em></div></div>
+<div id="adminPanel" class="card hidden" style="margin-bottom:19px"><div class="toolbar"><div><h2>Tổng hợp tình hình các đơn vị</h2><p class="hint" id="adminTotal">—</p></div><div class="toolbar-right"><input id="adminSearch" class="field" placeholder="Tìm đơn vị để xem" style="min-width:240px"><button class="action" id="lockBtn">Khóa kỳ</button></div></div><div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Đơn vị</th><th class="r">Dự toán</th><th class="r">Giải ngân</th><th class="r">Tỷ lệ</th><th>Đã nộp</th><th>Cảnh báo</th></tr></thead><tbody id="summaryBody"></tbody></table></div><p class="hint">Đơn vị chưa nộp được hiển thị theo số liệu kỳ trước, nhưng vẫn được đánh dấu <b>Chưa nộp</b>.</p></div>
+<div class="grid-head"><div><h2 id="assignmentTitle">Nội dung được phân công</h2><p class="hint" id="assignmentInfo">—</p></div><div class="searchbox"><label class="label" for="taskSearch">Tìm trong nhiệm vụ được phân công</label><input class="field" id="taskSearch" placeholder="Tìm theo mục, nguồn vốn, số thứ tự, công việc..."></div></div>
+<div id="entries" class="entries"></div>
+<div class="float-save" id="saveBar"><span>Chỉ cập nhật số liệu của đơn vị đang đăng nhập. Sau khi lưu, dữ liệu ghi trực tiếp vào Google Sheets.</span><div class="flex"><input id="reporter" class="field" placeholder="Họ tên người nhập báo cáo" style="min-width:220px;max-width:300px"><button id="saveBtn" class="action primary">Lưu báo cáo tuần</button></div></div>
+</section>
+<p class="footer">Dữ liệu lưu tại Google Sheets trên Google Drive, không lưu trong kho mã GitHub. Số liệu nguồn theo bảng phân công của xã; thời điểm số liệu gốc cần được quản trị kiểm tra trước khi tổng hợp chính thức.</p>
+</main>
+<script>
+'use strict';
+// Đặt đường dẫn /exec chính thức tại đây trước khi gửi website cho các đơn vị.
+// KHÔNG dán mã truy cập, mật khẩu hay dữ liệu báo cáo vào tệp này.
+const OFFICIAL_GAS_URL = '';
+const APP_ID = 'HAQUANG_WEEKLY_V1';
+const $ = id => document.getElementById(id);
+const fmt = v => new Intl.NumberFormat('vi-VN',{maximumFractionDigits:3}).format(Number(v)||0);
+const fmtDate = s => s ? new Date(s).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour12:false}) : '—';
+const periodName = s => s ? s.split('-').reverse().join('/') : '—';
+const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const state={endpoint:OFFICIAL_GAS_URL||localStorage.getItem('haquang_public_endpoint')||'',units:[],key:'',data:null,currentPeriod:'',selectedUnit:'',pending:new Map()};
+$('endpoint').value=state.endpoint;
+function notice(txt,type='info'){
+  const d=$('notify');d.className='alert'+(type==='error'?' error':type==='warn'?' warn':'');d.textContent=txt;d.classList.remove('hidden');
+}
+function clearNotice(){$('notify').classList.add('hidden');}
+function goodEndpoint(s){try{const u=new URL(s);return u.protocol==='https:'&&u.hostname==='script.google.com'&&/^\/macros\/s\/[^/]+\/exec$/.test(u.pathname);}catch(e){return false;}}
+const allowedOrigin = o => /^https:\/\/(?:[a-z0-9-]+\.)?googleusercontent\.com$/i.test(o)||o==='https://script.google.com';
+window.addEventListener('message',event=>{
+  const m=event.data;
+  if(!allowedOrigin(event.origin)||!m||m.app!==APP_ID||typeof m.id!=='string')return;
+  const job=state.pending.get(m.id);if(!job)return;
+  state.pending.delete(m.id);clearTimeout(job.timeout);job.frame.remove();job.form.remove();
+  if(!m.data||!m.data.ok)job.reject(new Error(m.data?.error||'Dịch vụ trả lời không hợp lệ.'));else job.resolve(m.data.data);
+});
+function callServer(payload){
+  if(!goodEndpoint(state.endpoint))return Promise.reject(new Error('Cần kết nối URL Apps Script /exec hợp lệ trước.'));
+  const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2));
+  return new Promise((resolve,reject)=>{
+    const iframe=document.createElement('iframe');iframe.name='hq_reply_'+id;iframe.title='Phản hồi máy chủ';iframe.style.display='none';
+    const form=document.createElement('form');form.method='POST';form.action=state.endpoint;form.target=iframe.name;form.style.display='none';form.enctype='application/x-www-form-urlencoded';
+    const input=document.createElement('input');input.type='hidden';input.name='payload';input.value=JSON.stringify({id,payload});form.appendChild(input);
+    document.body.appendChild(iframe);document.body.appendChild(form);
+    const timeout=setTimeout(()=>{state.pending.delete(id);iframe.remove();form.remove();reject(new Error('Không nhận được phản hồi từ Apps Script. Kiểm tra /exec, quyền triển khai và mã Apps Script.'));},60000);
+    state.pending.set(id,{frame:iframe,form,resolve,reject,timeout});form.submit();
+  });
+}
+async function connect(){
+  const url=$('endpoint').value.trim();if(!goodEndpoint(url)){notice('URL không đúng định dạng https://script.google.com/macros/s/.../exec','error');return;}
+  state.endpoint=url;localStorage.setItem('haquang_public_endpoint',url);$('connectBtn').disabled=true;$('connectBtn').textContent='Đang kết nối...';
+  try{const res=await callServer({action:'units'});state.units=res.units||[];state.currentPeriod=res.currentPeriod;$('headlinePeriod').textContent=periodName(res.currentPeriod);$('unitChoices').innerHTML=state.units.map(u=>`<option value="${esc(u.name)}"></option>`).join('');$('unitCount').textContent=`Có ${state.units.length} đơn vị trong danh sách. Nhập tên để lọc và chọn.`;
+    $('setup').classList.add('hidden');notice('Kết nối thành công. Chọn đúng đơn vị và nhập mã truy cập.');
+  }catch(e){notice(e.message,'error');}finally{$('connectBtn').disabled=false;$('connectBtn').textContent='Kết nối';}
+}
+$('connectBtn').addEventListener('click',connect);
+$('adminMode').addEventListener('change',()=>{$('unitPicker').classList.toggle('hidden',$('adminMode').checked);clearNotice();});
+$('accessKey').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+$('loginBtn').addEventListener('click',login);
+async function login(){
+  if(!state.units.length){notice('Cần kết nối Apps Script để tải danh sách đơn vị.','error');return;}
+  const admin=$('adminMode').checked;
+  const typed=$('unitSearch').value.trim();const found=state.units.find(u=>norm(u.name)===norm(typed));
+  if(!admin&&!found){notice('Chọn chính xác một đơn vị từ gợi ý trong ô tìm kiếm.','error');$('unitSearch').focus();return;}
+  const key=$('accessKey').value.trim();if(!key){notice('Vui lòng nhập mã truy cập riêng.','error');return;}
+  $('loginBtn').disabled=true;
+  try{
+    const res=await callServer({action:'load',key,selectedUnit:admin?undefined:found.id,period:state.currentPeriod});
+    if(admin&&res.role!=='admin')throw Error('Mã này không phải mã quản trị.');
+    if(!admin&&res.role!=='unit')throw Error('Hãy chọn chế độ quản trị khi dùng mã quản trị.');
+    state.key=key;state.data=res;state.selectedUnit=res.selectedUnit;$('accessKey').value='';
+    $('loginPanel').classList.add('hidden');$('workspace').classList.remove('hidden');clearNotice();draw(true);
+  }catch(e){notice(e.message,'error');}finally{$('loginBtn').disabled=false;}
+}
+function periods(upTo){const list=[];if(!upTo)return list;let d=new Date('2026-10-23T00:00:00Z');const end=new Date(upTo+'T00:00:00Z');while(d<=end){list.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+7);}return list.reverse();}
+function optionPeriods(){const d=state.data,old=$('periodSelect').value;$('periodSelect').innerHTML=periods(d.currentPeriod).map(x=>`<option value="${x}">Tuần chốt ${periodName(x)}${x===d.currentPeriod?' · Đang mở':''}</option>`).join('');$('periodSelect').value=d.period||old;}
+function ratio(row){return Number(row.budget)>0?Number(row.disbursed)/Number(row.budget)*100:0;}
+function totals(rows){return rows.reduce((x,r)=>({budget:x.budget+Number(r.budget||0),paid:x.paid+Number(r.disbursed||0)}),{budget:0,paid:0});}
+function draw(reset=false){
+  const d=state.data;if(!d)return;
+  $('roleLabel').textContent=d.role==='admin'?'Quản trị · theo dõi tổng hợp':'Đơn vị nhập báo cáo';
+  $('workspaceTitle').textContent=d.role==='admin'?'Tổng hợp xã Hà Quảng':d.selectedUnitName;
+  $('workspaceSubtitle').textContent=d.readonly?'Kỳ đã chốt hoặc đã khóa — chỉ xem số liệu.':'Kỳ đang mở. Bạn có thể nhập lại nhiều lần trước 10:00 thứ Sáu; phiên bản mới nhất được dùng để chốt.';
+  optionPeriods();const total=d.role==='admin'?d.summary.reduce((a,s)=>({budget:a.budget+s.budget,paid:a.paid+s.disbursed}),{budget:0,paid:0}):totals(d.rows);
+  $('budgetKpi').textContent=fmt(total.budget);$('paidKpi').textContent=fmt(total.paid);$('rateKpi').textContent=total.budget?fmt(total.paid/total.budget*100)+'%':'0%';$('paidBar').style.width=(total.budget?Math.min(total.paid/total.budget*100,100):0)+'%';
+  $('reportKpi').textContent=d.role==='admin'?`${d.summary.filter(s=>s.submitted).length}/${d.summary.length} đơn vị`:d.submitted?'Đã nộp':'Chưa nộp';
+  $('reportNote').textContent=d.role==='admin'?'Đơn vị đã gửi kỳ được chọn':d.submitted?('Cập nhật '+fmtDate(d.submittedAt)):('Số liệu chuyển từ '+(d.sourcePeriod||'dữ liệu gốc'));
+  $('adminPanel').classList.toggle('hidden',d.role!=='admin');$('saveBar').classList.toggle('hidden',d.role==='admin'||d.readonly);
+  $('assignmentTitle').textContent=d.role==='admin'?('Chi tiết · '+d.selectedUnitName):'Nội dung được phân công';
+  $('assignmentInfo').textContent=`${d.rows.length} dòng nhiệm vụ trong bảng phân công · Đơn vị tính: triệu đồng`;
+  $('reporter').value=reset?d.reporter||'':$('reporter').value;
+  if(d.role==='admin')drawAdmin();drawRows();
+}
+function drawAdmin(){
+  const d=state.data,s=d.summary,filter=norm($('adminSearch').value);$('adminTotal').textContent=`${s.length} đơn vị · ${s.filter(v=>v.submitted).length} đã nộp · ${s.filter(v=>!v.submitted).length} chưa nộp`;
+  $('lockBtn').textContent=d.manualLocked?'Mở khóa kỳ':'Khóa kỳ';$('lockBtn').disabled=d.period!==d.currentPeriod;
+  $('summaryBody').innerHTML=s.filter(x=>norm(x.name).includes(filter)).map(v=>`<tr><td><button class="linkunit" data-unit="${esc(v.unit)}">${esc(v.name)}</button></td><td class="r">${fmt(v.budget)}</td><td class="r">${fmt(v.disbursed)}</td><td class="r">${fmt(v.rate)}%</td><td>${v.submitted?'✓ Đã nộp':'Chưa nộp'}</td><td>${v.warningCount?'⚠ '+v.warningCount:'—'}</td></tr>`).join('');
+  $('summaryBody').querySelectorAll('[data-unit]').forEach(el=>el.addEventListener('click',()=>reload(el.dataset.unit)));
+}
+function rowHTML(row,i,readonly){
+  const p=ratio(row),overspend=p>100.00001,disabled=readonly?'disabled':'';
+  const inp=(f,label,wide=false,multi=false)=>`<div class="${wide?'wide':''}"><label class="label" for="r-${i}-${f}">${label}</label>${multi?`<textarea class="field" ${disabled} id="r-${i}-${f}" data-row="${i}" data-field="${f}" maxlength="1200">${esc(row[f]||'')}</textarea>`:`<input class="field" ${disabled} id="r-${i}-${f}" data-row="${i}" data-field="${f}" maxlength="1200" value="${esc(row[f]||'')}">`}</div>`;
+  return `<article class="entry" aria-readonly="${readonly}" data-index="${i}"><div class="entry-head"><div><span class="code">${esc(row.order||row.id)} · ${esc(row.group||'')}</span><div class="entry-title">${esc(row.category)}</div><div class="entry-sub">Phân công: ${esc(row.owner||row.unitName||'—')}</div></div><div class="entry-budget">Dự toán được giao<strong>${fmt(row.budget)}</strong>triệu đồng</div></div><div class="entry-body"><div class="entry-metrics"><div><label class="label" for="r-${i}-disbursed">Giải ngân lũy kế (triệu đồng)</label><input class="field" type="number" step="any" min="0" ${disabled} id="r-${i}-disbursed" data-row="${i}" data-field="disbursed" value="${Number(row.disbursed)||0}"></div><div class="metric-info">Tỷ lệ thực hiện<strong class="${overspend?'over':''}" id="rate-${i}">${fmt(p)}%</strong>Chưa giải ngân: <span id="left-${i}">${fmt(Number(row.budget)-Number(row.disbursed))}</span> triệu đồng</div></div><div class="entry-fields">${inp('plan','Kế hoạch thực hiện',true,true)}${inp('task','Nhiệm vụ/công việc còn lại',true,true)}${inp('assignee','Người trực tiếp phụ trách')}${inp('taskDeadline','Thời hạn công việc')}${inp('deadline','Dự kiến hoàn thành')}${inp('leader','Lãnh đạo theo dõi')}${inp('note','Khó khăn, vướng mắc, nguyên nhân và kiến nghị (bắt buộc nếu vượt dự toán/giảm lũy kế)',true,true)}</div></div></article>`;
+}
+function drawRows(){const d=state.data;$('entries').innerHTML=d.rows.map((r,i)=>rowHTML(r,i,d.readonly||d.role==='admin')).join('');
+  $('entries').querySelectorAll('[data-field]').forEach(el=>el.addEventListener('input',e=>{
+    const t=e.target,r=d.rows[Number(t.dataset.row)],f=t.dataset.field;r[f]=f==='disbursed'?Number(t.value):t.value;
+    if(f==='disbursed'){const i=t.dataset.row,p=ratio(r);$('rate-'+i).textContent=fmt(p)+'%';$('rate-'+i).classList.toggle('over',p>100.00001);$('left-'+i).textContent=fmt(Number(r.budget)-Number(r.disbursed));const total=totals(d.rows);$('paidKpi').textContent=fmt(total.paid);$('rateKpi').textContent=(total.budget?fmt(total.paid/total.budget*100):'0')+'%';$('paidBar').style.width=(total.budget?Math.min(total.paid/total.budget*100,100):0)+'%';}
+  }));filterRows();
+}
+function filterRows(){const q=norm($('taskSearch').value);let shown=0;for(const el of $('entries').querySelectorAll('.entry')){const r=state.data.rows[Number(el.dataset.index)];const hay=norm([r.order,r.category,r.group,r.owner,r.unitName,r.task,r.plan,r.note].join(' '));const yes=hay.includes(q);el.classList.toggle('hidden',!yes);if(yes)shown++;} $('assignmentInfo').textContent=`Hiển thị ${shown}/${state.data.rows.length} nội dung thuộc ${state.data.selectedUnitName} · Đơn vị tính: triệu đồng`;}
+$('taskSearch').addEventListener('input',filterRows);
+$('adminSearch').addEventListener('input',()=>{if(state.data?.role==='admin')drawAdmin();});
+$('periodSelect').addEventListener('change',()=>reload());
+$('refreshBtn').addEventListener('click',()=>reload());
+async function reload(selected){
+  const d=state.data;if(!d)return;const p=$('periodSelect').value||d.currentPeriod;
+  try{notice('Đang đọc số liệu được lưu trên Drive...');
+    const next=await callServer({action:'load',key:state.key,period:p,selectedUnit:selected||state.selectedUnit});
+    state.data=next;state.selectedUnit=next.selectedUnit;$('taskSearch').value='';clearNotice();draw(true);
+  }catch(e){notice(e.message,'error');}
+}
+$('saveBtn').addEventListener('click',async()=>{
+  const d=state.data;if(!d||d.role!=='unit'||d.readonly)return;
+  const reporter=$('reporter').value.trim();if(!reporter){notice('Vui lòng nhập họ và tên người báo cáo.','error');$('reporter').focus();return;}
+  for(const r of d.rows){if(!Number.isFinite(Number(r.disbursed))||r.disbursed<0){notice(`Dòng ${r.order}: số giải ngân phải không âm.`,'error');return;}
+    if(Number(r.disbursed)>Number(r.budget)+1e-6&&!String(r.note||'').trim()){notice(`Dòng ${r.order}: vượt dự toán giao, cần điền nguyên nhân ở Ghi chú.`,'error');return;}}
+  $('saveBtn').disabled=true;
+  try{const res=await callServer({action:'save',key:state.key,period:d.period,selectedUnit:state.selectedUnit,version:d.version,reporter,requestId:crypto.randomUUID(),rows:d.rows.map(r=>({id:r.id,disbursed:Number(r.disbursed),plan:r.plan||'',task:r.task||'',assignee:r.assignee||'',taskDeadline:r.taskDeadline||'',deadline:r.deadline||'',leader:r.leader||'',note:r.note||''}))});
+    d.version=res.version;d.submitted=true;d.submittedAt=res.submittedAt||new Date().toISOString();d.reporter=reporter;draw(false);notice('Đã lưu báo cáo lên Google Sheets thành công. Phiên bản '+res.version+'.');
+  }catch(e){notice(e.message,'error');}finally{$('saveBtn').disabled=false;}
+});
+$('lockBtn').addEventListener('click',async()=>{const d=state.data;if(d?.role!=='admin'||d.period!==d.currentPeriod)return;const locked=!d.manualLocked;if(!confirm(locked?'Khóa kỳ báo cáo này? Các đơn vị sẽ không thể gửi thêm.':'Mở khóa kỳ đang thu thập?'))return;
+  try{await callServer({action:'lock',key:state.key,period:d.period,locked});await reload();notice(locked?'Đã khóa kỳ báo cáo.':'Đã mở khóa kỳ báo cáo.');}catch(e){notice(e.message,'error');}
+});
+function csvValue(v){return '"'+String(v??'').replace(/^[=+@\-]/, "'$&").replace(/"/g,'""')+'"';}
+function exportCSV(){const d=state.data;if(!d)return;let data;
+  if(d.role==='admin')data=[['Mã đơn vị','Đơn vị','Dự toán (triệu đồng)','Giải ngân (triệu đồng)','Tỷ lệ (%)','Đã nộp','Số mục vượt dự toán'],...d.summary.map(x=>[x.unit,x.name,x.budget,x.disbursed,x.rate,x.submitted?'Có':'Không',x.warningCount])];
+  else data=[['STT','Đơn vị','Nhóm','Nội dung','Dự toán (triệu đồng)','Giải ngân (triệu đồng)','Tỷ lệ (%)','Công việc','Nguyên nhân/kiến nghị'],...d.rows.map(x=>[x.order,d.selectedUnitName,x.group,x.category,x.budget,x.disbursed,ratio(x),x.task,x.note])];
+  const blob=new Blob(['\ufeff'+data.map(row=>row.map(csvValue).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Ha-Quang-${d.period}-${d.role==='admin'?'tong-hop':d.selectedUnit}.csv`;a.click();URL.revokeObjectURL(url);
+}
+$('exportBtn').addEventListener('click',exportCSV);
+$('logoutBtn').addEventListener('click',()=>{state.key='';state.data=null;state.selectedUnit='';$('workspace').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('unitSearch').value='';$('adminMode').checked=false;$('unitPicker').classList.remove('hidden');clearNotice();});
+if(state.endpoint&&goodEndpoint(state.endpoint)){connect();}
+</script>
+</body>
+</html>
