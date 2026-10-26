@@ -323,7 +323,7 @@ const CONFIG=Object.freeze({
  API_URL:'https://script.google.com/macros/s/AKfycbzjBOjjPdTha9wX6A1laqtiGYwlaZK--dNbzHSRbjtZm3YlO_zObF2Wm7XuwIKpxnOl/exec',
  TIMEOUT_MS:25000,AUTO_REFRESH_MIN:5,CACHE_MAX_DAYS:30,MAX_FRACTION_DIGITS:3
 });
-const PROGRAMS=[{key:'all',label:'Tổng các nguồn'},{key:'I',label:'I. Dự toán đầu năm'},{key:'II',label:'II. Chương trình MTQG'},{key:'III',label:'III. Bổ sung có mục tiêu'},{key:'IV',label:'IV. KH&CN (NQ 57-NQ/TW)'}];
+const PROGRAMS=[{key:'all',label:'Tổng các nguồn'},{key:'I',label:'I. Dự toán đầu năm'},{key:'II',label:'II. Chương trình MTQG'},{key:'III',label:'III. Bổ sung có mục tiêu'},{key:'IV',label:'IV. KH&CN (NQ 57-NQ/TW)'},{key:'V',label:'V. Dự phòng ngân sách'}];
 const KINDS=[{key:'all',label:'Tất cả'},{key:'commune',label:'Xã, phường'},{key:'agency',label:'Sở, ban, ngành'},{key:'other',label:'Khác'}];
 const BANDS=[{key:'risk',label:'Dưới 50%',min:0,max:50,cls:'b-risk'},{key:'warn',label:'50% – dưới 70%',min:50,max:70,cls:'b-warn'},{key:'mid',label:'70% – dưới 90%',min:70,max:90,cls:'b-mid'},{key:'high',label:'Từ 90%',min:90,max:Infinity,cls:'b-high'}];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -864,9 +864,9 @@ updateHeaderHeight();navigationFromHash();
 const DOCX_LIB = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';
 const XU_FONT = '"Segoe UI", Arial, sans-serif';
 function xuCanvas(w, h) { const c = document.createElement('canvas'), s = 2; c.width = w * s; c.height = h * s; const g = c.getContext('2d'); g.scale(s, s); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.textBaseline = 'middle'; return { c, g }; }
-const QR_SEC = [['I', 'I. Dự toán đầu năm'], ['II', 'II. CTMTQG'], ['III', 'III. Bổ sung có mục tiêu'], ['IV', 'IV. KH&CN (NQ 57)']];
-const QR_SEC_TEXT = { I: 'Dự toán đầu năm', II: 'Vốn Chương trình MTQG', III: 'Bổ sung có mục tiêu', IV: 'KH&CN (NQ 57)' };
-const QR_SEC_LOW = { I: 'dự toán đầu năm', II: 'vốn CTMTQG', III: 'vốn bổ sung có mục tiêu', IV: 'kinh phí KH&CN (NQ 57)' };
+const QR_SEC = [['I', 'I. Dự toán đầu năm'], ['II', 'II. CTMTQG'], ['III', 'III. Bổ sung có mục tiêu'], ['IV', 'IV. KH&CN (NQ 57)'], ['V', 'V. Dự phòng ngân sách']];
+const QR_SEC_TEXT = { I: 'Dự toán đầu năm', II: 'Vốn Chương trình MTQG', III: 'Bổ sung có mục tiêu', IV: 'KH&CN (NQ 57)', V: 'Dự phòng ngân sách' };
+const QR_SEC_LOW = { I: 'dự toán đầu năm', II: 'vốn CTMTQG', III: 'vốn bổ sung có mục tiêu', IV: 'kinh phí KH&CN (NQ 57)', V: 'nguồn dự phòng ngân sách' };
 const qrPct = x => (x == null || !isFinite(x)) ? '—' : (x * 100).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 const qrPng = d => { const b = atob(d.split(',')[1]); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
 const qrJoin = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' và ' + a[a.length - 1];
@@ -1100,7 +1100,7 @@ const parseVN = s => { const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/.e
 function reportData() {
   const units = state.units.filter(u => u.kind === 'commune').map(u => {
     const a = u.p.all, sections = {};
-    ['I', 'II', 'III', 'IV'].forEach(k => { if (u.p[k]) sections[k] = { planned: u.p[k][0], disbursed: u.p[k][1] }; });
+    ['I', 'II', 'III', 'IV', 'V'].forEach(k => { if (u.p[k]) sections[k] = { planned: u.p[k][0], disbursed: u.p[k][1] }; });
     return { name: u.name, kind: 'xa', planned: a ? a[0] : 0, disbursed: a ? a[1] : 0, sections,
       submittedAt: u.submitted === true ? (parseVN(u.updated) || 'x') : null, late: u.status === 'late', explained: u.decreaseCount || 0,
       prevDisbursed: state.prevAt && u.prev.all ? u.prev.all[1] : null, prevPlanned: state.prevAt && u.prev.all ? u.prev.all[0] : null };
