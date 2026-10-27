@@ -1,1 +1,158 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#113449"><title>Cao Bằng · Báo cáo thu ngân sách</title><style>*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:#f2f6f8;color:#183345;font:14px Arial;display:flex;flex-direction:column;height:100dvh}header{background:#113449;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;gap:12px;flex-shrink:0}header strong{font-size:15px}header small{display:block;color:#bad8e3;font-size:11px;margin-top:4px}a{color:#fff;background:#087f80;padding:12px;border-radius:8px;text-decoration:none;font-size:12px;white-space:nowrap;min-height:44px;display:flex;align-items:center}iframe{display:block;width:100%;flex:1;min-height:0;border:0}.note{padding:6px 20px;font-size:11px;color:#526d7c;flex-shrink:0}@media(max-width:650px){header{padding:8px 10px}header strong{font-size:12px}header small{font-size:10px}a{padding:10px;font-size:11px}.note{padding:5px 10px;font-size:10px}}@media print{header,.note{display:none}iframe{height:100vh}}</style></head><body><header><div><strong>CAO BẰNG · THU NGÂN SÁCH</strong><small>Tổng quan · 56 xã, phường · So sánh cùng kỳ</small></div><a href="https://script.google.com/a/macros/we.edu.vn/s/AKfycbzeRDOPbTSjzF6ZGiwvddkiCeuDbdabQF9z3x63OoAEQVHMSavv2SLozFpBwstqeI4/exec?view=report" target="_blank" rel="noopener">Mở riêng ↗</a></header><div class="note">Xem, in và xuất báo cáo. Nếu nội dung chưa hiện, chọn “Mở riêng”.</div><iframe title="Báo cáo điều hành thu ngân sách Cao Bằng" src="https://script.google.com/a/macros/we.edu.vn/s/AKfycbzeRDOPbTSjzF6ZGiwvddkiCeuDbdabQF9z3x63OoAEQVHMSavv2SLozFpBwstqeI4/exec?view=report" allow="fullscreen"></iframe></body></html>
+<!doctype html>
+<html lang="vi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="author" content="Lục Hồng Kỳ - Phòng Ngân sách, Sở Tài chính tỉnh Cao Bằng">
+<meta name="description" content="Báo cáo tình hình thu ngân sách nhà nước tỉnh Cao Bằng.">
+<meta name="theme-color" content="#113449"><title>Thu ngân sách | Cao Bằng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6f8;--surface:#fff;--soft:#f6f9fa;--ink:#132b3a;--text:#33495a;--muted:#647a88;--line:#dde7ec;--brand:#113449;--teal:#087f80;--blue:#2f6fd1;--orange:#e0662c;--green:#1e7d4f;--amber:#a76b00;--red:#b8412f;--track:#e8eef1;--shadow:0 1px 2px #0b26360d,0 6px 18px #0b263609}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Be Vietnam Pro','Segoe UI',Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{background:var(--brand);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0}
+.top small{display:block;color:#bad8e3;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.top h1{margin:2px 0 0;font-size:21px;font-weight:700}
+.badge{background:#ffffff1a;border:1px solid #ffffff33;border-radius:12px;padding:8px 14px;text-align:right;font-size:12px;white-space:nowrap}
+.badge b{display:block;font-size:15px}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--teal);color:#fff;border:0;border-radius:9px;padding:9px 14px;font:600 12px inherit;text-decoration:none;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--teal)}
+.lead{margin:18px 0 6px;color:var(--text);font-size:13px}
+.kpis>*,.grid2>*{min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--brand);border-radius:14px;padding:15px 17px;box-shadow:var(--shadow)}
+.kpi.b{border-top-color:var(--blue)}.kpi.o{border-top-color:var(--orange)}.kpi.r{border-top-color:var(--red)}
+.kpi h3{margin:0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.kpi .v{font-size:27px;font-weight:700;margin:4px 0 2px}.kpi .v small{font-size:13px;color:var(--muted);font-weight:500}
+.kpi p{margin:0;font-size:12px;color:var(--text)}
+.bar{height:7px;background:var(--track);border-radius:9px;margin:9px 0 4px;position:relative;overflow:visible}
+.bar i{display:block;height:100%;border-radius:9px;background:var(--brand)}.bar em{position:absolute;top:-3px;width:2px;height:13px;background:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-top:16px}
+.card h2{margin:0 0 4px;font-size:16px}.card .sub{margin:0 0 12px;font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.ins{margin:0;padding:0;list-style:none}.ins li{padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--text)}.ins li:last-child{border:0}.ins b{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:right;font-weight:600;color:var(--muted);font-size:11px;padding:7px 8px;border-bottom:2px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+tr.tot td{font-weight:700;background:var(--soft)}tr.sub td:first-child{padding-left:22px;color:var(--text)}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.t-ok{background:#e6f4ec;color:var(--green)}.t-kha{background:#e8f0fc;color:var(--blue)}.t-bq{background:#fff4e0;color:var(--amber)}.t-no{background:#fdecea;color:var(--red)}
+.hbar{display:grid;grid-template-columns:170px 1fr 58px;align-items:center;gap:10px;font-size:12px;margin:6px 0}
+.hbar .tr{height:12px;background:var(--track);border-radius:6px;position:relative}
+.hbar .tr i{display:block;height:100%;border-radius:6px}.hbar .tr em{position:absolute;top:-3px;width:2px;height:18px;background:var(--ink);opacity:.55}
+.hbar b{text-align:right}
+.cols{display:flex;align-items:flex-end;gap:16px;height:230px;padding:10px 4px 0;position:relative;border-bottom:1px solid var(--line)}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;z-index:1}
+.col .stk{width:62%;max-width:70px;display:flex;flex-direction:column-reverse;border-radius:6px 6px 0 0;overflow:hidden}
+.col .stk span{display:block;color:#fff;font-size:10px;font-weight:700;text-align:center}
+.col .tt{font-size:12px;font-weight:700;margin-bottom:3px}
+.lbls{display:flex;gap:16px;padding:6px 4px 0}.lbls div{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+.line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--ink);z-index:2;font-size:10px;color:var(--ink)}
+.line span{position:absolute;left:0;top:-16px;background:var(--surface);padding:0 4px}.line.pd{border-color:var(--red);color:var(--red)}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:8px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tools input,.tools select{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:13px inherit;background:var(--surface);color:var(--ink)}
+.tbl-wrap{overflow-x:auto}
+.foot{margin:22px 0 30px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.state{padding:60px 20px;text-align:center;color:var(--muted)}
+@media(max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:600px){.wrap{padding:0 12px}.kpi p{font-size:11px}.badge{white-space:normal}.top{flex-wrap:wrap}.top h1{font-size:17px}.badge{text-align:left}.kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:12px}.kpi .v{font-size:21px}.hbar{grid-template-columns:118px 1fr 48px;font-size:11px}.card{padding:14px}.cols{height:200px;gap:8px}.lbls{gap:8px}table{font-size:11.5px}}
+@media print{header{background:#fff;color:#000}.top small{color:#333}.badge{border-color:#999}.btn,.tools{display:none!important}.card,.kpi{box-shadow:none;break-inside:avoid}body{background:#fff}}
+</style></head>
+<body>
+<header><div class="wrap top">
+ <div><small>UBND tỉnh Cao Bằng · Sở Tài chính</small><h1>Tình hình thu ngân sách nhà nước năm <span id="nam">…</span></h1></div>
+ <div class="badge"><span>Số liệu lũy kế đến</span><b id="ngay">…</b><span id="tiendo"></span></div>
+</div></header>
+<main class="wrap" id="app"><div class="state">Đang tải số liệu…</div></main>
+
+<script>
+(function(){
+var D, $=function(id){return document.getElementById(id)};
+function fmt(trieu,d){d=d==null?1:d;var s=(trieu/1000).toFixed(d);var p=s.split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return p.join(',');}
+function pc(a,b){return b?a/b*100:null}
+function P(x,d){if(x==null||!isFinite(x))return '–';return x.toFixed(d==null?1:d).replace('.',',')+'%';}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dg(p){if(p==null)return['–',''];if(p>=100)return['Vượt DT','t-ok'];if(p>=90)return['Khá','t-kha'];if(p>=D.tienDo)return['Bình quân','t-bq'];return['Chưa đạt tiến độ','t-no'];}
+function col(p){return p>=100?'var(--green)':p>=D.tienDo?'var(--blue)':'var(--red)'}
+function vnDate(iso){var p=iso.slice(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+
+fetch('data.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(d){D=d;render()}).catch(function(e){$('app').innerHTML='<div class="state">Chưa tải được số liệu ('+esc(e.message)+'). Vui lòng thử lại sau.</div>'});
+
+function render(){
+ var nd=D.nd,x=D.xnk,T={th:nd.th+x.th,hd:nd.hd+x.hd,tw:nd.tw+x.tw,pd:nd.pd+x.pd,ck:(nd.ck!=null&&x.ck!=null)?nd.ck+x.ck:null};
+ $('nam').textContent=D.ngay.slice(0,4);$('ngay').textContent=vnDate(D.ngay);$('tiendo').textContent='Tiến độ thời gian '+P(D.tienDo);
+ var conHD=Math.max(0,T.hd-T.th),conPD=Math.max(0,T.pd-T.th),bqT=D.bq.nd+D.bq.xnk;
+ var h='';
+ h+='<p class="lead">Đã qua '+P(D.tienDo)+' thời gian của năm, còn '+D.ky+' tuần đến 31/12. Dự toán và mục tiêu phấn đấu tính cho thu nội địa và thu xuất nhập khẩu (XNK). Đơn vị: tỷ đồng.</p>';
+ h+='<div class="kpis">'+kpi('','Nội địa + XNK',fmt(T.th),pc(T.th,T.hd),P(pc(T.th,T.hd))+' dự toán HĐND · '+P(pc(T.th,T.pd))+' mục tiêu phấn đấu'+(T.ck?' · bằng '+P(pc(T.th,T.ck))+' cùng kỳ':''))
+   +kpi('b','Thu nội địa',fmt(nd.th),pc(nd.th,nd.hd),'<b>'+(nd.th>=nd.hd?'Đã vượt dự toán '+fmt(nd.th-nd.hd)+' tỷ':'Còn thiếu '+fmt(nd.hd-nd.th)+' tỷ')+'</b> ('+P(pc(nd.th,nd.hd))+')'+(nd.ck?' · '+ss(nd.th,nd.ck)+' so cùng kỳ':''))
+   +kpi('o','Thu XNK',fmt(x.th),pc(x.th,x.hd),'<b>'+(x.th>=x.hd?'Đã vượt dự toán '+fmt(x.th-x.hd)+' tỷ':'Mới đạt '+P(pc(x.th,x.hd))+', còn thiếu '+fmt(x.hd-x.th)+' tỷ')+'</b>'+(x.ck?' · '+ss(x.th,x.ck)+' so cùng kỳ':''))
+   +'<div class="kpi r"><h3>Còn phải thu</h3><div class="v">'+fmt(conHD)+' <small>/ '+fmt(conPD)+'</small></div><p>để đạt dự toán HĐND / mục tiêu phấn đấu; tương đương <b>'+fmt(conHD/D.ky)+' / '+fmt(conPD/D.ky)+' tỷ mỗi tuần</b> (tốc độ hiện nay khoảng '+fmt(bqT)+' tỷ/tuần)</p></div></div>';
+ // bảng tổng hợp
+ h+='<div class="card"><h2>Kết quả thu so với dự toán</h2><div class="tbl-wrap"><table><tr><th>Chỉ tiêu</th><th>DT TW giao</th><th>DT HĐND</th><th>Phấn đấu</th><th>Lũy kế</th><th>% DT TW</th><th>% DT HĐND</th><th>% cùng kỳ</th><th>% phấn đấu</th></tr>'
+   +row('Nội địa + XNK',T,true)+row('Thu nội địa',nd)+row('Thu XNK',x)+'</table></div>';
+ var cd=D.canDoi;if(cd)h+='<p class="sub" style="margin-top:10px">Thu cân đối ngân sách địa phương: '+fmt(cd.congDat.th)+' tỷ = '+P(pc(cd.congDat.th,cd.congDat.hd))+' dự toán (không tính đất, xổ số: '+P(pc(cd.truDat.th,cd.truDat.hd))+'; cấp tỉnh '+P(pc(cd.tinh.th,cd.tinh.hd))+', cấp xã '+P(pc(cd.xa.th,cd.xa.hd))+').'+(D.tongNSNN?' Tổng thu NSNN trên địa bàn, kể cả ủng hộ, đóng góp: '+fmt(D.tongNSNN)+' tỷ.':'')+'</p>';
+ h+='</div>';
+ // điểm chính
+ h+='<div class="grid2"><div class="card"><h2>Điểm chính</h2><ul class="ins">'+insights(T)+'</ul></div>';
+ // dự báo
+ h+='<div class="card"><h2>Dự báo thu cả năm (nội địa + XNK)</h2><p class="sub">'+(D.kbTheoBinhQuan?'Tính theo tốc độ thu bình quân từ đầu năm.':'Tính theo diễn biến các tuần gần nhất.')+'</p>'+forecast(T)+'</div></div>';
+ // khoản thu
+ h+='<div class="card"><h2>Mức đạt dự toán từng khoản thu nội địa</h2><p class="sub">Vạch đen: tiến độ thời gian '+P(D.tienDo)+'. Xanh lá: đã vượt dự toán; xanh dương: trên tiến độ; đỏ: chậm so tiến độ.</p>'+bars()+'</div>';
+ h+='<div class="card"><h2>Chi tiết các khoản thu nội địa</h2><div class="tbl-wrap">'+detail()+'</div></div>';
+ // xã
+ h+='<div class="card"><h2>Thu nội địa theo xã, phường</h2><p class="sub" id="xaSum"></p><div class="tools"><input id="q" placeholder="Tìm xã, phường…"><select id="sx"><option value="pct">Sắp theo % dự toán (thấp → cao)</option><option value="pctd">Sắp theo % dự toán (cao → thấp)</option><option value="th">Sắp theo số thu</option><option value="ten">Sắp theo tên</option></select></div><div class="tbl-wrap"><table id="xaT"></table></div></div>';
+ h+='<div class="tools" style="margin-top:16px"><button class="btn" onclick="print()">In báo cáo</button><a class="btn ghost" id="btPdf" href="ban-tin-moi-nhat.pdf" target="_blank" rel="noopener" style="display:none">Bản tin tuần mới nhất (PDF)</a></div>';
+ h+='<div class="foot"><span>Phòng Ngân sách – Sở Tài chính tỉnh Cao Bằng</span><span>Cập nhật: '+new Date(D.capNhat).toLocaleString('vi-VN')+'</span></div>';
+ $('app').innerHTML=h;
+ $('q').oninput=xaTable;$('sx').onchange=xaTable;xaTable();
+ fetch('ban-tin-moi-nhat.pdf',{method:'HEAD',cache:'no-store'}).then(function(r){if(r.ok)$('btPdf').style.display='inline-flex'}).catch(function(){});
+}
+function ss(a,b){var p=pc(a,b)-100;return (p>=0?'tăng ':'giảm ')+P(Math.abs(p))}
+function kpi(c,t,v,p,txt){return '<div class="kpi '+c+'"><h3>'+t+'</h3><div class="v">'+v+' <small>tỷ</small></div><div class="bar"><i style="width:'+Math.min(100,p||0)+'%;background:'+col(p)+'"></i><em style="left:'+D.tienDo+'%"></em></div><p>'+txt+'</p></div>'}
+function row(t,o,b){return '<tr'+(b?' class="tot"':'')+'><td>'+t+'</td><td>'+fmt(o.tw)+'</td><td>'+fmt(o.hd)+'</td><td>'+fmt(o.pd)+'</td><td>'+fmt(o.th)+'</td><td>'+P(pc(o.th,o.tw))+'</td><td>'+P(pc(o.th,o.hd))+'</td><td>'+(o.ck?P(pc(o.th,o.ck)):'–')+'</td><td>'+P(pc(o.th,o.pd))+'</td></tr>'}
+function groups(){ // gộp nhóm thu về đất
+ var landIds=['st_sddpnn','st_bannha','st_dat','st_thuedat'],land=D.khoan.filter(function(k){return landIds.indexOf(k.id)>=0}),out=[],done=false;
+ D.khoan.forEach(function(k){if(landIds.indexOf(k.id)<0){out.push({k:k});return;}if(done)return;done=true;
+  var g={ten:'Các khoản thu về đất',hd:0,th:0,pd:0,ckv:0,ckOk:true};land.forEach(function(z){g.hd+=z.hd;g.th+=z.th;g.pd+=z.pd||0;if(z.pCK)g.ckv+=z.th/(z.pCK/100);else g.ckOk=false;});g.pCK=g.ckOk?pc(g.th,g.ckv):null;
+  out.push({k:g,sub:land});});
+ return out;}
+function bars(){var s='';groups().map(function(g){return g.k}).filter(function(k){return k.hd>0}).sort(function(a,b){return pc(b.th,b.hd)-pc(a.th,a.hd)}).forEach(function(k){var p=pc(k.th,k.hd);
+ s+='<div class="hbar"><span>'+esc(k.ten)+'</span><div class="tr"><i style="width:'+Math.min(100,p/1.6)+'%;background:'+col(p)+'"></i><em style="left:'+(D.tienDo/1.6)+'%"></em></div><b>'+P(p)+'</b></div>';});
+ return s+'<p class="sub">Thang đo tối đa 160%.</p>';}
+function detail(){var s='<table><tr><th>Khoản thu</th><th>DT HĐND</th><th>Lũy kế</th><th>% DT</th><th>% cùng kỳ</th><th>Phấn đấu</th><th>% phấn đấu</th><th>Còn phải thu (PĐ)</th><th>Đánh giá</th></tr>',tot={hd:0,th:0,pd:0};
+ groups().forEach(function(g){var k=g.k;tot.hd+=k.hd;tot.th+=k.th;tot.pd+=k.pd||0;s+=dr(k,false,!!g.sub);if(g.sub)g.sub.forEach(function(z){s+=dr(z,true)})});
+ var nd=D.nd;s+='<tr class="tot"><td>Tổng thu nội địa</td><td>'+fmt(nd.hd)+'</td><td>'+fmt(nd.th,3)+'</td><td>'+P(pc(nd.th,nd.hd))+'</td><td>'+(nd.ck?P(pc(nd.th,nd.ck)):'–')+'</td><td>'+fmt(nd.pd)+'</td><td>'+P(pc(nd.th,nd.pd))+'</td><td>'+fmt(Math.max(0,nd.pd-nd.th),3)+'</td><td><span class="tag '+dg(pc(nd.th,nd.hd))[1]+'">'+dg(pc(nd.th,nd.hd))[0]+'</span></td></tr>';
+ return s+'</table>';}
+function dr(k,sub,grp){var p=pc(k.th,k.hd),d=dg(p),pd=sub?null:k.pd;return '<tr'+(sub?' class="sub"':'')+'><td>'+(sub?'– ':'')+(grp?'<b>'+esc(k.ten)+'</b>':esc(k.ten))+'</td><td>'+fmt(k.hd)+'</td><td>'+fmt(k.th,3)+'</td><td>'+P(p)+'</td><td>'+P(k.pCK,0)+'</td><td>'+(pd?fmt(pd):'–')+'</td><td>'+(pd?P(pc(k.th,pd),0):'–')+'</td><td>'+(pd?fmt(Math.max(0,pd-k.th),3):'–')+'</td><td><span class="tag '+d[1]+'">'+d[0]+'</span></td></tr>'}
+function insights(T){var nd=D.nd,x=D.xnk,L=[],bqT=D.bq.nd+D.bq.xnk;
+ var ks=groups().map(function(g){return g.k}).filter(function(k){return k.hd>0});
+ var vuot=ks.filter(function(k){return k.th>=k.hd}).length,cham=ks.filter(function(k){return pc(k.th,k.hd)<D.tienDo});
+ L.push(nd.th>=nd.hd?'<b>Thu nội địa đã vượt dự toán cả năm:</b> '+fmt(nd.th)+' tỷ, vượt '+fmt(nd.th-nd.hd)+' tỷ ('+P(pc(nd.th,nd.hd))+')'+(nd.ck?', '+ss(nd.th,nd.ck)+' so cùng kỳ':'')+'; '+vuot+'/'+ks.length+' nhóm khoản đã vượt dự toán.':'<b>Thu nội địa đạt '+P(pc(nd.th,nd.hd))+' dự toán</b>, còn thiếu '+fmt(nd.hd-nd.th)+' tỷ.');
+ if(D.dat&&D.dat.hd)L.push('<b>Không tính tiền sử dụng đất</b>, thu nội địa vẫn đạt '+P(pc(nd.th-D.dat.th,nd.hd-D.dat.hd))+' dự toán.');
+ L.push(x.th>=x.hd?'<b>Thu XNK đã đạt dự toán</b> ('+P(pc(x.th,x.hd))+').':'<b>Thu XNK là điểm nghẽn:</b> mới đạt '+P(pc(x.th,x.hd))+' dự toán, còn thiếu '+fmt(x.hd-x.th)+' tỷ'+(x.ck?', '+ss(x.th,x.ck)+' so cùng kỳ':'')+'. Muốn đủ dự toán, XNK cần khoảng '+fmt(Math.max(0,x.hd-x.th)/D.ky)+' tỷ/tuần, gấp '+(Math.max(0,x.hd-x.th)/D.ky/D.bq.xnk).toFixed(1).replace('.',',')+' lần tốc độ hiện nay.');
+ if(cham.length)L.push('<b>'+cham.length+' khoản chậm so tiến độ:</b> '+cham.map(function(k){return esc(k.ten).toLowerCase()+' ('+P(pc(k.th,k.hd))+')'}).join(', ')+'.');
+ var conPD=Math.max(0,T.pd-T.th);L.push('<b>Mục tiêu phấn đấu '+fmt(T.pd,0)+' tỷ</b> mới đạt '+P(pc(T.th,T.pd))+'; mỗi tuần phải thu '+fmt(conPD/D.ky)+' tỷ, gấp '+(conPD/D.ky/bqT).toFixed(1).replace('.',',')+' lần tốc độ hiện nay.');
+ var xs=D.xa.filter(function(z){return z.dt>0}),dat=xs.filter(function(z){return z.th>=z.dt}).length,ch=xs.filter(function(z){return pc(z.th,z.dt)<D.tienDo});
+ L.push('<b>'+dat+'/'+xs.length+' xã, phường đã hoàn thành dự toán thu nội địa</b>'+(ch.length?'; còn '+ch.length+' đơn vị chậm so tiến độ: '+ch.map(function(z){return esc(z.ten)+' ('+P(pc(z.th,z.dt))+')'}).join(', '):'')+'.');
+ return L.map(function(t){return '<li>'+t+'</li>'}).join('');}
+function forecast(T){var items=[{ten:'Lũy kế',nd:D.nd.th,xnk:D.xnk.th}].concat(D.kb),max=Math.max(T.pd,Math.max.apply(null,items.map(function(i){return i.nd+i.xnk})))*1.08,H=230;
+ var s='<div class="cols">';
+ items.forEach(function(i){var t=i.nd+i.xnk;s+='<div class="col"><div class="tt">'+fmt(t,0)+'</div><div class="stk" style="height:'+(t/max*100)+'%"><span style="height:'+(i.nd/t*100)+'%;background:var(--blue)">'+fmt(i.nd,0)+'</span><span style="height:'+(i.xnk/t*100)+'%;background:var(--orange)">'+fmt(i.xnk,0)+'</span></div></div>';});
+ s+='<div class="line" style="bottom:'+(T.hd/max*100)+'%"><span>DT HĐND '+fmt(T.hd,0)+'</span></div><div class="line pd" style="bottom:'+(T.pd/max*100)+'%"><span>Phấn đấu '+fmt(T.pd,0)+'</span></div></div>';
+ s+='<div class="lbls">'+items.map(function(i){return '<div>'+esc(i.ten.replace(' – ','\n')).replace('\n','<br>')+'</div>'}).join('')+'</div>';
+ s+='<div class="legend"><span><i style="background:var(--blue)"></i>Thu nội địa</span><span><i style="background:var(--orange)"></i>Thu XNK</span></div>';
+ s+='<div class="tbl-wrap"><table style="margin-top:10px"><tr><th>Phương án</th><th>Cả năm</th><th>% DT HĐND</th><th>% phấn đấu</th><th>XNK so DT</th></tr>'+D.kb.map(function(k){var t=k.nd+k.xnk;return '<tr title="'+esc(k.mota)+'"><td>'+esc(k.ten)+'</td><td>'+fmt(t)+'</td><td>'+P(pc(t,T.hd))+'</td><td>'+P(pc(t,T.pd))+'</td><td>'+P(pc(k.xnk,D.xnk.hd))+'</td></tr>'}).join('')+'</table></div>';
+ return s;}
+function xaTable(){var q=($('q').value||'').toLowerCase(),sx=$('sx').value,xs=D.xa.slice().filter(function(z){return !q||z.ten.toLowerCase().indexOf(q)>=0});
+ xs.forEach(function(z){z.p=z.dt>0?pc(z.th,z.dt):null});
+ xs.sort(function(a,b){return sx==='ten'?a.ten.localeCompare(b.ten,'vi'):sx==='th'?b.th-a.th:sx==='pctd'?(b.p||0)-(a.p||0):(a.p==null?1e9:a.p)-(b.p==null?1e9:b.p)});
+ var all=D.xa.filter(function(z){return z.dt>0}),dat=all.filter(function(z){return z.th>=z.dt}).length,sum=D.xa.reduce(function(a,z){return a+z.th},0),sdt=all.reduce(function(a,z){return a+z.dt},0);
+ $('xaSum').textContent=D.xa.length+' đơn vị · '+dat+' đơn vị đã hoàn thành dự toán · tổng thu nội địa trên địa bàn các xã, phường '+fmt(sum)+' tỷ / dự toán '+fmt(sdt)+' tỷ.';
+ $('xaT').innerHTML='<tr><th>Xã, phường</th><th>Thu nội địa</th><th>Dự toán</th><th>% dự toán</th><th>Đánh giá</th></tr>'+xs.map(function(z){var d=dg(z.p);return '<tr><td>'+esc(z.ten)+'</td><td>'+fmt(z.th)+'</td><td>'+(z.dt?fmt(z.dt):'–')+'</td><td>'+P(z.p)+'</td><td><span class="tag '+d[1]+'">'+d[0]+'</span></td></tr>'}).join('');}
+})();
+</script>
+</body></html>

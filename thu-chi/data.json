@@ -1,0 +1,529 @@
+{
+"phienBan": 1,
+"donVi": "triệu đồng",
+"ngay": "2026-10-23",
+"capNhat": "2026-10-27T09:00:00+07:00",
+"tienDo": 81.0958904109589,
+"soNgay": 296,
+"soNgayNam": 365,
+"conLai": 69,
+"ky": 10,
+"nd": {
+"th": 1807036.6,
+"hd": 1710000,
+"tw": 1680000,
+"pd": 2100000,
+"ck": 1620500,
+"tuan": null
+},
+"xnk": {
+"th": 1321597.779,
+"hd": 1820000,
+"tw": 1800000,
+"pd": 2500000,
+"ck": 1842400,
+"tuan": null
+},
+"dat": {
+"th": 225080.379,
+"hd": 227000
+},
+"thuHoi": 41348.345,
+"ungHo": 256278.808,
+"vienTro": 0,
+"tongNSNN": 3384913.187,
+"canDoi": {
+"congDat": {
+"th": 1663057.365,
+"hd": 1539240
+},
+"truDat": {
+"th": 1451171.512,
+"hd": 1291240
+},
+"tinh": {
+"th": 754212.752,
+"hd": 690530
+},
+"xa": {
+"th": 696958.76,
+"hd": 600710
+}
+},
+"khoan": [
+{
+"id": "st_dnnn_tw",
+"ten": "Thu DNNN trung ương",
+"hd": 95000,
+"th": 107756,
+"pCK": 133.1,
+"pd": 120641,
+"tuan": null
+},
+{
+"id": "st_dnnn_dp",
+"ten": "Thu DNNN địa phương",
+"hd": 75000,
+"th": 75683,
+"pCK": 121.6,
+"pd": 88254,
+"tuan": null
+},
+{
+"id": "st_dtnn",
+"ten": "Thu DN có vốn ĐTNN",
+"hd": 1100,
+"th": 2201,
+"pCK": 7.3,
+"pd": 2505,
+"tuan": null
+},
+{
+"id": "st_nqd",
+"ten": "Thuế CTN-NQD",
+"hd": 686000,
+"th": 776764,
+"pCK": 118.0,
+"pd": 888325,
+"tuan": null
+},
+{
+"id": "st_lptb",
+"ten": "Lệ phí trước bạ",
+"hd": 121000,
+"th": 141915,
+"pCK": 134.9,
+"pd": 158258,
+"tuan": null
+},
+{
+"id": "st_sddpnn",
+"ten": "Thuế SDĐ phi nông nghiệp",
+"hd": 2200,
+"th": 2364,
+"pCK": 178.0,
+"pd": 3091,
+"tuan": null
+},
+{
+"id": "st_tncn",
+"ten": "Thuế thu nhập cá nhân",
+"hd": 75000,
+"th": 96564,
+"pCK": 110.7,
+"pd": 112003,
+"tuan": null
+},
+{
+"id": "st_philp",
+"ten": "Phí - lệ phí",
+"hd": 125000,
+"th": 132352,
+"pCK": 119.2,
+"pd": 152131,
+"tuan": null
+},
+{
+"id": "st_dat",
+"ten": "Tiền sử dụng đất",
+"hd": 227000,
+"th": 225080,
+"pCK": 115.6,
+"pd": 296427,
+"tuan": null
+},
+{
+"id": "st_thuedat",
+"ten": "Tiền thuê đất, mặt nước",
+"hd": 37000,
+"th": 30966,
+"pCK": 104.8,
+"pd": 37475,
+"tuan": null
+},
+{
+"id": "st_bannha",
+"ten": "Bán, thuê nhà thuộc SHNN",
+"hd": 500,
+"th": 1666,
+"pCK": 504.8,
+"pd": 1666,
+"tuan": null
+},
+{
+"id": "st_khac",
+"ten": "Thu khác ngân sách",
+"hd": 120000,
+"th": 133663,
+"pCK": 116.6,
+"pd": 154940,
+"tuan": null
+},
+{
+"id": "st_hoaloi",
+"ten": "Quỹ đất công ích, hoa lợi công sản",
+"hd": 200,
+"th": 0,
+"pCK": null,
+"pd": 60,
+"tuan": null
+},
+{
+"id": "st_bvmt",
+"ten": "Thuế bảo vệ môi trường",
+"hd": 91000,
+"th": 40578,
+"pCK": 54.6,
+"pd": 40578,
+"tuan": null
+},
+{
+"id": "st_capquyen",
+"ten": "Thu cấp quyền KTKS",
+"hd": 28000,
+"th": 16261,
+"pCK": 32.6,
+"pd": 17000,
+"tuan": null
+},
+{
+"id": "st_xskt",
+"ten": "Thu xổ số kiến thiết",
+"hd": 21000,
+"th": 20579,
+"pCK": 109.7,
+"pd": 24000,
+"tuan": null
+},
+{
+"id": "st_thuhoivon",
+"ten": "Thu hồi vốn, lợi nhuận, LNST",
+"hd": 5000,
+"th": 2646,
+"pCK": 147.6,
+"pd": 2646,
+"tuan": null
+}
+],
+"tuanSo": [],
+"bq": {
+"nd": 42733.97364864865,
+"xnk": 31254.001530405407
+},
+"nhip": {
+"hdTong": 40136.56209999998,
+"pdTong": 147136.56209999998,
+"pdNd": 29296.33999999999,
+"pdX": 117840.22209999998,
+"hdX": 49840.22209999999
+},
+"kb": [
+{
+"ten": "PA1 – Thận trọng",
+"mota": "Nội địa vừa đủ mục tiêu phấn đấu nội địa; XNK giữ tốc độ bình quân từ đầu năm",
+"ndTuan": 29296.33999999999,
+"xnkTuan": 31254.001530405407,
+"nd": 2100000.0,
+"xnk": 1634137.7943040542
+},
+{
+"ten": "PA2 – Giữ tốc độ",
+"mota": "Nội địa và XNK giữ tốc độ bình quân từ đầu năm",
+"ndTuan": 42733.97364864865,
+"xnkTuan": 31254.001530405407,
+"nd": 2234376.3364864867,
+"xnk": 1634137.7943040542
+},
+{
+"ten": "PA3 – XNK tăng tốc",
+"mota": "Nội địa giữ tốc độ bình quân; XNK tăng lên vừa đủ dự toán HĐND",
+"ndTuan": 42733.97364864865,
+"xnkTuan": 49840.22209999999,
+"nd": 2234376.3364864867,
+"xnk": 1820000.0
+}
+],
+"kbTheoBinhQuan": true,
+"xa": [
+{
+"ten": "Phường Thục Phán",
+"th": 498118.928,
+"dt": 278151.0
+},
+{
+"ten": "Phường Nùng Trí Cao",
+"th": 145236.812,
+"dt": 68158.0
+},
+{
+"ten": "Phường Tân Giang",
+"th": 78795.603,
+"dt": 70770.0
+},
+{
+"ten": "Xã Bảo Lâm",
+"th": 23910.797,
+"dt": 20708.0
+},
+{
+"ten": "Xã Lý Bôn",
+"th": 43402.508,
+"dt": 48010.0
+},
+{
+"ten": "Xã Nam Quang",
+"th": 1049.795,
+"dt": 360.0
+},
+{
+"ten": "Xã Quảng Lâm",
+"th": 786.793,
+"dt": 540.0
+},
+{
+"ten": "Xã Yên Thổ",
+"th": 2076.766,
+"dt": 602.0
+},
+{
+"ten": "Xã Bảo Lạc",
+"th": 28710.16,
+"dt": 30972.0
+},
+{
+"ten": "Xã Cốc Pàng",
+"th": 853.038,
+"dt": 726.0
+},
+{
+"ten": "Xã Cô Ba",
+"th": 3259.507,
+"dt": 1424.0
+},
+{
+"ten": "Xã Khánh Xuân",
+"th": 740.287,
+"dt": 310.0
+},
+{
+"ten": "Xã Xuân Trường",
+"th": 1298.712,
+"dt": 322.0
+},
+{
+"ten": "Xã Hưng Đạo",
+"th": 1480.476,
+"dt": 500.0
+},
+{
+"ten": "Xã Huy Giáp",
+"th": 2318.277,
+"dt": 926.0
+},
+{
+"ten": "Xã Sơn Lộ",
+"th": 960.095,
+"dt": 335.0
+},
+{
+"ten": "Xã Thông Nông",
+"th": 11974.316,
+"dt": 8573.0
+},
+{
+"ten": "Xã Cần Yên",
+"th": 1717.122,
+"dt": 472.0
+},
+{
+"ten": "Xã Thanh Long",
+"th": 1624.929,
+"dt": 415.0
+},
+{
+"ten": "Xã Trường Hà",
+"th": 19901.107,
+"dt": 14006.0
+},
+{
+"ten": "Xã Lũng Nặm",
+"th": 2063.873,
+"dt": 350.0
+},
+{
+"ten": "Xã Tổng Cọt",
+"th": 2540.749,
+"dt": 300.0
+},
+{
+"ten": "Xã Hà Quảng",
+"th": 5842.015,
+"dt": 2659.0
+},
+{
+"ten": "Xã Trà Lĩnh",
+"th": 16954.783,
+"dt": 8594.0
+},
+{
+"ten": "Xã Quang Hán",
+"th": 3226.15,
+"dt": 1553.0
+},
+{
+"ten": "Xã Quang Trung",
+"th": 2267.626,
+"dt": 1358.0
+},
+{
+"ten": "Xã Trùng Khánh",
+"th": 30558.644,
+"dt": 27147.0
+},
+{
+"ten": "Xã Đình Phong",
+"th": 7528.64,
+"dt": 3015.0
+},
+{
+"ten": "Xã Đàm Thủy",
+"th": 11595.606,
+"dt": 5909.0
+},
+{
+"ten": "Xã Đoài Dương",
+"th": 7451.776,
+"dt": 3243.0
+},
+{
+"ten": "Xã Lý Quốc",
+"th": 2341.604,
+"dt": 1989.0
+},
+{
+"ten": "Xã Quang Long",
+"th": 2803.871,
+"dt": 3579.0
+},
+{
+"ten": "Xã Hạ Lang",
+"th": 40642.873,
+"dt": 43596.0
+},
+{
+"ten": "Xã Vinh Quý",
+"th": 5011.796,
+"dt": 4571.0
+},
+{
+"ten": "Xã Quảng Uyên",
+"th": 17885.661,
+"dt": 17020.0
+},
+{
+"ten": "Xã Độc Lập",
+"th": 7936.412,
+"dt": 9883.0
+},
+{
+"ten": "Xã Hạnh Phúc",
+"th": 14749.872,
+"dt": 8350.0
+},
+{
+"ten": "Xã Bế Văn Đàn",
+"th": 1400.041,
+"dt": 1658.0
+},
+{
+"ten": "Xã Phục Hòa",
+"th": 23918.81,
+"dt": 21653.0
+},
+{
+"ten": "Xã Hòa An",
+"th": 36714.114,
+"dt": 33711.0
+},
+{
+"ten": "Xã Nam Tuấn",
+"th": 6889.47,
+"dt": 2887.0
+},
+{
+"ten": "Xã Nguyễn Huệ",
+"th": 3458.872,
+"dt": 1739.0
+},
+{
+"ten": "Xã Bạch Đằng",
+"th": 4878.893,
+"dt": 4039.0
+},
+{
+"ten": "Xã Nguyên Bình",
+"th": 13322.248,
+"dt": 15198.0
+},
+{
+"ten": "Xã Tĩnh Túc",
+"th": 2969.013,
+"dt": 1334.0
+},
+{
+"ten": "Xã Ca Thành",
+"th": 1141.396,
+"dt": 309.0
+},
+{
+"ten": "Xã Minh Tâm",
+"th": 10925.53,
+"dt": 6376.0
+},
+{
+"ten": "Xã Phan Thanh",
+"th": 1101.315,
+"dt": 160.0
+},
+{
+"ten": "Xã Tam Kim",
+"th": 2692.892,
+"dt": 902.0
+},
+{
+"ten": "Xã Thành Công",
+"th": 2983.948,
+"dt": 311.0
+},
+{
+"ten": "Xã Đông Khê",
+"th": 14421.597,
+"dt": 12118.0
+},
+{
+"ten": "Xã Canh Tân",
+"th": 1314.288,
+"dt": 549.0
+},
+{
+"ten": "Xã Kim Đồng",
+"th": 1336.466,
+"dt": 544.0
+},
+{
+"ten": "Xã Minh Khai",
+"th": 1263.752,
+"dt": 371.0
+},
+{
+"ten": "Xã Thạch An",
+"th": 41887.359,
+"dt": 15286.0
+},
+{
+"ten": "Xã Đức Long",
+"th": 3572.216,
+"dt": 157.0
+}
+]
+}
