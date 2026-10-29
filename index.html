@@ -149,6 +149,32 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 #decreaseBtn{color:var(--amber)}.watchline{flex-wrap:wrap}
 @media(max-width:720px){.report-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.report-source{font-size:10px}.report-strip{gap:10px}}
 @media print{.report-source{font-size:7px}.report-explain{font-size:8px}}
+
+/* Mục VI – kinh phí bão lũ nguồn NSTW (theo dõi riêng, không cộng vào tổng) */
+#baoLu{margin:26px 0 0}body[data-view=assign] #baoLu{display:none!important}
+#baoLu .bl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#baoLu h2{font-size:18px;margin:0;letter-spacing:-.02em;color:var(--ink)}
+#baoLu .bl-sep{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-bg);border-radius:999px;padding:3px 10px}
+#baoLu .bl-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+#baoLu .bl-kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--soft);min-width:0}
+#baoLu .bl-kpi span{display:block;font-size:11px;color:var(--muted)}
+#baoLu .bl-kpi b{display:block;font-size:20px;color:var(--ink);margin-top:4px}
+#baoLu .bl-kpi small{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+#baoLu .bl-scroll{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:12px}
+#baoLu table{width:100%;table-layout:auto;border-collapse:separate;border-spacing:0;font-size:12px;min-width:760px}
+#baoLu th{position:sticky;top:0;z-index:1;background:var(--soft);color:var(--muted);font-weight:600;font-size:10.5px;padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;border-left:0;border-right:0;border-top:0}
+#baoLu td{padding:9px 8px;border-bottom:1px solid var(--line);color:var(--text);background:var(--surface);font-weight:400;font-size:12px;vertical-align:middle;border-left:0;border-right:0;border-top:0}
+#baoLu .r{text-align:right}#baoLu .bl-name button{border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}
+#baoLu .bl-name button:hover{color:var(--brand);text-decoration:underline}
+#baoLu .bl-bar{height:6px;border-radius:4px;background:var(--track);overflow:hidden;margin-top:4px;min-width:60px}#baoLu .bl-bar i{display:block;height:100%;background:var(--mint)}
+#baoLu .bl-bar i.lo{background:var(--risk)}#baoLu .bl-bar i.mid{background:var(--amber)}
+#baoLu tr.bl-det>td{background:var(--soft);padding:6px 8px 12px 28px}
+#baoLu .bl-det table{min-width:0;font-size:11.5px}#baoLu .bl-det td:first-child{width:14px;color:var(--muted)}#baoLu .bl-det td:nth-child(2){width:44%}#baoLu .bl-det td,#baoLu .bl-det th{background:transparent;position:static;padding:6px}
+#baoLu .bl-tag{font-size:10.5px;color:var(--muted)}#baoLu .bl-tag.pre{color:var(--amber)}
+#baoLu tfoot td{background:var(--tint);font-weight:700;color:var(--ink);position:sticky;bottom:0}
+#baoLu .bl-note{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.6}
+@media (max-width:760px){#baoLu .bl-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#baoLu .bl-kpi b{font-size:17px}}
+@media print{#baoLu .bl-scroll{max-height:none;overflow:visible}}
 </style><style id="m-ux-css">
 /* m-ux: giao diện điện thoại cho lãnh đạo (2026-10-22). Chỉ áp dụng ≤720px; máy tính và bản in giữ nguyên. */
 .m-toolbar,.m-sheet[hidden],.m-backdrop[hidden]{display:none}
@@ -272,6 +298,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
  </section>
 
 
+ <section class="card" id="baoLu" aria-labelledby="baoLuTitle" hidden><div class="bl-head"><div><p class="overline">Mục VI · Theo dõi riêng</p><h2 id="baoLuTitle">Kinh phí bão lũ nguồn NSTW giao trong năm 2026</h2><span class="bl-sep">Không cộng vào tổng dự toán, tổng giải ngân và tỷ lệ giải ngân các Mục I–V</span></div><p class="card-subtitle" id="baoLuSub">—</p></div><div class="bl-kpis" id="baoLuKpis"></div><div class="bl-scroll"><table><thead><tr><th>STT</th><th>Đơn vị</th><th class="r">Vốn NSTW giao</th><th class="r">Đã thanh toán</th><th class="r">Chi đầu tư</th><th class="r">Chi thường xuyên</th><th>Tỷ lệ</th><th class="r">Công trình đã chọn nhà thầu</th><th>Cập nhật</th></tr></thead><tbody id="baoLuRows"></tbody><tfoot id="baoLuFoot"></tfoot></table></div><p class="bl-note">Số liệu do đơn vị cập nhật trên Hệ thống (đơn vị chưa cập nhật: số Sở Tài chính nhập sẵn theo biểu tổng hợp, lũy kế đến 20/9/2026). Đã thanh toán = tổng các công trình, hạng mục chi tiết. Chọn tên đơn vị để xem danh mục công trình. Đơn vị tính: triệu đồng.</p></section>
  <section class="assignment-register no-print" id="assignments" aria-labelledby="assignmentTitle">
   <div class="assignment-head"><div><p class="overline">Theo dõi, đôn đốc</p><h2 id="assignmentTitle">Phân công · Vốn thường xuyên</h2></div></div>
   <p class="assignment-source"><strong>Xã, phường:</strong> lãnh đạo UBND tỉnh phụ trách theo <strong>địa bàn</strong> (vốn thường xuyên). <strong>Cấp tỉnh:</strong> phân công theo nguồn — <strong>vốn sự nghiệp CTMTQG</strong> (lãnh đạo phụ trách riêng) và <strong>chi thường xuyên chuyển đổi số</strong>.</p>
@@ -358,6 +385,31 @@ function pairs(input){
  if(!result.all&&PROGRAMS.slice(1).every(p=>result[p.key]))result.all=PROGRAMS.slice(1).reduce((a,p)=>[a[0]+result[p.key][0],a[1]+result[p.key][1]],[0,0]);return result;
 }
 function submission(v){if(v===true||v===1||v==='true'||v==='1')return true;if(v===false||v===0||v==='false'||v==='0')return false;return null;}
+// Mục VI – kinh phí bão lũ nguồn NSTW: dữ liệu riêng từ API (data.baoLu), không cộng vào p.all.
+function normalizeBaoLu(b){
+ if(!b||typeof b!=='object'||!Array.isArray(b.units))return null;
+ const n=v=>typeof v==='number'&&Number.isFinite(v)?v:(typeof v==='string'&&v.trim()!==''&&Number.isFinite(Number(v))?Number(v):null);
+ const units=b.units.filter(u=>u&&typeof u==='object'&&str(u.name).trim()).slice(0,200).map((u,i)=>({id:'bl'+i,name:str(u.name).normalize('NFC'),kind:u.kind==='agency'?'agency':'commune',plan:n(u.plan)||0,spent:n(u.spent)||0,dt:n(u.dt)||0,tx:n(u.tx)||0,projects:Number.isSafeInteger(u.projects)?u.projects:0,contracted:Number.isSafeInteger(u.contracted)?u.contracted:0,updated:str(u.updated,40),sent:str(u.sent,40),preloaded:u.preloaded===true,rows:Array.isArray(u.rows)?u.rows.filter(Array.isArray).slice(0,300).map(r=>[r[0]==='+'?'+':'-',str(r[1],300),n(r[2]),n(r[3]),str(r[4],120),str(r[5],120)]):[]}));
+ return{title:str(b.title,200)||'Kinh phí bão lũ nguồn NSTW',preloadedAsOf:str(b.preloadedAsOf,20),units};
+}
+const blOpen=new Set();
+function renderBaoLu(){
+ const sec=$('#baoLu'),b=state.baoLu;
+ if(!b||!b.units.length){sec.hidden=true;return;}
+ const us=b.units.filter(u=>state.kind==='all'||u.kind===state.kind);
+ sec.hidden=!us.length;if(sec.hidden)return;
+ const P=us.reduce((a,u)=>a+u.plan,0),D=us.reduce((a,u)=>a+u.spent,0),DT=us.reduce((a,u)=>a+u.dt,0),TX=us.reduce((a,u)=>a+u.tx,0);
+ const upd=us.filter(u=>!u.preloaded).length,sent=us.filter(u=>u.sent).length,rate=u=>u.plan>0?u.spent/u.plan*100:null;
+ $('#baoLuSub').textContent=(state.kind==='commune'?'Khối xã, phường':state.kind==='agency'?'Khối sở, ban, ngành':'Toàn tỉnh')+' · '+us.length+' đơn vị có kinh phí bão lũ';
+ $('#baoLuKpis').innerHTML=[['Vốn NSTW giao',fmt(P),'Tổng kinh phí giao trong năm'],['Đã thanh toán',fmt(D),'Chi đầu tư '+fmt(DT)+' · Chi thường xuyên '+fmt(TX)],['Tỷ lệ thanh toán',pct(P?D/P*100:null),'Đã thanh toán / vốn NSTW giao'],['Đơn vị đã cập nhật',upd+'/'+us.length,sent+' đơn vị đã gửi kèm báo cáo kỳ']].map(k=>`<div class="bl-kpi"><span>${esc(k[0])}</span><b class="num">${esc(k[1])}</b><small>${esc(k[2])}</small></div>`).join('');
+ const sorted=us.slice().sort((a,b)=>(rate(a)??-1)-(rate(b)??-1)||b.plan-a.plan);
+ const cls=x=>x==null?'lo':x<30?'lo':x<60?'mid':'';
+ $('#baoLuRows').innerHTML=sorted.map((u,i)=>{const x=rate(u),open=blOpen.has(u.id);
+  const det=open?`<tr class="bl-det"><td colspan="9"><table><thead><tr><th></th><th>Công trình / hạng mục</th><th class="r">Vốn giao</th><th class="r">Đã thanh toán</th><th>Lựa chọn nhà thầu</th><th>Tiến độ thi công</th></tr></thead><tbody>${u.rows.map(r=>`<tr><td>${r[0]==='+'?'+':'–'}</td><td${r[0]==='+'?' style="padding-left:16px"':''}>${esc(r[1])}</td><td class="r num">${fmt(r[2])}</td><td class="r num">${fmt(r[3])}</td><td>${esc(r[4])}</td><td>${esc(r[5])}</td></tr>`).join('')||'<tr><td colspan="6">Chưa có danh mục công trình.</td></tr>'}</tbody></table></td></tr>`:'';
+  return `<tr><td>${i+1}</td><td class="bl-name"><button type="button" data-bl="${esc(u.id)}" aria-expanded="${open}">${esc(u.name)}</button></td><td class="r num">${fmt(u.plan)}</td><td class="r num">${fmt(u.spent)}</td><td class="r num">${fmt(u.dt)}</td><td class="r num">${fmt(u.tx)}</td><td><span class="num">${pct(x)}</span><div class="bl-bar"><i class="${cls(x)}" style="width:${clamp(x??0)}%"></i></div></td><td class="r num">${u.contracted}/${u.projects}</td><td>${u.preloaded?`<span class="bl-tag pre">Số nhập sẵn đến ${esc(b.preloadedAsOf||'20/9/2026')}</span>`:`<span class="bl-tag">${esc(u.updated)}${u.sent?' · đã gửi':''}</span>`}</td></tr>`+det;}).join('');
+ $('#baoLuFoot').innerHTML=`<tr><td></td><td>Tổng cộng</td><td class="r num">${fmt(P)}</td><td class="r num">${fmt(D)}</td><td class="r num">${fmt(DT)}</td><td class="r num">${fmt(TX)}</td><td class="num">${pct(P?D/P*100:null)}</td><td></td><td></td></tr>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#baoLuRows button[data-bl]');if(!b)return;const id=b.dataset.bl;blOpen.has(id)?blOpen.delete(id):blOpen.add(id);renderBaoLu();});
 function normalizePayload(data){
  if(!data||data.ok!==true||!Array.isArray(data.units))throw new Error('API chưa trả về danh sách đơn vị hợp lệ.');
  if(data.sample===true||data.demo===true||data.sample==='true'||data.demo==='true')throw new Error('API đang trả dữ liệu mẫu. Trang chỉ chấp nhận số liệu thực.');
@@ -378,7 +430,7 @@ function normalizePayload(data){
   return{id,name,short,kind,p,prev,submitted,status,reportSource,decreaseCount,unchanged,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
  });
  const period=data.period&&typeof data.period==='object'&&str(data.period.label)?{label:str(data.period.label),key:str(data.period.key,50),cutoffText:str(data.period.cutoffText),graceText:str(data.period.graceText),closed:data.period.closed===true}:null;
- return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250)};
+ return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250),baoLu:normalizeBaoLu(data.baoLu)};
 }
 
 
@@ -629,8 +681,8 @@ function setView(v,scrollTop=false){
  if(scrollTop)window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 }
 function jumpToList(){setView('details');document.getElementById('details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}
-function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
-function apply(pack,source,receivedAt){state.units=pack.units;state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();renderBaoLu();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
+function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
 function readCache(){const c=store.get(CACHE_KEY);if(!c)return null;try{if(c.version!==5||c.api!==CONFIG.API_URL||!validISO(c.receivedAt))throw new Error('cache');const age=Date.now()-new Date(c.receivedAt).getTime();if(age< -300000||age>CONFIG.CACHE_MAX_DAYS*86400000)throw new Error('cache');return{pack:normalizePayload(c.pack),receivedAt:c.receivedAt};}catch{store.remove(CACHE_KEY);return null;}}
 function messageFor(e){if(e.name==='AbortError')return 'Quá thời gian chờ 25 giây. Vui lòng thử lại sau ít phút.';if(e instanceof TypeError)return 'Không nhận được phản hồi. Cần kiểm tra mạng, quyền truy cập và kết nối API từ trang web.';return str(e.message,400)||'Không thể tải số liệu.';}
 async function load(force=false){
