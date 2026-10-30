@@ -170,7 +170,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 #baoLu .bl-bar i.lo{background:var(--risk)}#baoLu .bl-bar i.mid{background:var(--amber)}
 #baoLu tr.bl-det>td{background:var(--soft);padding:6px 8px 12px 28px}
 #baoLu .bl-det table{min-width:0;font-size:11.5px}#baoLu .bl-det td:first-child{width:14px;color:var(--muted)}#baoLu .bl-det td:nth-child(2){width:44%}#baoLu .bl-det td,#baoLu .bl-det th{background:transparent;position:static;padding:6px}
-#baoLu .bl-tag{font-size:10.5px;color:var(--muted)}#baoLu .bl-tag.pre{color:var(--amber)}
+#baoLu .bl-tag{font-size:10.5px;color:var(--muted)}#baoLu .bl-tag.pre{color:var(--amber)}#baoLu tr.bl-pre>td{color:var(--muted)}#baoLu tr.bl-pre .bl-name button{font-weight:500;color:var(--muted)}.kpi-value{white-space:nowrap}.programs.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}.programs.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px);mask-image:linear-gradient(90deg,transparent,#000 48px)}.programs.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent)}.report-desc{font-size:11px}
 #baoLu tfoot td{background:var(--tint);font-weight:700;color:var(--ink);position:sticky;bottom:0}
 #baoLu .bl-note{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.6}
 @media (max-width:760px){#baoLu .bl-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#baoLu .bl-kpi b{font-size:17px}}
@@ -359,6 +359,7 @@ const fold=v=>String(v??'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/
 const icon=n=>`<svg class="icon" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const NF=new Intl.NumberFormat('vi-VN',{maximumFractionDigits:CONFIG.MAX_FRACTION_DIGITS}),PF=new Intl.NumberFormat('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});
 const fmt=v=>v==null||!Number.isFinite(v)?'—':NF.format(Object.is(v,-0)?0:v);
+const NF0=new Intl.NumberFormat('vi-VN',{maximumFractionDigits:0}),fmt0=v=>v==null||!Number.isFinite(v)?'—':NF0.format(Math.round(v)||0);
 const pct=v=>v==null||!Number.isFinite(v)?'—':PF.format(v)+'%';
 const clamp=n=>Number.isFinite(n)?Math.max(0,Math.min(100,n)):0;
 const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
@@ -402,11 +403,11 @@ function renderBaoLu(){
  const upd=us.filter(u=>!u.preloaded).length,sent=us.filter(u=>u.sent).length,rate=u=>u.plan>0?u.spent/u.plan*100:null;
  $('#baoLuSub').textContent=(state.kind==='commune'?'Khối xã, phường':state.kind==='agency'?'Khối sở, ban, ngành':'Toàn tỉnh')+' · '+us.length+' đơn vị có kinh phí bão lũ';
  $('#baoLuKpis').innerHTML=[['Vốn NSTW giao',fmt(P),'Tổng kinh phí giao trong năm'],['Đã thanh toán',fmt(D),'Chi đầu tư '+fmt(DT)+' · Chi thường xuyên '+fmt(TX)],['Tỷ lệ thanh toán',pct(P?D/P*100:null),'Đã thanh toán / vốn NSTW giao'],['Đơn vị đã cập nhật',upd+'/'+us.length,sent+' đơn vị đã gửi kèm báo cáo kỳ']].map(k=>`<div class="bl-kpi"><span>${esc(k[0])}</span><b class="num">${esc(k[1])}</b><small>${esc(k[2])}</small></div>`).join('');
- const sorted=us.slice().sort((a,b)=>(rate(a)??-1)-(rate(b)??-1)||b.plan-a.plan);
+ const sorted=us.slice().sort((a,b)=>((+!!a.preloaded)-(+!!b.preloaded))||(rate(a)??-1)-(rate(b)??-1)||b.plan-a.plan);
  const cls=x=>x==null?'lo':x<30?'lo':x<60?'mid':'';
  $('#baoLuRows').innerHTML=sorted.map((u,i)=>{const x=rate(u),open=blOpen.has(u.id);
   const det=open?`<tr class="bl-det"><td colspan="9"><table><thead><tr><th></th><th>Công trình / hạng mục</th><th class="r">Vốn giao</th><th class="r">Đã thanh toán</th><th>Lựa chọn nhà thầu</th><th>Tiến độ thi công</th></tr></thead><tbody>${u.rows.map(r=>`<tr><td>${r[0]==='+'?'+':'–'}</td><td${r[0]==='+'?' style="padding-left:16px"':''}>${esc(r[1])}</td><td class="r num">${fmt(r[2])}</td><td class="r num">${fmt(r[3])}</td><td>${esc(r[4])}</td><td>${esc(r[5])}</td></tr>`).join('')||'<tr><td colspan="6">Chưa có danh mục công trình.</td></tr>'}</tbody></table></td></tr>`:'';
-  return `<tr><td>${i+1}</td><td class="bl-name"><button type="button" data-bl="${esc(u.id)}" aria-expanded="${open}">${esc(u.name)}</button></td><td class="r num">${fmt(u.plan)}</td><td class="r num">${fmt(u.spent)}</td><td class="r num">${fmt(u.dt)}</td><td class="r num">${fmt(u.tx)}</td><td><span class="num">${pct(x)}</span><div class="bl-bar"><i class="${cls(x)}" style="width:${clamp(x??0)}%"></i></div></td><td class="r num">${u.contracted}/${u.projects}</td><td>${u.preloaded?`<span class="bl-tag pre">Số nhập sẵn đến ${esc(b.preloadedAsOf||'20/9/2026')}</span>`:`<span class="bl-tag">${esc(u.updated)}${u.sent?' · đã gửi':''}</span>`}</td></tr>`+det;}).join('');
+  return `<tr${u.preloaded?' class="bl-pre"':''}><td>${i+1}</td><td class="bl-name"><button type="button" data-bl="${esc(u.id)}" aria-expanded="${open}">${esc(u.name)}</button></td><td class="r num">${fmt(u.plan)}</td><td class="r num">${fmt(u.spent)}</td><td class="r num">${fmt(u.dt)}</td><td class="r num">${fmt(u.tx)}</td><td><span class="num">${pct(x)}</span><div class="bl-bar"><i class="${cls(x)}" style="width:${clamp(x??0)}%"></i></div></td><td class="r num">${u.contracted}/${u.projects}</td><td>${u.preloaded?`<span class="bl-tag pre" title="Đơn vị chưa cập nhật; đang hiển thị số nhập sẵn">Chưa cập nhật</span>`:`<span class="bl-tag">${esc(u.updated)}${u.sent?' · đã gửi':''}</span>`}</td></tr>`+det;}).join('');
  $('#baoLuFoot').innerHTML=`<tr><td></td><td>Tổng cộng</td><td class="r num">${fmt(P)}</td><td class="r num">${fmt(D)}</td><td class="r num">${fmt(DT)}</td><td class="r num">${fmt(TX)}</td><td class="num">${pct(P?D/P*100:null)}</td><td></td><td></td></tr>`;
 }
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#baoLuRows button[data-bl]');if(!b)return;const id=b.dataset.bl;blOpen.has(id)?blOpen.delete(id):blOpen.add(id);renderBaoLu();});
@@ -602,7 +603,7 @@ function renderMetadata(){
 }
 function renderKpis(){
  const rows=scope(),g=aggregate(rows),ready=state.hasData,hasAmounts=ready&&(g.known>0||rows.length===0);
- $('#kPlan').textContent=hasAmounts?fmt(g.P):'—';$('#kSpent').textContent=hasAmounts?fmt(g.S):'—';$('#kLeft').textContent=hasAmounts?fmt(g.L):'—';$('#kRate').textContent=hasAmounts?pct(g.rate):'—';
+ for(const [id,v] of [['#kPlan',g.P],['#kSpent',g.S],['#kLeft',g.L]]){$(id).textContent=hasAmounts?fmt0(v):'—';$(id).title=hasAmounts?'Số chính xác: '+fmt(v)+' triệu đồng':'';}$('#kRate').textContent=hasAmounts?pct(g.rate):'—';
  $('#kPlanNote').textContent=ready?rows.filter(v=>v.plan>0).length+' đơn vị có dự toán':'Chưa có số liệu';
  $('#kSpentNote').textContent=state.period?.closed?'Theo kỳ đã chốt '+state.period.label:state.generatedAt?'Số liệu API cập nhật lúc '+dateLabel(state.generatedAt):'Theo dữ liệu hệ thống';
  $('#kLeftNote').textContent=g.L<0?'Số âm: cần đối chiếu dữ liệu':'Dự toán trừ số đã giải ngân';$('#rateMeter').style.width=clamp(g.rate)+'%';
@@ -610,14 +611,14 @@ function renderKpis(){
  const draftCount=rows.filter(v=>v.u.reportSource==='draft').length,snapshotCount=rows.filter(v=>v.u.reportSource==='snapshot').length;
  const notes=[];
  if(g.missing)notes.push(g.missing+' đơn vị chưa có số liệu nguồn đang chọn; tổng quan chỉ cộng '+g.known+' đơn vị có số liệu.');
- if(snapshotCount)notes.push(snapshotCount+' đơn vị chưa gửi: số chụp khi chốt, chưa phải số đơn vị đã gửi chính thức.');
- if(draftCount)notes.push(draftCount+' đơn vị chưa gửi: số đang nhập, có thể thay đổi trước khi gửi.');
+ const noSent=kindUnits().filter(u=>u.submitted===false).length;
+ if(snapshotCount||draftCount)notes.push(noSent+' đơn vị chưa gửi báo cáo; tổng số đang tạm tính số liệu chưa chính thức của '+(snapshotCount+draftCount)+' đơn vị trong số này'+(snapshotCount?' (số chụp khi chốt)':' (số đang nhập)')+'.');
  if(state.reportSchema<2&&ready)notes.push('API chưa được nâng cấp để đối chiếu nguồn gốc số liệu của kỳ.');
  $('#qualityNote').hidden=!ready||!notes.length;$('#qualityNote').textContent=notes.join(' ');
  const us=kindUnits(),yes=us.filter(u=>u.submitted===true).length,no=us.filter(u=>u.submitted===false).length,unknown=us.length-yes-no;
  const ontime=us.filter(u=>u.status==='on_time').length,late=us.filter(u=>u.status==='late').length,unspecified=us.filter(u=>u.status==='submitted_unknown').length,sameN=us.filter(u=>u.unchanged).length;
  $('#reportCount').textContent=ready?yes+' / '+us.length:'—';$('#reportMeter').style.width=(us.length?yes/us.length*100:0)+'%';
- $('#reportDesc').textContent=kindName(state.kind)+'; không phụ thuộc nguồn vốn.'+(state.reportSchema>=2?' Đúng hạn: '+ontime+' · Gửi muộn: '+late+(sameN?' · Xác nhận không đổi: '+sameN:'')+'.':'')+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
+ $('#reportDesc').textContent=(state.reportSchema>=2?'Đúng hạn '+ontime+' · Gửi muộn '+late+(sameN?' · Không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
  $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
  const decUnits=rows.filter(v=>v.u.decreaseCount>0).length,decLines=rows.reduce((s,v)=>s+v.u.decreaseCount,0);
  $('#decreaseBtn').hidden=!ready||state.reportSchema<2||!decUnits;$('#decreaseBtn span').textContent=decUnits+' đơn vị có '+decLines+' khoản mục giảm đã giải trình';
@@ -626,8 +627,9 @@ function renderKpis(){
 }
 function renderCharts(){
  const rows=scope(),eligible=rows.filter(v=>v.band),ready=state.hasData;
- const ranked=[...eligible].sort((a,b)=>(state.rank==='top'?b.rate-a.rate:a.rate-b.rate)||a.u.name.localeCompare(b.u.name,'vi')).slice(0,8);
- $('#rankSubtitle').textContent=ready?ranked.length+' đơn vị '+(state.rank==='top'?'cao nhất':'thấp nhất')+' · '+programName():'Chưa có số liệu';
+ const sentElig=eligible.filter(v=>v.u.submitted!==false),pool=sentElig.length?sentElig:eligible,skipped=eligible.length-pool.length;
+ const ranked=[...pool].sort((a,b)=>(state.rank==='top'?b.rate-a.rate:a.rate-b.rate)||a.u.name.localeCompare(b.u.name,'vi')).slice(0,8);
+ $('#rankSubtitle').textContent=ready?ranked.length+' đơn vị '+(state.rank==='top'?'cao nhất':'thấp nhất')+' · '+programName()+(skipped?' · chưa xét '+skipped+' đơn vị chưa gửi':''):'Chưa có số liệu';
  $('#bars').innerHTML=ranked.length?ranked.map((v,i)=>`<button type="button" class="bar-row ${v.band.cls}" data-detail="${esc(v.u.id)}" title="${esc(v.u.name)}: ${pct(v.rate)}"><span class="bar-number num">${String(i+1).padStart(2,'0')}</span><span class="bar-name">${esc(v.u.short||v.u.name)}</span><span class="bar-track" aria-hidden="true"><i style="width:${clamp(v.rate)}%"></i></span><span class="bar-value num">${pct(v.rate)}</span></button>`).join(''):`<div class="chart-empty">${ready?'Chưa có đơn vị đủ số liệu để xếp hạng.':state.loading?'Đang tải biểu đồ…':'Chưa có dữ liệu để hiển thị.'}</div>`;
  $('#donutCount').textContent=ready?eligible.length:'—';
  const circumference=2*Math.PI*62;let offset=0;const arcs=[];
@@ -635,7 +637,7 @@ function renderCharts(){
   if(n){const length=fraction*circumference,gap=n===eligible.length?0:2;arcs.push(`<circle class="donut-segment ${b.cls}" cx="80" cy="80" r="62" stroke-dasharray="${Math.max(0,length-gap)} ${circumference-Math.max(0,length-gap)}" stroke-dashoffset="${-offset}"/>`);offset+=length;}
   const button=$(`#legend [data-band="${b.key}"]`);button.querySelector('b').textContent=ready?n:'—';button.querySelector('.legend-info').textContent=ready?(fraction*100).toLocaleString('vi-VN',{maximumFractionDigits:1})+'% số đơn vị':'Chưa có dữ liệu';button.setAttribute('aria-label',b.label+': '+(ready?n+' đơn vị':'chưa có dữ liệu')+'. Lọc danh sách.');});
  $('#donutSvg').innerHTML='<circle class="donut-track" cx="80" cy="80" r="62"/>'+arcs.join('');$('#distSubtitle').textContent=programName()+' · '+kindName(state.kind);
- $('#distNote').textContent=ready&&rows.length>eligible.length?(rows.length-eligible.length)+' đơn vị chưa phân mức. Chọn một mức để lọc danh sách.':'Chọn một mức để lọc danh sách bên dưới.';
+ const noBand=rows.filter(v=>!v.band).map(v=>v.u.short||v.u.name);$('#distNote').textContent=ready&&noBand.length?'Chưa phân mức (không có dự toán): '+noBand.slice(0,3).join(', ')+(noBand.length>3?' và '+(noBand.length-3)+' đơn vị khác':'')+'. Chọn một mức để lọc danh sách.':'Chọn một mức để lọc danh sách bên dưới.';
 }
 function amountHTML(v){return `<td class="r money num ${v!=null&&v<0?'negative':''}">${fmt(v)}</td>`;}
 function renderTable(){
@@ -807,6 +809,7 @@ $('#leaderSelect').addEventListener('change',e=>setLeaderFilter(e.target.value,f
 document.addEventListener('click',e=>{const b=e.target.closest('[data-leader-filter]');if(b){setLeaderFilter(b.dataset.leaderFilter,true);return;}if(e.target.closest('[data-clear-leader]'))setLeaderFilter('all',false);});
 $('#kindSeg').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b)changeKind(b.dataset.kind);});
 $('#detailKindSeg').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b)changeKind(b.dataset.kind);});
+(()=>{const t=$('#programTabs');const f=()=>{t.classList.toggle('fade-r',t.scrollLeft+t.clientWidth<t.scrollWidth-4);t.classList.toggle('fade-l',t.scrollLeft>4);};t.addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof ResizeObserver==='function')new ResizeObserver(f).observe(t);setTimeout(f,300);})();
 $('#programTabs').addEventListener('click',e=>{const b=e.target.closest('[data-program]');if(b)changeProgram(b.dataset.program);});
 $('#detailProgram').addEventListener('change',e=>changeProgram(e.target.value));
 $('#rankSeg').addEventListener('click',e=>{const b=e.target.closest('[data-rank]');if(!b)return;state.rank=b.dataset.rank;savePrefs();renderControls();renderCharts();});
