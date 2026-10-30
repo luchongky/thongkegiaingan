@@ -152,6 +152,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 
 /* Mục VI – kinh phí bão lũ nguồn NSTW (theo dõi riêng, không cộng vào tổng) */
 #baoLu{margin:26px 0 0}body[data-view=assign] #baoLu{display:none!important}
+body[data-bl="1"] .overview>:not(.scope-panel),body[data-bl="1"] #details{display:none!important}body[data-bl="1"] #baoLu{margin-top:14px}#programTabs button[data-bltab]{border-style:dashed}
 #baoLu .bl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 #baoLu h2{font-size:18px;margin:0;letter-spacing:-.02em;color:var(--ink)}
 #baoLu .bl-sep{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-bg);border-radius:999px;padding:3px 10px}
@@ -410,6 +411,8 @@ function renderBaoLu(){
   return `<tr${u.preloaded?' class="bl-pre"':''}><td>${i+1}</td><td class="bl-name"><button type="button" data-bl="${esc(u.id)}" aria-expanded="${open}">${esc(u.name)}</button></td><td class="r num">${fmt(u.plan)}</td><td class="r num">${fmt(u.spent)}</td><td class="r num">${fmt(u.dt)}</td><td class="r num">${fmt(u.tx)}</td><td><span class="num">${pct(x)}</span><div class="bl-bar"><i class="${cls(x)}" style="width:${clamp(x??0)}%"></i></div></td><td class="r num">${u.contracted}/${u.projects}</td><td>${u.preloaded?`<span class="bl-tag pre" title="Đơn vị chưa cập nhật; đang hiển thị số nhập sẵn">Chưa cập nhật</span>`:`<span class="bl-tag">${esc(u.updated)}${u.sent?' · đã gửi':''}</span>`}</td></tr>`+det;}).join('');
  $('#baoLuFoot').innerHTML=`<tr><td></td><td>Tổng cộng</td><td class="r num">${fmt(P)}</td><td class="r num">${fmt(D)}</td><td class="r num">${fmt(DT)}</td><td class="r num">${fmt(TX)}</td><td class="num">${pct(P?D/P*100:null)}</td><td></td><td></td></tr>`;
 }
+// Thẻ "VI. Bão lũ NSTW (riêng)": chỉ hiện Mục VI, không cộng vào tổng các Mục I–V.
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#programTabs button[data-bltab], .nav a');if(!t)return;if(!t.dataset.bltab){delete document.body.dataset.bl;return;}document.body.dataset.bl='1';$$('#programTabs button').forEach(x=>x.setAttribute('aria-pressed',String(!!x.dataset.bltab)));const sec=$('#baoLu');if(sec&&!sec.hidden)sec.scrollIntoView({behavior:'smooth',block:'start'});});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#baoLuRows button[data-bl]');if(!b)return;const id=b.dataset.bl;blOpen.has(id)?blOpen.delete(id):blOpen.add(id);renderBaoLu();});
 function normalizePayload(data){
  if(!data||data.ok!==true||!Array.isArray(data.units))throw new Error('API chưa trả về danh sách đơn vị hợp lệ.');
@@ -549,12 +552,12 @@ function buildStatic(){
  $('#kindSeg').innerHTML=KINDS.map(k=>`<button type="button" data-kind="${k.key}" aria-pressed="false" ${k.key==='other'?'hidden':''}>${k.label}<span class="count num">—</span></button>`).join('');
  $('#detailKindSeg').innerHTML=$('#kindSeg').innerHTML;
  $('#detailProgram').innerHTML=PROGRAMS.map(p=>`<option value="${p.key}">${esc(p.label)}</option>`).join('');
- $('#programTabs').innerHTML=PROGRAMS.map(p=>`<button type="button" data-program="${p.key}" aria-pressed="false">${esc(p.label)}</button>`).join('');
+ $('#programTabs').innerHTML=PROGRAMS.map(p=>`<button type="button" data-program="${p.key}" aria-pressed="false">${esc(p.label)}</button>`).join('')+'<button type="button" data-bltab="1" aria-pressed="false" title="Mục VI – theo dõi riêng, không cộng vào tổng dự toán, tổng giải ngân các Mục I–V">VI. Bão lũ NSTW (riêng)</button>';
  $('#legend').innerHTML=BANDS.map(b=>`<button type="button" class="legend-btn ${b.cls}" data-band="${b.key}" aria-pressed="false"><span class="legend-dot" aria-hidden="true"></span><span>${b.label}<span class="legend-info">—</span></span><b class="num">—</b></button>`).join('');
 }
 function renderControls(){
  $$('#kindSeg button, #detailKindSeg button').forEach(b=>{const k=b.dataset.kind;b.hidden=k==='other'&&!state.units.some(u=>u.kind==='other');b.setAttribute('aria-pressed',String(k===state.kind));b.querySelector('.count').textContent=state.hasData?String(k==='all'?state.units.length:state.units.filter(u=>u.kind===k).length):'—';});
- $$('#programTabs button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.program===state.program)));
+ $$('#programTabs button').forEach(b=>b.setAttribute('aria-pressed',String(document.body.dataset.bl==='1'?!!b.dataset.bltab:b.dataset.program===state.program)));
  $$('#rankSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.rank===state.rank)));
  $('#detailProgram').value=state.program;
  $('#leaderSelect').value=state.leader;$('#subSelect').value=state.sub;$('#bandSelect').value=state.band;$('#sortSelect').value=state.sort;
@@ -770,7 +773,7 @@ function changeKind(kind){
 }
 function changeProgram(program){
  if(!PROGRAMS.some(p=>p.key===program))return;
- closeSearchSuggestions();state.program=program;if(selectionInfo().mode==='source')state.leader='all';state.band='all';state.attention=false;savePrefs();renderAll();
+ closeSearchSuggestions();delete document.body.dataset.bl;state.program=program;if(selectionInfo().mode==='source')state.leader='all';state.band='all';state.attention=false;savePrefs();renderAll();
 }
 function updateTypedSearch(){
  state.unitId=null;state.q=$('#searchInput').value;renderTable();renderSearchSuggestions();
