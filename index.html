@@ -483,13 +483,9 @@ function assignmentHTML(u){const groups=assignmentGroups(u),ref=areaReference(u,
 function buildAssignments(){
  const directOptions=DIRECT_LEADERS.map(l=>{const scopes=[...new Set(ASSIGNMENT_DATA.records.filter(r=>r.leader===l.id).map(r=>r.scope))];return `<option value="source:${l.id}">${esc(leaderName(l.name,true))} · ${scopes.map(k=>k==='II'?'CTMTQG':'Chuyển đổi số').join(', ')}</option>`;}).join('');
  $('#leaderSelect').innerHTML='<option value="all">Tất cả lãnh đạo</option><optgroup label="Theo nguồn · CTMTQG, chuyển đổi số">'+directOptions+'</optgroup><optgroup label="Vốn thường xuyên · theo địa bàn xã, phường">'+ASSIGNMENT_DATA.leaders.map(l=>`<option value="reference:${l.id}">${String(l.order).padStart(2,'0')}. ${esc(leaderName(l.name,true))}</option>`).join('')+'</optgroup><option value="unassigned">Chưa có phân công (nguồn đang xem)</option>';
- const priorityLeaders=[...new Map(ASSIGNMENT_DATA.leaders
-  .filter(l=>/Chủ tịch/.test(l.title)||DIRECT_LEADERS.some(x=>x.id===l.id))
-  .map(l=>[l.id,l])).values()]
-  .sort((a,b)=>{
-   const rank=l=>/Phó\s+Chủ tịch/.test(l.title)?1:/Chủ tịch/.test(l.title)?0:2;
-   return rank(a)-rank(b)||a.order-b.order;
-  });
+ const priorityLeaders=ASSIGNMENT_DATA.leaders
+  .filter(l=>['ld01','ld05'].includes(l.id))
+  .sort((a,b)=>a.id==='ld01'?-1:b.id==='ld01'?1:a.order-b.order);
  $('#sourceLeaders').innerHTML=priorityLeaders.map(l=>{
   const records=ASSIGNMENT_DATA.records.filter(r=>r.leader===l.id),scopes=[...new Set(records.map(r=>r.scope))];
   const areaCount=(l.areas||[]).length,agencyCount=new Set(records.filter(r=>r.kind==='agency').map(r=>r.key)).size,communeCount=new Set(records.filter(r=>r.kind==='commune').map(r=>r.key)).size;
