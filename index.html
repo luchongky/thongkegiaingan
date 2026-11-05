@@ -174,6 +174,19 @@ body[data-bl="1"] .overview>:not(.scope-panel),body[data-bl="1"] #details{displa
 #baoLu .bl-tag{font-size:10.5px;color:var(--muted)}#baoLu .bl-tag.pre{color:var(--amber)}#baoLu tr.bl-pre>td{color:var(--muted)}#baoLu tr.bl-pre .bl-name button{font-weight:500;color:var(--muted)}.kpi-value{white-space:nowrap}.programs.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}.programs.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px);mask-image:linear-gradient(90deg,transparent,#000 48px)}.programs.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent)}.report-desc{font-size:11px}
 #baoLu tfoot td{background:var(--tint);font-weight:700;color:var(--ink);position:sticky;bottom:0}
 #baoLu .bl-note{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.6}
+/* Dashboard polish: emphasize decision-ready progress and loading states. */
+.kpi.accent{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--brand),var(--deep));box-shadow:0 10px 24px color-mix(in srgb,var(--brand) 22%,transparent)}
+.kpi.accent:after{content:"";position:absolute;width:128px;height:128px;border:1px solid #ffffff33;border-radius:50%;right:-48px;bottom:-62px;box-shadow:0 0 0 18px #ffffff0d,0 0 0 36px #ffffff08;pointer-events:none}
+.kpi.accent .kpi-value{font-size:clamp(29px,2.6vw,38px);position:relative;z-index:1}
+.kpi-progress-note{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10.5px;font-weight:650;color:#d6f2e4;position:relative;z-index:1}
+.kpi-progress-note:before{content:"";width:7px;height:7px;border-radius:50%;background:#bff1d2;box-shadow:0 0 0 3px #ffffff1c;flex:none}
+.kpi-progress-note.warn{color:#ffe2a5}.kpi-progress-note.warn:before{background:#ffd36f}.kpi-progress-note.risk{color:#ffd0c5}.kpi-progress-note.risk:before{background:#ff9f8d}
+#kpis.loading .kpi-value{color:transparent!important;border-radius:7px;background:linear-gradient(90deg,#ffffff18,#ffffff40,#ffffff18);background-size:220% 100%;animation:kpiShimmer 1.3s infinite}
+#kpis.loading .kpi:not(.accent) .kpi-value{background:linear-gradient(90deg,var(--soft),var(--line),var(--soft));background-size:220% 100%}
+#kpis.loading .kpi-note{opacity:.45}
+@keyframes kpiShimmer{to{background-position:-220% 0}}
+@media(max-width:720px){.kpi.accent .kpi-value{font-size:34px}.kpi-progress-note{font-size:10px}}
+
 @media (max-width:760px){#baoLu .bl-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#baoLu .bl-kpi b{font-size:17px}}
 @media print{#baoLu .bl-scroll{max-height:none;overflow:visible}}
 </style><style id="m-ux-css">
@@ -283,7 +296,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
    <article class="kpi"><div class="kpi-heading">Dự toán được giao<svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg></div><strong class="kpi-value num" id="kPlan">—</strong><div class="kpi-note" id="kPlanNote">Chưa có số liệu</div></article>
    <article class="kpi"><div class="kpi-heading">Đã giải ngân<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></div><strong class="kpi-value num" id="kSpent">—</strong><div class="kpi-note" id="kSpentNote">Lũy kế theo dữ liệu hệ thống</div></article>
    <article class="kpi"><div class="kpi-heading">Dự toán còn lại<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div><strong class="kpi-value num" id="kLeft">—</strong><div class="kpi-note" id="kLeftNote">Dự toán trừ số đã giải ngân</div></article>
-   <article class="kpi accent"><div class="kpi-heading">Tỷ lệ giải ngân<svg class="icon" aria-hidden="true"><use href="#i-percent"/></svg></div><strong class="kpi-value num" id="kRate">—</strong><div class="kpi-line" aria-hidden="true"><i id="rateMeter"></i></div><div class="kpi-note" id="kRateNote">Tính trên tổng dự toán</div></article>
+   <article class="kpi accent"><div class="kpi-heading">Tỷ lệ giải ngân<svg class="icon" aria-hidden="true"><use href="#i-percent"/></svg></div><strong class="kpi-value num" id="kRate">—</strong><div class="kpi-line" aria-hidden="true"><i id="rateMeter"></i></div><div class="kpi-note" id="kRateNote">Tính trên tổng dự toán</div><div class="kpi-progress-note" id="kRateContext">Đang chờ số liệu</div></article>
   </div><p class="quality-note" id="qualityNote" hidden></p>
   <div class="report-strip"><div class="report-overview"><span class="report-icon"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg></span><div class="report-content"><div class="report-period" id="reportPeriod" role="status">Kỳ báo cáo: Đang tải…</div><div class="report-title">Đơn vị đã nộp báo cáo <b class="num" id="reportCount">—</b></div><div class="report-cutoff" id="reportCutoff" hidden></div><div class="report-context-notice" id="reportPeriodNotice" role="status" hidden></div><div class="report-desc" id="reportDesc">Theo khối đơn vị; không phụ thuộc nguồn vốn đang chọn.</div><div class="report-meter" aria-hidden="true"><i id="reportMeter"></i></div></div></div><div class="report-actions">
    <button class="quick" id="quickYes" type="button" aria-pressed="false"><span>Đã nhận</span><b class="num">—</b></button>
@@ -611,6 +624,11 @@ function renderKpis(){
  $('#kSpentNote').textContent=state.period?.closed?'Theo kỳ đã chốt '+state.period.label:state.generatedAt?'Số liệu API cập nhật lúc '+dateLabel(state.generatedAt):'Theo dữ liệu hệ thống';
  $('#kLeftNote').textContent=g.L<0?'Số âm: cần đối chiếu dữ liệu':'Dự toán trừ số đã giải ngân';$('#rateMeter').style.width=clamp(g.rate)+'%';
  $('#kRateNote').innerHTML=g.delta!=null?deltaHTML(g.delta)+' so với mốc chụp':state.prevAt?'Chưa đủ số liệu để so sánh':'Tính trên tổng dự toán';
+ const ctx=$('#kRateContext');
+ if(!hasAmounts||g.rate==null){ctx.textContent='Đang chờ số liệu';ctx.className='kpi-progress-note';}
+ else if(g.rate<50){ctx.textContent='Cần đôn đốc tiến độ';ctx.className='kpi-progress-note risk';}
+ else if(g.rate<70){ctx.textContent='Cần theo dõi sát';ctx.className='kpi-progress-note warn';}
+ else{ctx.textContent='Đang duy trì tiến độ';ctx.className='kpi-progress-note';}
  const draftCount=rows.filter(v=>v.u.reportSource==='draft').length,snapshotCount=rows.filter(v=>v.u.reportSource==='snapshot').length;
  const notes=[];
  if(g.missing)notes.push(g.missing+' đơn vị chưa có số liệu nguồn đang chọn; tổng quan chỉ cộng '+g.known+' đơn vị có số liệu.');
