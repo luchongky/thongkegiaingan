@@ -483,7 +483,21 @@ function assignmentHTML(u){const groups=assignmentGroups(u),ref=areaReference(u,
 function buildAssignments(){
  const directOptions=DIRECT_LEADERS.map(l=>{const scopes=[...new Set(ASSIGNMENT_DATA.records.filter(r=>r.leader===l.id).map(r=>r.scope))];return `<option value="source:${l.id}">${esc(leaderName(l.name,true))} · ${scopes.map(k=>k==='II'?'CTMTQG':'Chuyển đổi số').join(', ')}</option>`;}).join('');
  $('#leaderSelect').innerHTML='<option value="all">Tất cả lãnh đạo</option><optgroup label="Theo nguồn · CTMTQG, chuyển đổi số">'+directOptions+'</optgroup><optgroup label="Vốn thường xuyên · theo địa bàn xã, phường">'+ASSIGNMENT_DATA.leaders.map(l=>`<option value="reference:${l.id}">${String(l.order).padStart(2,'0')}. ${esc(leaderName(l.name,true))}</option>`).join('')+'</optgroup><option value="unassigned">Chưa có phân công (nguồn đang xem)</option>';
- $('#sourceLeaders').innerHTML=DIRECT_LEADERS.map(l=>{const records=ASSIGNMENT_DATA.records.filter(r=>r.leader===l.id),scopes=[...new Set(records.map(r=>r.scope))],agencyCount=new Set(records.filter(r=>r.kind==='agency').map(r=>r.key)).size,communeCount=new Set(records.filter(r=>r.kind==='commune').map(r=>r.key)).size;return `<article class="tx-source-card"><span class="source-scope">${scopes.map(k=>esc(SCOPE_LABELS[k])).join(' · ')}</span><h3>${esc(leaderName(l.name))}</h3><p class="leader-title">${esc(l.title)}</p><div class="source-bottom"><span>${agencyCount} cơ quan, đơn vị cấp tỉnh${communeCount?' · '+communeCount+' xã, phường':''}</span><button class="text-btn" type="button" data-leader-filter="source:${l.id}">Xem đơn vị ${icon('arrow')}</button></div></article>`;}).join('');
+ const priorityLeaders=[...new Map(ASSIGNMENT_DATA.leaders
+  .filter(l=>/Chủ tịch/.test(l.title)||DIRECT_LEADERS.some(x=>x.id===l.id))
+  .map(l=>[l.id,l])).values()]
+  .sort((a,b)=>{
+   const rank=l=>/Phó\s+Chủ tịch/.test(l.title)?1:/Chủ tịch/.test(l.title)?0:2;
+   return rank(a)-rank(b)||a.order-b.order;
+  });
+ $('#sourceLeaders').innerHTML=priorityLeaders.map(l=>{
+  const records=ASSIGNMENT_DATA.records.filter(r=>r.leader===l.id),scopes=[...new Set(records.map(r=>r.scope))];
+  const areaCount=(l.areas||[]).length,agencyCount=new Set(records.filter(r=>r.kind==='agency').map(r=>r.key)).size,communeCount=new Set(records.filter(r=>r.kind==='commune').map(r=>r.key)).size;
+  const isSource=records.length>0, mode=isSource?'source':'reference';
+  const scopeLabel=isSource?scopes.map(k=>esc(SCOPE_LABELS[k])).join(' · '):'Theo dõi địa bàn · vốn thường xuyên';
+  const countLabel=isSource?`${agencyCount} cơ quan, đơn vị cấp tỉnh${communeCount?' · '+communeCount+' xã, phường':''}`:`${areaCount} xã, phường phụ trách theo địa bàn`;
+  return `<article class="tx-source-card priority-leader-card"><span class="source-scope">${scopeLabel}</span><h3>${esc(leaderName(l.name))}</h3><p class="leader-title">${esc(l.title)}</p><div class="source-bottom"><span>${countLabel}</span><button class="text-btn" type="button" data-leader-filter="${mode}:${l.id}">Xem đơn vị ${icon('arrow')}</button></div></article>`;
+ }).join('');
  $('#leaderDirectory').innerHTML=ASSIGNMENT_DATA.leaders.map(l=>`<article class="leader-card" data-leader-card="${l.id}"><div class="leader-card-head"><span class="leader-order num">${String(l.order).padStart(2,'0')}</span><div><h3>${esc(leaderName(l.name))}</h3><p class="leader-title">${esc(l.title)}</p></div></div><p class="leader-areas"><b>Địa bàn phụ trách · vốn thường xuyên</b>${l.areas.map(esc).join(' · ')}</p><p class="leader-stats" data-leader-stats="${l.id}"></p><button class="text-btn" type="button" data-leader-filter="reference:${l.id}">Xem xã, phường phụ trách ${icon('arrow')}</button></article>`).join('');
 }
 function renderLeaderStats(){const prog=state.program==='II'?'all':state.program;
