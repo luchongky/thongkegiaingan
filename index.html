@@ -279,6 +279,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
  <div class="top-actions">
   <button class="btn" id="quickReportBtn" type="button" aria-label="Xuất báo cáo nhanh (Word) cho các xã, phường được chọn" title="Báo cáo nhanh (Word) cho các xã, phường được chọn"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg><span>Báo cáo nhanh</span></button>
   <button class="btn" id="printBtn" type="button" aria-label="In báo cáo theo bộ lọc" title="In báo cáo theo bộ lọc" disabled><svg class="icon" aria-hidden="true"><use href="#i-print"/></svg><span>In báo cáo</span></button>
+  <button class="btn" id="mtqgPrintBtn" type="button" aria-label="In báo cáo giải ngân Chương trình MTQG chi tiết từng xã, phường" title="In báo cáo Chương trình MTQG chi tiết từng xã, phường"><svg class="icon" aria-hidden="true"><use href="#i-print"/></svg><span>In BC MTQG</span></button>
   <button class="btn icon-only" id="themeBtn" type="button" aria-label="Chuyển sang giao diện tối" title="Đổi giao diện sáng / tối"><svg class="icon" aria-hidden="true"><use href="#i-theme"/></svg></button>
   <button class="btn primary" id="refreshBtn" type="button" aria-label="Cập nhật số liệu" title="Lấy số liệu mới nhất"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>Cập nhật</span></button>
  </div>
@@ -427,6 +428,9 @@ function renderBaoLu(){
 // Thẻ "VI. Bão lũ NSTW (riêng)": chỉ hiện Mục VI, không cộng vào tổng các Mục I–V.
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#programTabs button[data-bltab], .nav a');if(!t)return;if(!t.dataset.bltab){delete document.body.dataset.bl;return;}document.body.dataset.bl='1';$$('#programTabs button').forEach(x=>x.setAttribute('aria-pressed',String(!!x.dataset.bltab)));const sec=$('#baoLu');if(sec&&!sec.hidden)sec.scrollIntoView({behavior:'smooth',block:'start'});});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#baoLuRows button[data-bl]');if(!b)return;const id=b.dataset.bl;blOpen.has(id)?blOpen.delete(id):blOpen.add(id);renderBaoLu();});
+/* Mục II tách theo chương trình MTQG (mã 1, 2, 3...): {key:[dự toán, giải ngân]}. Thiếu số thì bỏ, không coi là 0. */
+function mtqgPairs(input){const r=Object.create(null);if(!input||typeof input!=='object'||Array.isArray(input))return r;for(const k of Object.keys(input)){if(!/^[0-9]{1,2}$/.test(k))continue;const a=input[k];if(!Array.isArray(a)||a.length<2||a[0]==null||a[1]==null||a[0]===''||a[1]==='')continue;r[k]=[numeric(a[0]),numeric(a[1])];}return r;}
+function mtqgProgramList(input){return Array.isArray(input)?input.filter(x=>x&&/^[0-9]{1,2}$/.test(String(x.key))&&str(x.label).trim()).map(x=>({key:String(x.key),label:str(x.label,400)})):[];}
 function normalizePayload(data){
  if(!data||data.ok!==true||!Array.isArray(data.units))throw new Error('API chưa trả về danh sách đơn vị hợp lệ.');
  if(data.sample===true||data.demo===true||data.sample==='true'||data.demo==='true')throw new Error('API đang trả dữ liệu mẫu. Trang chỉ chấp nhận số liệu thực.');
@@ -444,10 +448,10 @@ function normalizePayload(data){
   const reportSource=['submitted','snapshot','draft','unavailable'].includes(u.reportSource)?u.reportSource:'legacy';
   const decreaseCount=Number.isSafeInteger(u.decreaseCount)&&u.decreaseCount>=0?u.decreaseCount:0;
   const unchanged=u.unchanged===true&&submitted===true;
-  return{id,name,short,kind,p,prev,submitted,status,reportSource,decreaseCount,unchanged,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
+  return{id,name,short,kind,p,prev,mtqg:mtqgPairs(u.mtqg),submitted,status,reportSource,decreaseCount,unchanged,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
  });
  const period=data.period&&typeof data.period==='object'&&str(data.period.label)?{label:str(data.period.label),key:str(data.period.key,50),cutoffText:str(data.period.cutoffText),graceText:str(data.period.graceText),closed:data.period.closed===true}:null;
- return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250),baoLu:normalizeBaoLu(data.baoLu)};
+ return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250),baoLu:normalizeBaoLu(data.baoLu),mtqgPrograms:mtqgProgramList(data.mtqgPrograms)};
 }
 
 
@@ -715,7 +719,7 @@ function setView(v,scrollTop=false){
 }
 function jumpToList(){setView('details');document.getElementById('details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}
 function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();renderBaoLu();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
-function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
 function readCache(){const c=store.get(CACHE_KEY);if(!c)return null;try{if(c.version!==5||c.api!==CONFIG.API_URL||!validISO(c.receivedAt))throw new Error('cache');const age=Date.now()-new Date(c.receivedAt).getTime();if(age< -300000||age>CONFIG.CACHE_MAX_DAYS*86400000)throw new Error('cache');return{pack:normalizePayload(c.pack),receivedAt:c.receivedAt};}catch{store.remove(CACHE_KEY);return null;}}
 function messageFor(e){if(e.name==='AbortError')return 'Quá thời gian chờ 25 giây. Vui lòng thử lại sau ít phút.';if(e instanceof TypeError)return 'Không nhận được phản hồi. Cần kiểm tra mạng, quyền truy cập và kết nối API từ trang web.';return str(e.message,400)||'Không thể tải số liệu.';}
 async function load(force=false){
@@ -1263,6 +1267,165 @@ async function exportQuick() {
 }
 const qb = document.getElementById('quickReportBtn');
 if (qb) qb.addEventListener('click', exportQuick);
+})();
+</script>
+<script id="mtqg-print-js">
+/* In báo cáo giải ngân Chương trình MTQG (Mục II) chi tiết từng xã, phường.
+   Lập ngay trên thiết bị từ số liệu API đang hiển thị (trường mtqg, mtqgPrograms); không gọi thêm điểm cuối.
+   Người lập: Lục Hồng Kỳ. */
+(function(){
+'use strict';
+const BTN = document.getElementById('mtqgPrintBtn');
+if (!BTN) return;
+
+function shortName(label) {
+  const f = fold(label);
+  if (f.includes('nong thon moi')) return 'CTMTQG xây dựng NTM, giảm nghèo bền vững và phát triển KT-XH vùng đồng bào DTTS&MN';
+  if (f.includes('van hoa')) return 'CTMTQG về phát triển văn hóa';
+  if (f.includes('ma tuy')) return 'CTMTQG phòng, chống ma túy';
+  return label;
+}
+function programs() {
+  const list = (state.mtqgPrograms || []).slice();
+  const keys = new Set(list.map(p => p.key));
+  state.units.forEach(u => Object.keys(u.mtqg || {}).forEach(k => { if (!keys.has(k)) { keys.add(k); list.push({ key: k, label: 'Chương trình mã ' + k }); } }));
+  return list.sort((a, b) => Number(a.key) - Number(b.key)).map(p => Object.assign({}, p, { short: shortName(p.label) }));
+}
+function units() {
+  return state.units.filter(u => u.kind === 'commune' || Object.keys(u.mtqg || {}).length);
+}
+const rate = (s, p) => p > 0 ? s / p * 100 : null;
+const status = u => u.status === 'late' ? 'Gửi muộn' : u.submitted === true ? 'Đã gửi' : u.submitted === false ? 'Chưa gửi' : '—';
+const origin = u => u.reportSource === 'snapshot' ? 'Số chụp khi chốt' : u.reportSource === 'draft' ? 'Số đang nhập' : u.reportSource === 'unavailable' ? 'Chưa có số' : '';
+
+function sortRows(rows, mode, val) {
+  const byName = (a, b) => a.u.name.localeCompare(b.u.name, 'vi');
+  if (mode === 'name') return rows.sort(byName);
+  return rows.sort((a, b) => {
+    const x = val(a), y = val(b);
+    if (x == null && y == null) return byName(a, b);
+    if (x == null) return 1; if (y == null) return -1;
+    return mode === 'asc' ? x - y || byName(a, b) : y - x || byName(a, b);
+  });
+}
+
+/* Biểu tổng hợp: mỗi xã một dòng, các chương trình đặt cạnh nhau. */
+function summaryTable(progs, list, mode) {
+  const rows = list.map(u => {
+    const cells = progs.map(p => u.mtqg[p.key] || null);
+    const known = cells.filter(Boolean);
+    const P = known.reduce((s, c) => s + c[0], 0), S = known.reduce((s, c) => s + c[1], 0);
+    return { u, cells, P: known.length ? P : null, S: known.length ? S : null };
+  });
+  sortRows(rows, mode, r => r.P == null ? null : rate(r.S, r.P));
+  const tot = progs.map((p, i) => rows.reduce((a, r) => r.cells[i] ? [a[0] + r.cells[i][0], a[1] + r.cells[i][1]] : a, [0, 0]));
+  const TP = tot.reduce((s, t) => s + t[0], 0), TS = tot.reduce((s, t) => s + t[1], 0);
+  const trio = (P, S) => `<td class="n">${fmt(P)}</td><td class="n">${fmt(S)}</td><td class="n">${P == null ? '—' : pct(rate(S, P))}</td>`;
+  const nc = (progs.length + 1) * 3, w = (100 - 18) / nc;
+  let h = '<table class="fixed"><colgroup><col style="width:4%"><col style="width:14%">' + Array(nc).fill('<col style="width:' + w.toFixed(2) + '%">').join('') + '</colgroup><thead><tr><th rowspan="2" class="stt">STT</th><th rowspan="2">Xã, phường</th><th colspan="3">Tổng các chương trình</th>'
+    + progs.map(p => `<th colspan="3">${esc(p.short)}</th>`).join('') + '</tr><tr>'
+    + Array(progs.length + 1).fill('<th>Dự toán</th><th>Giải ngân</th><th>Tỷ lệ</th>').join('') + '</tr></thead><tbody>';
+  h += `<tr class="tot"><td></td><td>Tổng cộng (${rows.length} đơn vị)</td>${trio(TP, TS)}${tot.map(t => trio(t[0], t[1])).join('')}</tr>`;
+  rows.forEach((r, i) => {
+    h += `<tr><td class="c">${i + 1}</td><td>${esc(r.u.name)}</td>${trio(r.P, r.S)}${r.cells.map(c => c ? trio(c[0], c[1]) : trio(null, null)).join('')}</tr>`;
+  });
+  return { html: h + '</tbody></table>', missing: rows.filter(r => r.P == null).length };
+}
+
+/* Biểu chi tiết một chương trình. */
+function programTable(p, list, mode) {
+  const rows = list.map(u => ({ u, c: u.mtqg[p.key] || null })).filter(r => r.c || r.u.kind === 'commune');
+  sortRows(rows, mode, r => r.c ? rate(r.c[1], r.c[0]) : null);
+  const known = rows.filter(r => r.c), P = known.reduce((s, r) => s + r.c[0], 0), S = known.reduce((s, r) => s + r.c[1], 0);
+  let h = '<table><thead><tr><th class="stt">STT</th><th>Xã, phường</th><th>Dự toán</th><th>Đã giải ngân</th><th>Còn lại</th><th>Tỷ lệ giải ngân</th><th>Tình trạng gửi báo cáo</th><th>Ghi chú</th></tr></thead><tbody>';
+  h += `<tr class="tot"><td></td><td>Tổng cộng (${rows.length} đơn vị)</td><td class="n">${fmt(P)}</td><td class="n">${fmt(S)}</td><td class="n">${fmt(P - S)}</td><td class="n">${pct(rate(S, P))}</td><td></td><td></td></tr>`;
+  rows.forEach((r, i) => {
+    const c = r.c, rt = c ? rate(c[1], c[0]) : null;
+    h += `<tr${rt != null && rt < 50 ? ' class="low"' : ''}><td class="c">${i + 1}</td><td>${esc(r.u.name)}</td>`
+      + (c ? `<td class="n">${fmt(c[0])}</td><td class="n">${fmt(c[1])}</td><td class="n">${fmt(c[0] - c[1])}</td><td class="n">${pct(rt)}</td>` : '<td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td>')
+      + `<td class="c">${esc(status(r.u))}</td><td>${esc(origin(r.u))}</td></tr>`;
+  });
+  const below = known.filter(r => { const x = rate(r.c[1], r.c[0]); return x != null && x < 50; }).length;
+  return { html: h + '</tbody></table>', missing: rows.length - known.length, below, n: known.length };
+}
+
+function buildDoc(sel, mode) {
+  const progs = programs(), list = units();
+  const chosen = sel === 'all' ? progs : progs.filter(p => p.key === sel);
+  const period = state.period ? 'Kỳ báo cáo đến ' + esc(state.period.label) + (state.period.cutoffText ? ' · Mốc chốt: ' + esc(state.period.cutoffText) : '') : 'Chưa có thông tin kỳ báo cáo';
+  const when = (state.generatedAt ? 'Số liệu lúc ' + esc(dateLabel(state.generatedAt)) + ' · ' : '') + 'In lúc ' + esc(dateLabel(new Date().toISOString()));
+  const warn = state.source === 'cache' ? '<p class="warn">BẢN LƯU TRÊN THIẾT BỊ — CHƯA ĐỒNG BỘ MỚI. Bấm "Cập nhật" trước khi in.</p>' : '';
+  const sentN = list.filter(u => u.submitted === true).length;
+  const head = (title, sub) => `<div class="hd"><div class="org"><div>UBND TỈNH CAO BẰNG</div><b>SỞ TÀI CHÍNH</b></div><div class="unit">Đơn vị tính: triệu đồng</div></div><h1>${title}</h1><p class="sub">${sub}</p><p class="sub">${period}<br>${when}</p>${warn}`;
+  let body = '';
+  if (sel === 'all' && chosen.length > 1) {
+    const t = summaryTable(chosen, list, mode);
+    body += '<section>' + head('TÌNH HÌNH GIẢI NGÂN VỐN CÁC CHƯƠNG TRÌNH MỤC TIÊU QUỐC GIA<br>CHI TIẾT TỪNG XÃ, PHƯỜNG', 'Biểu tổng hợp các chương trình')
+      + t.html + `<p class="note">Có ${sentN}/${list.length} đơn vị đã gửi báo cáo kỳ này; đơn vị chưa gửi sử dụng số đang nhập hoặc số chụp khi chốt.${t.missing ? ' ' + t.missing + ' đơn vị chưa có số liệu, không cộng vào tổng.' : ''}</p></section>`;
+  }
+  chosen.forEach(p => {
+    const t = programTable(p, list, mode);
+    body += '<section>' + head('TÌNH HÌNH GIẢI NGÂN VỐN ' + esc(p.label.toUpperCase()), 'Chi tiết từng xã, phường')
+      + t.html + `<p class="note">${t.n} đơn vị có số liệu; ${t.below} đơn vị giải ngân dưới 50% (in đậm nền nhạt).${t.missing ? ' ' + t.missing + ' đơn vị chưa có số liệu, không cộng vào tổng.' : ''}</p></section>`;
+  });
+  body += '<p class="note foot">Số liệu do các xã, phường tự nhập trên hệ thống theo dõi giải ngân; các đơn vị chịu trách nhiệm trước UBND tỉnh về tính chính xác, trung thực của số liệu báo cáo.</p>';
+  const css = '@page{size:A4 landscape;margin:12mm 10mm}*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;color:#000;margin:0;padding:12px;font-size:12px}'
+    + 'section{page-break-after:always;break-after:page}section:last-of-type{page-break-after:auto;break-after:auto}'
+    + '.hd{display:flex;justify-content:space-between;align-items:flex-start}.org{text-align:center;font-size:12.5px;line-height:1.35}.org b{display:inline-block;border-bottom:1px solid #000;padding-bottom:1px}.unit{font-style:italic;font-size:12px;padding-top:30px}'
+    + 'h1{text-align:center;font-size:14.5px;margin:10px 0 4px;line-height:1.35}.sub{text-align:center;margin:2px 0;font-style:italic}.warn{text-align:center;font-weight:700;border:1px solid #000;padding:4px;margin:6px 0}'
+    + 'table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11.5px}table.fixed{table-layout:fixed}table.fixed td,table.fixed th{overflow-wrap:anywhere}table.fixed .n{white-space:normal}th,td{border:1px solid #000;padding:3px 5px;vertical-align:middle}th{font-weight:700;text-align:center;background:#f0f0f0}'
+    + 'thead{display:table-header-group}tr{page-break-inside:avoid;break-inside:avoid}.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.c{text-align:center}.stt{width:34px}'
+    + '.tot td{font-weight:700;background:#f6f6f6}.low td{font-weight:700;background:#fbf3df}.note{margin:6px 0 0;font-style:italic;font-size:11.5px}.foot{margin-top:10px}'
+    + '.bar{position:sticky;top:0;background:#fff;padding:8px 0;margin-bottom:6px;border-bottom:1px solid #ccc;display:flex;gap:8px;font-family:Arial,sans-serif}.bar button{padding:7px 14px;font-size:14px;cursor:pointer}@media print{.bar{display:none}body{padding:0}}'
+    + '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bao cao giai ngan CTMTQG theo xa</title><style>' + css + '</style></head><body>'
+    + '<div class="bar"><button type="button" onclick="window.print()">In / Lưu PDF</button><button type="button" onclick="window.close()">Đóng</button></div>' + body + '</body></html>';
+}
+
+function openReport(sel, mode) {
+  const html = buildDoc(sel, mode);
+  const w = window.open('', '_blank');
+  if (w) { w.document.open(); w.document.write(html); w.document.close(); setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400); return; }
+  // Trình duyệt chặn cửa sổ mới: in qua khung ẩn.
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(f);
+  f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close();
+  setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} setTimeout(() => f.remove(), 2000); }, 400);
+}
+
+function pick() {
+  const progs = programs();
+  if (!state.hasData) { alert('Chưa có số liệu. Bấm "Cập nhật" rồi thử lại.'); return; }
+  if (!progs.length || !state.units.some(u => Object.keys(u.mtqg || {}).length)) { alert('Số liệu hiện tại chưa có chi tiết theo chương trình MTQG. Bấm "Cập nhật" để lấy số liệu mới rồi thử lại.'); return; }
+  const ov = document.createElement('div');
+  ov.className = 'no-print';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,30,22,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:12px';
+  const opt = 'display:block;padding:7px 0;cursor:pointer;line-height:1.4';
+  ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="mpTitle" style="background:var(--surface,#fff);color:var(--text,#1d2b24);border-radius:16px;max-width:560px;width:100%;max-height:94vh;overflow:auto;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.3);font-size:14px">'
+    + '<div id="mpTitle" style="font-weight:800;font-size:17px;margin-bottom:4px">In báo cáo Chương trình MTQG</div>'
+    + '<div style="opacity:.75;font-size:12.5px;margin-bottom:10px">Chi tiết từng xã, phường; số liệu đúng như trang đang hiển thị (kỳ ' + esc(state.period ? state.period.label : '') + '). Khổ A4 ngang.</div>'
+    + '<div style="font-weight:650;margin-bottom:2px">Chương trình</div>'
+    + '<label style="' + opt + '"><input type="radio" name="mpProg" value="all" checked> Tất cả: biểu tổng hợp và từng chương trình</label>'
+    + progs.map(p => '<label style="' + opt + '"><input type="radio" name="mpProg" value="' + esc(p.key) + '"> ' + esc(p.short) + '</label>').join('')
+    + '<div style="font-weight:650;margin:10px 0 2px">Sắp xếp xã, phường</div>'
+    + '<label style="' + opt + '"><input type="radio" name="mpSort" value="name" checked> Theo tên (A–Z)</label>'
+    + '<label style="' + opt + '"><input type="radio" name="mpSort" value="desc"> Tỷ lệ giải ngân từ cao xuống thấp</label>'
+    + '<label style="' + opt + '"><input type="radio" name="mpSort" value="asc"> Tỷ lệ giải ngân từ thấp lên cao</label>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button type="button" id="mpCancel" class="btn">Hủy</button><button type="button" id="mpOk" class="btn primary">Xem và in</button></div></div>';
+  document.body.appendChild(ov);
+  const close = () => { document.removeEventListener('keydown', onKey); ov.remove(); BTN.focus(); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#mpCancel').onclick = close;
+  ov.querySelector('#mpOk').onclick = () => {
+    const sel = ov.querySelector('input[name=mpProg]:checked').value, mode = ov.querySelector('input[name=mpSort]:checked').value;
+    close(); openReport(sel, mode);
+  };
+  ov.querySelector('#mpOk').focus();
+}
+BTN.addEventListener('click', pick);
 })();
 </script>
 </body></html>
