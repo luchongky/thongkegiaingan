@@ -1395,6 +1395,118 @@ function openReport(sel, mode) {
   setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} setTimeout(() => f.remove(), 2000); }, 400);
 }
 
+/* Xuất Excel: cùng số liệu với bản in; công thức tổng, còn lại, tỷ lệ để kiểm tra lại được trên Excel. */
+const XLSX_LIB = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+function loadExcel() {
+  if (window.ExcelJS) return Promise.resolve();
+  return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = XLSX_LIB; s.onload = ok; s.onerror = () => fail(new Error('Không tải được thư viện Excel. Kiểm tra kết nối mạng rồi thử lại.')); document.head.appendChild(s); });
+}
+function sheetName(p, used) {
+  const f = fold(p.label);
+  let n = f.includes('nong thon moi') ? 'CT1 NTM-GNBV-DTTS&MN' : f.includes('van hoa') ? 'CT2 Văn hóa' : f.includes('ma tuy') ? 'CT3 Phòng chống ma túy' : 'CT mã ' + p.key;
+  n = n.replace(/[:\\\/?*\[\]]/g, ' ').slice(0, 31);
+  while (used.has(n)) n = n.slice(0, 28) + ' ' + used.size;
+  used.add(n); return n;
+}
+async function exportExcel(sel, mode) {
+  try {
+    BTN.disabled = true;
+    await loadExcel();
+    const progs = programs(), list = units(), chosen = sel === 'all' ? progs : progs.filter(p => p.key === sel);
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Lục Hồng Kỳ - Sở Tài chính tỉnh Cao Bằng'; wb.created = new Date();
+    const NUM = '#,##0.###;-#,##0.###;0', PCT = '0.0%';
+    const thin = { style: 'thin', color: { argb: 'FF000000' } }, box = { top: thin, left: thin, bottom: thin, right: thin };
+    const font = (o) => Object.assign({ name: 'Times New Roman', size: 12 }, o || {});
+    const period = state.period ? 'Kỳ báo cáo đến ' + state.period.label + (state.period.cutoffText ? ' · Mốc chốt: ' + state.period.cutoffText : '') : 'Chưa có thông tin kỳ báo cáo';
+    const when = (state.generatedAt ? 'Số liệu lúc ' + dateLabel(state.generatedAt) + ' · ' : '') + 'Xuất lúc ' + dateLabel(new Date().toISOString());
+    const L = n => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+    const head = (ws, ncol, title, sub) => {
+      ws.getCell('A1').value = 'UBND TỈNH CAO BẰNG'; ws.getCell('A2').value = 'SỞ TÀI CHÍNH';
+      ws.mergeCells(1, 1, 1, 3); ws.mergeCells(2, 1, 2, 3);
+      ws.getCell('A1').font = font(); ws.getCell('A2').font = font({ bold: true });
+      ['A1', 'A2'].forEach(a => ws.getCell(a).alignment = { horizontal: 'center' });
+      [[4, title, { bold: true, size: 14 }], [5, sub, { italic: true }], [6, period, { italic: true }], [7, when, { italic: true }]].forEach(([r, v, f]) => {
+        ws.mergeCells(r, 1, r, ncol); const c = ws.getCell(r, 1); c.value = v; c.font = font(f); c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      });
+      ws.getRow(4).height = title.length > 90 ? 58 : 36;
+      const u = ws.getCell(8, ncol); u.value = 'Đơn vị tính: triệu đồng'; u.font = font({ italic: true }); u.alignment = { horizontal: 'right' };
+      if (state.source === 'cache') { ws.mergeCells(3, 4, 3, ncol); const w = ws.getCell(3, 4); w.value = 'BẢN LƯU TRÊN THIẾT BỊ — CHƯA ĐỒNG BỘ MỚI'; w.font = font({ bold: true, color: { argb: 'FF9C2B1E' } }); w.alignment = { horizontal: 'right' }; }
+    };
+    const styleHeader = (ws, r1, r2, ncol) => { for (let r = r1; r <= r2; r++) for (let c = 1; c <= ncol; c++) { const x = ws.getCell(r, c); x.font = font({ bold: true, size: 11 }); x.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; x.border = box; x.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F0F0' } }; } };
+    const styleBody = (ws, r1, r2, ncol, numFrom) => { for (let r = r1; r <= r2; r++) for (let c = 1; c <= ncol; c++) { const x = ws.getCell(r, c); x.border = box; x.font = font({ size: 11, bold: r === r1 }); x.alignment = { vertical: 'middle', horizontal: c === 1 ? 'center' : c >= numFrom ? 'right' : 'left', wrapText: c === 2 }; } };
+    const rt = (s, p) => p > 0 ? s / p : null;
+    const used = new Set();
+    if (sel === 'all' && chosen.length > 1) {
+      const ws = wb.addWorksheet('Tổng hợp', { pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: .4, right: .4, top: .5, bottom: .5, header: .3, footer: .3 } }, views: [{ state: 'frozen', xSplit: 2, ySplit: 10 }] });
+      used.add('Tổng hợp');
+      const ncol = 2 + (chosen.length + 1) * 3;
+      head(ws, ncol, 'TÌNH HÌNH GIẢI NGÂN VỐN CÁC CHƯƠNG TRÌNH MỤC TIÊU QUỐC GIA CHI TIẾT TỪNG XÃ, PHƯỜNG', 'Biểu tổng hợp các chương trình');
+      ws.getCell(9, 1).value = 'STT'; ws.getCell(9, 2).value = 'Xã, phường'; ws.mergeCells(9, 1, 10, 1); ws.mergeCells(9, 2, 10, 2);
+      ['Tổng các chương trình'].concat(chosen.map(p => p.label)).forEach((t, i) => { const c = 3 + i * 3; ws.mergeCells(9, c, 9, c + 2); ws.getCell(9, c).value = t; ['Dự toán', 'Giải ngân', 'Tỷ lệ'].forEach((h, j) => ws.getCell(10, c + j).value = h); });
+      ws.getRow(9).height = 96;
+      const rows = list.map(u => { const cells = chosen.map(p => u.mtqg[p.key] || null), k = cells.filter(Boolean); return { u, cells, P: k.length ? k.reduce((s, c) => s + c[0], 0) : null, S: k.length ? k.reduce((s, c) => s + c[1], 0) : null }; });
+      sortRows(rows, mode, r => r.P == null ? null : rate(r.S, r.P));
+      const first = 12, last = first + rows.length - 1;
+      rows.forEach((r, i) => {
+        const R = first + i, row = ws.getRow(R); row.getCell(1).value = i + 1; row.getCell(2).value = r.u.name;
+        r.cells.forEach((c, j) => { const col = 6 + j * 3; if (c) { row.getCell(col).value = c[0]; row.getCell(col + 1).value = c[1]; row.getCell(col + 2).value = { formula: `IF(${L(col)}${R}>0,${L(col + 1)}${R}/${L(col)}${R},"")`, result: rt(c[1], c[0]) ?? '' }; } });
+        if (r.P != null) {
+          const pc = chosen.map((p, j) => L(6 + j * 3) + R).join(','), sc = chosen.map((p, j) => L(7 + j * 3) + R).join(',');
+          row.getCell(3).value = { formula: `SUM(${pc})`, result: r.P }; row.getCell(4).value = { formula: `SUM(${sc})`, result: r.S }; row.getCell(5).value = { formula: `IF(C${R}>0,D${R}/C${R},"")`, result: rt(r.S, r.P) ?? '' };
+        }
+      });
+      const T = ws.getRow(11); T.getCell(2).value = `Tổng cộng (${rows.length} đơn vị)`;
+      for (let j = 0; j <= chosen.length; j++) {
+        const col = 3 + j * 3, sP = rows.reduce((s, r) => s + ((j ? (r.cells[j - 1] || [0])[0] : r.P) || 0), 0), sS = rows.reduce((s, r) => s + ((j ? (r.cells[j - 1] || [0, 0])[1] : r.S) || 0), 0);
+        T.getCell(col).value = { formula: `SUM(${L(col)}${first}:${L(col)}${last})`, result: sP }; T.getCell(col + 1).value = { formula: `SUM(${L(col + 1)}${first}:${L(col + 1)}${last})`, result: sS };
+        T.getCell(col + 2).value = { formula: `IF(${L(col)}11>0,${L(col + 1)}11/${L(col)}11,"")`, result: rt(sS, sP) ?? '' };
+        for (let r = 11; r <= last; r++) { ws.getCell(r, col).numFmt = NUM; ws.getCell(r, col + 1).numFmt = NUM; ws.getCell(r, col + 2).numFmt = PCT; }
+      }
+      styleHeader(ws, 9, 10, ncol); styleBody(ws, 11, last, ncol, 3);
+      ws.getColumn(1).width = 6; ws.getColumn(2).width = 24; for (let c = 3; c <= ncol; c++) ws.getColumn(c).width = (c % 3 === 2) ? 9 : 14;
+      ws.pageSetup.printTitlesRow = '9:10';
+    }
+    chosen.forEach(p => {
+      const ws = wb.addWorksheet(sheetName(p, used), { pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: .4, right: .4, top: .5, bottom: .5, header: .3, footer: .3 } }, views: [{ state: 'frozen', xSplit: 2, ySplit: 9 }] });
+      const ncol = 8;
+      head(ws, ncol, 'TÌNH HÌNH GIẢI NGÂN VỐN ' + p.label.toUpperCase(), 'Chi tiết từng xã, phường');
+      ['STT', 'Xã, phường', 'Dự toán', 'Đã giải ngân', 'Còn lại', 'Tỷ lệ giải ngân', 'Tình trạng gửi báo cáo', 'Ghi chú'].forEach((h, i) => ws.getCell(9, i + 1).value = h);
+      ws.getRow(9).height = 32;
+      const rows = list.map(u => ({ u, c: u.mtqg[p.key] || null }));
+      sortRows(rows, mode, r => r.c ? rate(r.c[1], r.c[0]) : null);
+      const first = 11, last = first + rows.length - 1;
+      rows.forEach((r, i) => {
+        const R = first + i, row = ws.getRow(R), c = r.c;
+        row.getCell(1).value = i + 1; row.getCell(2).value = r.u.name;
+        if (c) { row.getCell(3).value = c[0]; row.getCell(4).value = c[1]; row.getCell(5).value = { formula: `C${R}-D${R}`, result: c[0] - c[1] }; row.getCell(6).value = { formula: `IF(C${R}>0,D${R}/C${R},"")`, result: rt(c[1], c[0]) ?? '' };
+          if (c[0] > 0 && c[1] / c[0] < .5) for (let k = 1; k <= ncol; k++) ws.getCell(R, k).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFBF3DF' } }; }
+        row.getCell(7).value = status(r.u); row.getCell(8).value = origin(r.u);
+      });
+      const P = rows.reduce((s, r) => s + (r.c ? r.c[0] : 0), 0), S = rows.reduce((s, r) => s + (r.c ? r.c[1] : 0), 0);
+      const T = ws.getRow(10); T.getCell(2).value = `Tổng cộng (${rows.length} đơn vị)`;
+      T.getCell(3).value = { formula: `SUM(C${first}:C${last})`, result: P }; T.getCell(4).value = { formula: `SUM(D${first}:D${last})`, result: S };
+      T.getCell(5).value = { formula: 'C10-D10', result: P - S }; T.getCell(6).value = { formula: 'IF(C10>0,D10/C10,"")', result: rt(S, P) ?? '' };
+      for (let r = 10; r <= last; r++) { [3, 4, 5].forEach(k => ws.getCell(r, k).numFmt = NUM); ws.getCell(r, 6).numFmt = PCT; }
+      styleHeader(ws, 9, 9, ncol); styleBody(ws, 10, last, ncol, 3);
+      for (let r = first; r <= last; r++) { ws.getCell(r, 7).alignment = { horizontal: 'center', vertical: 'middle' }; ws.getCell(r, 8).alignment = { horizontal: 'left', vertical: 'middle' }; }
+      [6, 26, 15, 15, 15, 12, 16, 18].forEach((w, i) => ws.getColumn(i + 1).width = w);
+      ws.pageSetup.printTitlesRow = '9:9';
+      const nr = last + 2; ws.mergeCells(nr, 1, nr, ncol); const nc = ws.getCell(nr, 1);
+      nc.value = 'Số liệu do các xã, phường tự nhập trên hệ thống theo dõi giải ngân; các đơn vị chịu trách nhiệm trước UBND tỉnh về tính chính xác, trung thực của số liệu báo cáo. Dòng tô nền: giải ngân dưới 50%.';
+      nc.font = font({ italic: true, size: 11 }); nc.alignment = { wrapText: true }; ws.getRow(nr).height = 32;
+    });
+    const buf = await wb.xlsx.writeBuffer();
+    const g = new Date(state.generatedAt || Date.now()), two = n => String(n).padStart(2, '0');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    a.download = 'Giai_ngan_CTMTQG_theo_xa_' + (sel === 'all' ? 'tat_ca' : 'CT' + sel) + '_' + two(g.getDate()) + '-' + two(g.getMonth() + 1) + '-' + g.getFullYear() + '.xlsx';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  } catch (e) {
+    alert((e && e.message) || 'Không xuất được file Excel.');
+  } finally { BTN.disabled = false; }
+}
+
 function pick() {
   const progs = programs();
   if (!state.hasData) { alert('Chưa có số liệu. Bấm "Cập nhật" rồi thử lại.'); return; }
@@ -1413,17 +1525,16 @@ function pick() {
     + '<label style="' + opt + '"><input type="radio" name="mpSort" value="name" checked> Theo tên (A–Z)</label>'
     + '<label style="' + opt + '"><input type="radio" name="mpSort" value="desc"> Tỷ lệ giải ngân từ cao xuống thấp</label>'
     + '<label style="' + opt + '"><input type="radio" name="mpSort" value="asc"> Tỷ lệ giải ngân từ thấp lên cao</label>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button type="button" id="mpCancel" class="btn">Hủy</button><button type="button" id="mpOk" class="btn primary">Xem và in</button></div></div>';
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button type="button" id="mpCancel" class="btn">Hủy</button><button type="button" id="mpXlsx" class="btn">Xuất Excel</button><button type="button" id="mpOk" class="btn primary">Xem và in</button></div></div>';
   document.body.appendChild(ov);
   const close = () => { document.removeEventListener('keydown', onKey); ov.remove(); BTN.focus(); };
   const onKey = e => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   ov.querySelector('#mpCancel').onclick = close;
-  ov.querySelector('#mpOk').onclick = () => {
-    const sel = ov.querySelector('input[name=mpProg]:checked').value, mode = ov.querySelector('input[name=mpSort]:checked').value;
-    close(); openReport(sel, mode);
-  };
+  const choice = () => [ov.querySelector('input[name=mpProg]:checked').value, ov.querySelector('input[name=mpSort]:checked').value];
+  ov.querySelector('#mpOk').onclick = () => { const [sel, mode] = choice(); close(); openReport(sel, mode); };
+  ov.querySelector('#mpXlsx').onclick = () => { const [sel, mode] = choice(); close(); exportExcel(sel, mode); };
   ov.querySelector('#mpOk').focus();
 }
 BTN.addEventListener('click', pick);
