@@ -1288,11 +1288,12 @@ function shortName(label) {
 function programs() {
   const list = (state.mtqgPrograms || []).slice();
   const keys = new Set(list.map(p => p.key));
-  state.units.forEach(u => Object.keys(u.mtqg || {}).forEach(k => { if (!keys.has(k)) { keys.add(k); list.push({ key: k, label: 'Chương trình mã ' + k }); } }));
+  units().forEach(u => Object.keys(u.mtqg || {}).forEach(k => { if (!keys.has(k)) { keys.add(k); list.push({ key: k, label: 'Chương trình mã ' + k }); } }));
   return list.sort((a, b) => Number(a.key) - Number(b.key)).map(p => Object.assign({}, p, { short: shortName(p.label) }));
 }
+/* Chỉ khối xã, phường: mã chương trình trong biểu của sở, ban, ngành đánh riêng, không tương ứng 3 chương trình của khối xã. */
 function units() {
-  return state.units.filter(u => u.kind === 'commune' || Object.keys(u.mtqg || {}).length);
+  return state.units.filter(u => u.kind === 'commune');
 }
 const rate = (s, p) => p > 0 ? s / p * 100 : null;
 const status = u => u.status === 'late' ? 'Gửi muộn' : u.submitted === true ? 'Đã gửi' : u.submitted === false ? 'Chưa gửi' : '—';
@@ -1397,7 +1398,7 @@ function openReport(sel, mode) {
 function pick() {
   const progs = programs();
   if (!state.hasData) { alert('Chưa có số liệu. Bấm "Cập nhật" rồi thử lại.'); return; }
-  if (!progs.length || !state.units.some(u => Object.keys(u.mtqg || {}).length)) { alert('Số liệu hiện tại chưa có chi tiết theo chương trình MTQG. Bấm "Cập nhật" để lấy số liệu mới rồi thử lại.'); return; }
+  if (!progs.length || !units().some(u => Object.keys(u.mtqg || {}).length)) { alert('Số liệu hiện tại chưa có chi tiết theo chương trình MTQG. Bấm "Cập nhật" để lấy số liệu mới rồi thử lại.'); return; }
   const ov = document.createElement('div');
   ov.className = 'no-print';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,30,22,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:12px';
