@@ -1,8 +1,10 @@
 <!doctype html>
 <html lang="vi" data-theme="light"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="theme-color" content="#075c43">
+<meta name="description" content="Báo cáo nhanh tình hình giải ngân vốn thường xuyên của các đơn vị tỉnh Cao Bằng."><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="author" content="Phòng Ngân sách - Sở Tài chính tỉnh Cao Bằng">
-<meta name="description" content="Theo dõi giải ngân vốn thường xuyên của các đơn vị tỉnh Cao Bằng.">
+
 <meta name="theme-color" content="#07664d"><title>Theo dõi giải ngân | Cao Bằng</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2307664d'/%3E%3Cpath d='M9 23V15M16 23V9M23 23v-10' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -253,6 +255,67 @@ h1,.hero h1{font-size:20px;line-height:1.3}
 .programs button{white-space:nowrap;scroll-snap-align:start}
 }
 </style>
+
+<style id="mobile-polish-2026">
+/* Mobile-first polish: ưu tiên đọc nhanh và thao tác bằng một tay. */
+@media screen and (max-width:720px){
+  .wrap{padding-left:16px;padding-right:16px}
+  .topbar{border-top-width:3px}
+  .top-inner{padding-left:0;padding-right:0}
+  .brand-mark{width:36px;height:36px;border-radius:10px}
+  .brand-mark svg{width:20px;height:20px}
+  .brand-title{font-size:11px;line-height:1.35;letter-spacing:.01em}
+  .brand-subtitle{font-size:10px;margin-top:1px}
+  .top-actions{gap:5px}
+  .top-actions .btn{min-height:40px;width:40px;padding:0;border-radius:9px}
+  .top-actions .btn span{display:none}
+  .top-actions #printBtn,.top-actions #mtqgPrintBtn{display:none}
+  .top-actions #quickReportBtn{display:inline-flex;background:var(--tint);border-color:var(--line);color:var(--brand)}
+  .top-actions #refreshBtn{display:inline-flex}
+  .top-actions #themeBtn{display:inline-flex}
+  .hero{padding:18px 0 14px;align-items:stretch}
+  .hero h1{font-size:22px;letter-spacing:-.035em}
+  .hero .hero-break{display:block;white-space:normal}
+  .hero-desc{display:block;font-size:12px;line-height:1.65;margin-top:6px;max-width:310px}
+  .period-card{min-width:0;max-width:none;width:100%;padding:10px 12px}
+  .period-name{font-size:14px}
+  .period-cutoff{font-size:10px}
+  .scope-panel{border-radius:13px}
+  .programs{padding-left:6px;padding-right:6px}
+  .programs button{font-size:11px;padding-left:10px;padding-right:10px}
+  .section-caption{margin:16px 0 9px;align-items:flex-start;line-height:1.5}
+  .section-caption span{font-size:10px;text-align:right}
+  .kpi-heading{font-size:11px}
+  .kpi-note{line-height:1.45}
+  .report-strip{padding:13px 12px}
+  .report-title{font-size:12px}
+  .report-title b{font-size:18px}
+  .quick{min-height:46px;padding:7px 8px}
+  .quick span{font-size:10px}
+  .quick b{font-size:18px}
+  .analysis-grid{gap:10px}
+  .card-header{gap:8px}
+  .card-header h2{font-size:16px}
+  .rank-switch button{min-height:38px;padding:6px 8px;font-size:10px}
+  .detail-section{margin-top:24px}
+  .detail-title{margin-bottom:11px}
+  .detail-title h2{font-size:18px}
+  .detail-tag{font-size:10px;padding:5px 8px}
+  .filters{padding:12px}
+  .filter-meta{padding:0 12px 10px;font-size:10px}
+  .table-footnote{font-size:10px;line-height:1.6}
+  .footer{display:block;font-size:10px;padding-bottom:88px}
+  .footer-right{text-align:left;margin-top:10px}
+}
+@media screen and (max-width:390px){
+  .wrap{padding-left:12px;padding-right:12px}
+  .brand-title{font-size:10px}
+  .hero h1{font-size:20px}
+  .top-actions #themeBtn{display:none}
+  .kpi{padding:11px 10px}
+  .kpi-value{font-size:19px}
+}
+</style>
 </head><body>
 <a class="skip" href="#main">Chuyển đến nội dung chính</a>
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
@@ -273,7 +336,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
 <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
 </defs></svg>
 <header class="topbar"><div class="wrap top-inner">
- <div class="brand"><div class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div><div><strong class="brand-title">SỞ TÀI CHÍNH TỈNH CAO BẰNG</strong><span class="brand-subtitle">Hệ thống theo dõi giải ngân</span></div></div>
+ <div class="brand"><div class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div><div><strong class="brand-title">SỞ TÀI CHÍNH TỈNH CAO BẰNG</strong><span class="brand-subtitle">Báo cáo nhanh · Theo dõi giải ngân</span></div></div>
  <!-- Một thanh điều hướng duy nhất; không tạo thêm tab chuyển Giải ngân/Phân công trong phần nội dung. -->
  <nav class="nav" aria-label="Điều hướng chính"><a href="#main" data-nav="main">Tổng quan</a><a href="#assignments" data-nav="assign">Phân công</a><a href="#details" data-nav="details">Chi tiết đơn vị</a></nav>
  <div class="top-actions">
@@ -286,20 +349,20 @@ h1,.hero h1{font-size:20px;line-height:1.3}
 </div></header>
 <main id="main" class="wrap">
  <noscript><p class="noscript">Vui lòng bật JavaScript để tải và xem số liệu.</p></noscript>
- <section class="hero" aria-labelledby="pageTitle"><div><p class="eyebrow">Theo dõi ngân sách</p><h1 id="pageTitle">Giải ngân <span class="hero-break">vốn thường xuyên</span></h1><p class="hero-desc">Tổng quan nguồn vốn và tình hình báo cáo của các đơn vị.</p></div>
+ <section class="hero" aria-labelledby="pageTitle"><div><p class="eyebrow">Báo cáo điều hành</p><h1 id="pageTitle">Báo cáo nhanh <span class="hero-break">tình hình giải ngân</span></h1><p class="hero-desc">Nắm ngay tiến độ, mức hoàn thành và tình hình nộp báo cáo của từng đơn vị.</p></div>
   <div class="period-card"><div class="period-top"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>KỲ BÁO CÁO</div><strong class="period-name" id="periodLabel">Đang tải thông tin…</strong><p class="period-cutoff" id="periodCutoff">Theo dữ liệu từ hệ thống</p><div class="sync-line" role="status"><span id="syncDot" class="status-dot"></span><span id="syncText">Đang kết nối…</span></div></div>
  </section>
  <section class="banner" id="banner" aria-label="Trạng thái dữ liệu" role="status" hidden></section>
  <section class="overview" aria-label="Tổng quan theo nguồn và khối đơn vị">
   <div class="scope-panel"><div class="scope-top"><div class="scope-title"><svg class="icon" aria-hidden="true"><use href="#i-filter"/></svg>Phạm vi theo dõi</div><div class="segments" id="kindSeg" role="group" aria-label="Chọn khối đơn vị"></div></div><div class="programs" id="programTabs" role="group" aria-label="Chọn nguồn vốn"></div></div>
-  <div class="section-caption"><strong id="scopeCaption">Tổng quan theo nguồn và khối đã chọn</strong><span>Đơn vị tính: <b>triệu đồng</b></span></div>
+  <div class="section-caption"><strong id="scopeCaption">Tổng quan theo phạm vi đang chọn</strong><span>Đơn vị tính: <b>triệu đồng</b></span></div>
   <div class="kpis" id="kpis">
    <article class="kpi"><div class="kpi-heading">Dự toán được giao<svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg></div><strong class="kpi-value num" id="kPlan">—</strong><div class="kpi-note" id="kPlanNote">Chưa có số liệu</div></article>
    <article class="kpi"><div class="kpi-heading">Đã giải ngân<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></div><strong class="kpi-value num" id="kSpent">—</strong><div class="kpi-note" id="kSpentNote">Lũy kế theo dữ liệu hệ thống</div></article>
    <article class="kpi"><div class="kpi-heading">Dự toán còn lại<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div><strong class="kpi-value num" id="kLeft">—</strong><div class="kpi-note" id="kLeftNote">Dự toán trừ số đã giải ngân</div></article>
    <article class="kpi accent"><div class="kpi-heading">Tỷ lệ giải ngân<svg class="icon" aria-hidden="true"><use href="#i-percent"/></svg></div><strong class="kpi-value num" id="kRate">—</strong><div class="kpi-line" aria-hidden="true"><i id="rateMeter"></i></div><div class="kpi-note" id="kRateNote">Tính trên tổng dự toán</div><div class="kpi-progress-note" id="kRateContext">Đang chờ số liệu</div></article>
   </div><p class="quality-note" id="qualityNote" hidden></p>
-  <div class="report-strip"><div class="report-overview"><span class="report-icon"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg></span><div class="report-content"><div class="report-period" id="reportPeriod" role="status">Kỳ báo cáo: Đang tải…</div><div class="report-title">Đơn vị đã nộp báo cáo <b class="num" id="reportCount">—</b></div><div class="report-cutoff" id="reportCutoff" hidden></div><div class="report-context-notice" id="reportPeriodNotice" role="status" hidden></div><div class="report-desc" id="reportDesc">Theo khối đơn vị; không phụ thuộc nguồn vốn đang chọn.</div><div class="report-meter" aria-hidden="true"><i id="reportMeter"></i></div></div></div><div class="report-actions">
+  <div class="report-strip"><div class="report-overview"><span class="report-icon"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg></span><div class="report-content"><div class="report-period" id="reportPeriod" role="status">Kỳ báo cáo: Đang tải…</div><div class="report-title">Đơn vị đã nộp báo cáo <b class="num" id="reportCount">—</b></div><div class="report-cutoff" id="reportCutoff" hidden></div><div class="report-context-notice" id="reportPeriodNotice" role="status" hidden></div><div class="report-desc" id="reportDesc">Tình hình nộp báo cáo theo kỳ; không phụ thuộc nguồn vốn đang chọn.</div><div class="report-meter" aria-hidden="true"><i id="reportMeter"></i></div></div></div><div class="report-actions">
    <button class="quick" id="quickYes" type="button" aria-pressed="false"><span>Đã nhận</span><b class="num">—</b></button>
    <button class="quick late" id="quickLate" type="button" aria-pressed="false" title="Lọc đơn vị gửi muộn"><span>Gửi muộn</span><b class="num">—</b></button>
    <button class="quick" id="quickNo" type="button" aria-pressed="false"><span>Chưa gửi</span><b class="num">—</b></button>
@@ -331,7 +394,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
   <p class="assignment-data-note">Nguồn: địa bàn theo dõi theo Phụ lục kèm theo Nghị quyết số 07-NQ/ĐU ngày 21/10/2026 của Ban Chấp hành Đảng bộ UBND tỉnh; phân công vốn sự nghiệp CTMTQG cấp tỉnh và nguồn chuyển đổi số (NQ 57) theo 2. Phụ lục kèm theo.xlsx, tháng 10/2026 (không thay đổi). Số liệu giải ngân chỉ lấy từ API. Nơi chưa có phân công sẽ được ghi rõ, không tự gán theo chức vụ.</p>
  </section>
  <div class="print-head" id="printHead"></div><div class="print-summary" id="printSummary"></div>
- <section class="detail-section" id="details" aria-labelledby="detailTitle"><div class="detail-title"><div><h2 id="detailTitle">Chi tiết theo đơn vị</h2><p>Chọn khối đơn vị, nguồn vốn; gõ tên để tìm nhanh. Các bộ lọc lãnh đạo, tên, mức giải ngân và nộp báo cáo chỉ áp dụng cho danh sách.</p><p class="detail-report-period" id="detailReportPeriod">Kỳ báo cáo: Đang tải…</p></div><span class="detail-tag" id="listCount">— đơn vị</span></div>
+ <section class="detail-section" id="details" aria-labelledby="detailTitle"><div class="detail-title"><div><h2 id="detailTitle">Chi tiết theo đơn vị</h2><p>Tra cứu nhanh theo khối, nguồn vốn, đơn vị và người phụ trách. Các bộ lọc bên dưới chỉ áp dụng cho danh sách chi tiết.</p><p class="detail-report-period" id="detailReportPeriod">Kỳ báo cáo: Đang tải…</p></div><span class="detail-tag" id="listCount">— đơn vị</span></div>
   <div class="table-card">
    <div class="detail-scope no-print" aria-label="Chọn khối và nguồn vốn">
     <div class="detail-kind-group"><span class="scope-field-label" id="detailKindLabel">Khối đơn vị</span><div class="segments" id="detailKindSeg" role="group" aria-labelledby="detailKindLabel"></div></div>
@@ -354,7 +417,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
   <div class="table-footnote"><span id="tableNote">Tỷ lệ tổng = tổng đã giải ngân / tổng dự toán.</span><span>Số tiền hiển thị tối đa 3 chữ số thập phân.</span></div>
   </div>
  </section>
- <footer class="footer"><div><strong>Sở Tài chính tỉnh Cao Bằng</strong><br>Số liệu do các đơn vị nhập trên hệ thống. Đơn vị tính: triệu đồng.</div><div class="footer-right">Biên tập: <strong>Phòng Ngân sách</strong><br>Phối hợp rà soát số liệu: <strong>Phòng Hành chính sự nghiệp</strong><br><span class="version">Giao diện 2.3 · Tự động đồng bộ mỗi 5 phút khi đang mở trang</span></div></footer>
+ <footer class="footer"><div><strong>Sở Tài chính tỉnh Cao Bằng</strong><br>Số liệu do các đơn vị nhập trên hệ thống. Đơn vị tính: triệu đồng.</div><div class="footer-right">Báo cáo phục vụ điều hành · Cập nhật tự động<br>Biên tập: <strong>Phòng Ngân sách</strong><br>Phối hợp rà soát số liệu: <strong>Phòng Hành chính sự nghiệp</strong><br><span class="version">Giao diện 2.3 · Tự động đồng bộ mỗi 5 phút khi đang mở trang</span></div></footer>
 </main>
 <dialog id="unitDialog" aria-labelledby="dialogTitle"><div class="dialog-body" id="dialogBody"></div></dialog>
 <script>'use strict';
