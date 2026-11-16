@@ -316,6 +316,9 @@ h1,.hero h1{font-size:20px;line-height:1.3}
   .kpi-value{font-size:19px}
 }
 </style>
+<style id="chart-polish-2026">
+.chart-insight{margin-top:12px;padding:9px 11px;border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;color:var(--text);font-size:10px;line-height:1.65}.chart-insight strong{color:var(--amber)}.chart-insight button{border:0;background:none;color:var(--brand);font:inherit;font-weight:700;padding:0;cursor:pointer}.chart-insight button:hover{text-decoration:underline}.bar-value{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.bar-value small{display:block;color:var(--muted);font-size:8px;font-weight:500;margin-top:3px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}.bar-value b{font-size:11px}@media(max-width:720px){.bar-value small{font-size:8px;max-width:92px}.chart-insight{font-size:10px}.bar-row{min-height:40px}}
+</style>
 </head><body>
 <a class="skip" href="#main">Chuyển đến nội dung chính</a>
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
@@ -370,8 +373,8 @@ h1,.hero h1{font-size:20px;line-height:1.3}
   </div></div>
   <div class="watchline"><span>Phân nhóm theo tỷ lệ, không thay thế đánh giá tiến độ theo kế hoạch.</span><button class="text-btn" id="decreaseBtn" type="button" hidden title="Lọc đơn vị có khoản mục giảm số giải ngân và đã có giải trình"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span></button><button class="text-btn" id="qualityBtn" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span></button></div>
   <div class="analysis-grid">
-   <section class="card" aria-labelledby="rankTitle"><div class="card-header"><div><p class="overline">So sánh đơn vị</p><h2 id="rankTitle">Tỷ lệ giải ngân</h2><p class="card-subtitle" id="rankSubtitle">Chưa có số liệu</p></div><div class="rank-switch" id="rankSeg" role="group" aria-label="Thứ tự xếp hạng"><button type="button" data-rank="bottom" aria-pressed="true">Thấp nhất</button><button type="button" data-rank="top" aria-pressed="false">Cao nhất</button></div></div><div id="bars" class="bars"></div><p class="chart-note">Chọn tên đơn vị để xem chi tiết các nguồn vốn.</p></section>
-   <section class="card" aria-labelledby="distTitle"><div class="card-header"><div><p class="overline">Cơ cấu theo tỷ lệ</p><h2 id="distTitle">Phân bố mức giải ngân</h2><p class="card-subtitle" id="distSubtitle">Trong phạm vi theo dõi đang chọn</p></div></div><div class="distribution"><div class="donut" aria-hidden="true"><svg viewBox="0 0 160 160" id="donutSvg"><circle class="donut-track" cx="80" cy="80" r="62"/></svg><div class="donut-label"><b id="donutCount" class="num">—</b><span>đơn vị có tỷ lệ</span></div></div><div class="legend" id="legend" role="group" aria-label="Lọc theo mức giải ngân"></div></div><p class="chart-note" id="distNote">Chọn một mức để lọc danh sách bên dưới.</p></section>
+   <section class="card" aria-labelledby="rankTitle"><div class="card-header"><div><p class="overline">So sánh đơn vị</p><h2 id="rankTitle">Tỷ lệ giải ngân</h2><p class="card-subtitle" id="rankSubtitle">Chưa có số liệu</p></div><div class="rank-switch" id="rankSeg" role="group" aria-label="Thứ tự xếp hạng"><button type="button" data-rank="bottom" aria-pressed="true">Thấp nhất</button><button type="button" data-rank="top" aria-pressed="false">Cao nhất</button></div></div><div id="bars" class="bars"></div><div id="rankInsight" class="chart-insight" hidden></div><p class="chart-note">Thanh màu thể hiện tỷ lệ; số tiền còn lại hiển thị bên dưới. Chọn tên đơn vị để xem chi tiết các nguồn vốn.</p></section>
+   <section class="card" aria-labelledby="distTitle"><div class="card-header"><div><p class="overline">Cơ cấu theo tỷ lệ</p><h2 id="distTitle">Phân bố mức giải ngân</h2><p class="card-subtitle" id="distSubtitle">Trong phạm vi theo dõi đang chọn</p></div></div><div class="distribution"><div class="donut" aria-hidden="true"><svg viewBox="0 0 160 160" id="donutSvg"><circle class="donut-track" cx="80" cy="80" r="62"/></svg><div class="donut-label"><b id="donutCount" class="num">—</b><span>đơn vị có tỷ lệ</span></div></div><div class="legend" id="legend" role="group" aria-label="Lọc theo mức giải ngân"></div></div><div id="distInsight" class="chart-insight" hidden></div><p class="chart-note" id="distNote">Chọn một mức để lọc danh sách bên dưới.</p></section>
   </div>
  </section>
 
@@ -728,7 +731,9 @@ function renderCharts(){
  const sentElig=eligible.filter(v=>v.u.submitted!==false),pool=sentElig.length?sentElig:eligible,skipped=eligible.length-pool.length;
  const ranked=[...pool].sort((a,b)=>(state.rank==='top'?b.rate-a.rate:a.rate-b.rate)||a.u.name.localeCompare(b.u.name,'vi')).slice(0,8);
  $('#rankSubtitle').textContent=ready?ranked.length+' đơn vị '+(state.rank==='top'?'cao nhất':'thấp nhất')+' · '+programName()+(skipped?' · chưa xét '+skipped+' đơn vị chưa gửi':''):'Chưa có số liệu';
- $('#bars').innerHTML=ranked.length?ranked.map((v,i)=>`<button type="button" class="bar-row ${v.band.cls}" data-detail="${esc(v.u.id)}" title="${esc(v.u.name)}: ${pct(v.rate)}"><span class="bar-number num">${String(i+1).padStart(2,'0')}</span><span class="bar-name">${esc(v.u.short||v.u.name)}</span><span class="bar-track" aria-hidden="true"><i style="width:${clamp(v.rate)}%"></i></span><span class="bar-value num">${pct(v.rate)}</span></button>`).join(''):`<div class="chart-empty">${ready?'Chưa có đơn vị đủ số liệu để xếp hạng.':state.loading?'Đang tải biểu đồ…':'Chưa có dữ liệu để hiển thị.'}</div>`;
+ $('#bars').innerHTML=ranked.length?ranked.map((v,i)=>{const flags=[v.u.submitted===false?'Chưa gửi':v.u.status==='late'?'Gửi muộn':'',v.left>0?'Còn '+fmt0(v.left):''].filter(Boolean);return `<button type="button" class="bar-row ${v.band.cls}" data-detail="${esc(v.u.id)}" title="${esc(v.u.name)}: ${pct(v.rate)} · còn ${fmt(v.left)} triệu đồng"><span class="bar-number num">${String(i+1).padStart(2,'0')}</span><span class="bar-name">${esc(v.u.short||v.u.name)}</span><span class="bar-track" aria-hidden="true"><i style="width:${clamp(v.rate)}%"></i></span><span class="bar-value num"><b>${pct(v.rate)}</b><small>${esc(flags.join(' · '))}</small></span></button>`}).join(''):`<div class="chart-empty">${ready?'Chưa có đơn vị đủ số liệu để xếp hạng.':state.loading?'Đang tải biểu đồ…':'Chưa có dữ liệu để hiển thị.'}</div>`;
+ const urgent=rows.filter(v=>v.band?.key==='risk'||v.u.submitted===false||v.u.status==='late'||v.u.decreaseCount>0).sort((a,b)=>{const score=v=>((v.u.submitted===false?4:0)+(v.band?.key==='risk'?3:0)+(v.u.status==='late'?1:0)+(v.u.decreaseCount>0?1:0));return score(b)-score(a)||(a.rate??1)-(b.rate??1);}).slice(0,3);
+ const ri=$('#rankInsight');ri.hidden=!ready||!urgent.length;ri.innerHTML=urgent.length?`<strong>Cần xử lý trước:</strong> ${urgent.map(v=>`<button type="button" data-detail="${esc(v.u.id)}">${esc(v.u.short||v.u.name)} <b>${pct(v.rate)}</b></button>`).join(' · ')}`:'';
  $('#donutCount').textContent=ready?eligible.length:'—';
  const circumference=2*Math.PI*62;let offset=0;const arcs=[];
  BANDS.forEach(b=>{const n=eligible.filter(v=>v.band.key===b.key).length,fraction=eligible.length?n/eligible.length:0;
@@ -736,6 +741,7 @@ function renderCharts(){
   const button=$(`#legend [data-band="${b.key}"]`);button.querySelector('b').textContent=ready?n:'—';button.querySelector('.legend-info').textContent=ready?(fraction*100).toLocaleString('vi-VN',{maximumFractionDigits:1})+'% số đơn vị':'Chưa có dữ liệu';button.setAttribute('aria-label',b.label+': '+(ready?n+' đơn vị':'chưa có dữ liệu')+'. Lọc danh sách.');});
  $('#donutSvg').innerHTML='<circle class="donut-track" cx="80" cy="80" r="62"/>'+arcs.join('');$('#distSubtitle').textContent=programName()+' · '+kindName(state.kind);
  const noBand=rows.filter(v=>!v.band).map(v=>v.u.short||v.u.name);$('#distNote').textContent=ready&&noBand.length?'Chưa phân mức (không có dự toán): '+noBand.slice(0,3).join(', ')+(noBand.length>3?' và '+(noBand.length-3)+' đơn vị khác':'')+'. Chọn một mức để lọc danh sách.':'Chọn một mức để lọc danh sách bên dưới.';
+ const low=eligible.filter(v=>v.rate<.5).length,late=rows.filter(v=>v.u.status==='late').length,missing=rows.filter(v=>v.u.submitted===false).length;const di=$('#distInsight');di.hidden=!ready;di.innerHTML=ready?`<strong>Tóm tắt:</strong> ${low}/${eligible.length} đơn vị dưới 50% · ${missing} chưa gửi${late?' · '+late+' gửi muộn':''}.`:'';
 }
 function amountHTML(v){return `<td class="r money num ${v!=null&&v<0?'negative':''}">${fmt(v)}</td>`;}
 function renderTable(){
@@ -1037,12 +1043,14 @@ function qrMainChart(rows, avg, time, labPrev, title) {
   const { c, g } = xuCanvas(W, H);
   const max = Math.min(1.2, Math.max(0.1, Math.ceil(Math.max(avg, time || 0, ...rows.map(x => Math.max(x.r || 0, x.a || 0))) * 10 + 0.3) / 10));
   const bw = W - left - right, X = v => left + bw * Math.min(Math.max(v, 0), max) / max, bot = top + rows.length * rh;
-  const hatch = qrHatch(g, '#444'), RED = '#b3261e', BLUE = '#2b5c9e';
+  const hatch = qrHatch(g, '#444'), RED = '#b3261e', BLUE = '#2b5c9e', AMBER = '#b97800';
+  const bandColor = r => r < .5 ? '#c84b3f' : r < .7 ? '#d69a27' : r < .9 ? '#76a889' : '#2d7a55';
   g.fillStyle = '#162f28'; g.font = 'bold 16px ' + XU_FONT; g.textAlign = 'left'; g.fillText(title, 16, 20);
   // chú giải
   let lx = 16; const ly = 46;
   const leg = (draw, text) => { draw(lx, ly); g.fillStyle = '#162f28'; g.font = '12px ' + XU_FONT; g.textAlign = 'left'; g.fillText(text, lx + 22, ly); lx += 22 + g.measureText(text).width + 22; };
   leg((x, y) => { g.fillStyle = hatch; g.fillRect(x, y - 6, 16, 12); g.strokeStyle = '#444'; g.lineWidth = 1; g.strokeRect(x, y - 6, 16, 12); }, 'Thấp hơn bình quân');
+  leg((x, y) => { g.fillStyle = '#c84b3f'; g.fillRect(x, y - 6, 16, 12); }, 'Dưới 50%');
   leg((x, y) => { g.fillStyle = '#a9a9a9'; g.fillRect(x, y - 6, 16, 12); g.strokeStyle = '#444'; g.lineWidth = 1; g.strokeRect(x, y - 6, 16, 12); }, 'Từ bình quân trở lên');
   if (hasPrev) leg((x, y) => { g.fillStyle = '#fff'; g.strokeStyle = '#222'; g.lineWidth = 1.5; g.beginPath(); g.arc(x + 8, y, 5.5, 0, 7); g.fill(); g.stroke(); }, labPrev);
   leg((x, y) => { g.strokeStyle = RED; g.lineWidth = 2; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(x, y); g.lineTo(x + 16, y); g.stroke(); g.setLineDash([]); }, 'Bình quân');
@@ -1056,7 +1064,8 @@ function qrMainChart(rows, avg, time, labPrev, title) {
   rows.forEach((x, i) => {
     const y = top + i * rh, cy = y + rh / 2, w = Math.max(2, X(x.r || 0) - left), low = (x.r || 0) < avg - 1e-9;
     g.textAlign = 'right'; g.font = '13px ' + XU_FONT; g.fillStyle = '#162f28'; g.fillText(x.name, left - 10, cy);
-    g.fillStyle = low ? hatch : '#a9a9a9'; g.fillRect(left, y + 8, w, rh - 16);
+    g.fillStyle = bandColor(x.r || 0); g.fillRect(left, y + 8, w, rh - 16);
+    if (low) { g.fillStyle = hatch; g.globalAlpha = .52; g.fillRect(left, y + 8, w, rh - 16); g.globalAlpha = 1; }
     g.strokeStyle = '#444'; g.lineWidth = 1; g.strokeRect(left, y + 8, w, rh - 16);
     let end = left + w;
     if (x.a != null) {
@@ -1073,6 +1082,7 @@ function qrMainChart(rows, avg, time, labPrev, title) {
   };
   vline(avg, RED, [6, 4], 'Bình quân ' + qrPct(avg), top - 12);
   if (time != null) vline(time, BLUE, [2, 3], 'Thời gian ' + qrPct(time), top - 28);
+  if (max >= .5) vline(.5, AMBER, [3, 3], 'Mốc 50%', top - 44);
   g.textAlign = 'left'; g.font = 'bold 12.5px ' + XU_FONT;
   labels.forEach(([t, x, y]) => { g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(x - 3, y - 9, g.measureText(t).width + 6, 18); g.fillStyle = '#162f28'; g.fillText(t, x, y); });
   return { data: c.toDataURL('image/png'), w: W, h: H };
