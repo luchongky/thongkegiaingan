@@ -1174,6 +1174,26 @@ function buildQuickDoc(D, data, picked) {
   };
   const dAvg = SUM.x - BQ.x, eq = Math.abs(dAvg) < 0.0005, dT = SUM.x - TIME;
   const cmpAvg = (x, b) => Math.abs(x - b) < 0.0005 ? 'tương đương' : x > b ? 'cao hơn' : 'thấp hơn';
+  const unitAssessment = u => {
+    const r = ratio(u), n = nm(u.name), left = Math.max(0, Number(u.planned || 0) - Number(u.disbursed || 0));
+    if (r == null) return '**' + n + ':** chưa đủ cơ sở xác định tỷ lệ giải ngân; đề nghị rà soát lại dự toán, số đã giải ngân và trạng thái cập nhật trên hệ thống trước khi đánh giá tiến độ.';
+    const parts = [n + ' đạt ' + pc(r) + ', đã giải ngân ' + money(u.disbursed || 0) + ' trên tổng dự toán ' + money(u.planned || 0) + ', còn lại ' + money(left) + '.'];
+    if (Math.abs(r - BQ.x) < 0.0005) parts.push('Kết quả tương đương bình quân ' + bqName + ' (' + pc(BQ.x) + ').');
+    else parts.push('Tỷ lệ ' + (r > BQ.x ? 'cao hơn ' : 'thấp hơn ') + bqName + ' ' + Math.abs((r - BQ.x) * 100).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' điểm %.');
+    parts.push('So với tiến độ thời gian của năm, đơn vị đang ' + (r >= TIME ? 'bám sát hoặc cao hơn' : 'chậm hơn') + ' ' + pc(TIME) + ' thời gian đã qua.');
+    const w = weak(u);
+    if (w.length) parts.push('Nguồn cần tập trung rà soát: ' + qrJoin(w) + '.');
+    if (r < 0.3) parts.push('Đây là nhóm cần ưu tiên cao, vì phần kinh phí chưa giải ngân còn lớn so với kết quả đạt được.');
+    else if (r < 0.5) parts.push('Tiến độ còn thấp, cần chuyển từ theo dõi sang giao mốc hoàn thành cụ thể cho từng khoản chi.');
+    else if (r < BQ.x) parts.push('Chưa theo kịp mặt bằng chung; cần xác định rõ khâu đang làm chậm tiến độ và trách nhiệm xử lý.');
+    else if (r >= 0.9) parts.push('Kết quả tốt; cần tiếp tục cập nhật kịp thời và kiểm soát phần kinh phí còn lại để tránh dồn hồ sơ cuối kỳ.');
+    else parts.push('Tiến độ ở mức có thể tiếp tục đôn đốc theo kế hoạch, đồng thời theo dõi sát phần kinh phí còn lại.');
+    if (!u.submittedAt) parts.push('Đơn vị chưa gửi báo cáo kỳ này, vì vậy cần hoàn thiện cả số liệu và phần giải trình tiến độ.');
+    else if (u.late) parts.push('Báo cáo đã gửi muộn; cần chấn chỉnh kỷ luật báo cáo để bảo đảm dữ liệu phục vụ điều hành đúng thời điểm.');
+    const old = mv.find(x => x.u.name === u.name);
+    if (old && old.dd < -0.0005) parts.push('Số giải ngân giảm so với ' + prevName + ', cần giải trình nguyên nhân và biện pháp khắc phục.');
+    return '**' + n + ':** ' + parts.join(' ');
+  };
   const body = [];
   // ---- tiêu đề ----
   body.push(P('SỞ TÀI CHÍNH TỈNH CAO BẰNG', { bold: 1, ni: 1, al: C, size: 13, after: 240 }));
@@ -1227,6 +1247,11 @@ function buildQuickDoc(D, data, picked) {
   } else if (!hasPrev) body.push(B('Chưa có mốc số liệu trước để so sánh biến động.'));
   const lg = new Map(); sel.forEach(u => { const l = leaderOf(u.name); if (l) { if (!lg.has(l)) lg.set(l, []); lg.get(l).push(nm(u)); } });
   if (lg.size) body.push(B('Lãnh đạo UBND tỉnh phụ trách địa bàn: ' + [...lg].map(([l, us]) => l + ' (' + us.join(', ') + ')').join('; ') + '.'));
+  body.push(H('1.1. Nhận định sâu theo đơn vị'));
+  body.push(P('Nhận định dưới đây kết hợp tỷ lệ giải ngân, so sánh với bình quân các xã, phường, tiến độ thời gian của năm, nguồn vốn có tỷ lệ thấp, phần kinh phí còn lại và tình trạng gửi báo cáo:', { it: 1, size: 12, ni: 1, al: J, after: 60 }));
+  const assessmentLimit = 24;
+  byR.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, assessmentLimit).forEach(u => body.push(B(unitAssessment(u))));
+  if (byR.length > assessmentLimit) body.push(B('Các đơn vị còn lại được đánh giá theo cùng nguyên tắc; đề nghị đối chiếu bảng số liệu chi tiết để xác định nguồn vốn và mốc xử lý cụ thể.'));
   // ---- 2. Theo nguồn vốn (bảng tô màu) ----
   body.push(H('2. Tỷ lệ giải ngân theo nguồn vốn'));
   const cw = Math.floor((TW - 2600) / (sel.length + 1)), widths2 = [TW - cw * (sel.length + 1)].concat(sel.map(() => cw), [cw]);
@@ -1258,7 +1283,7 @@ function buildQuickDoc(D, data, picked) {
   s5.forEach(t => body.push(B(t)));
   body.push(P('Kiến nghị cụ thể theo đơn vị', { bold: 1, ni: 1, al: L, size: 13, before: 100, after: 50, kn: 1 }));
   const adviceRows = sel.slice().sort((a, b) => (ratio(a) == null ? -1 : ratio(a)) - (ratio(b) == null ? -1 : ratio(b)));
-  const adviceLimit = 16;
+  const adviceLimit = 24;
   adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
   if (adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
   body.push(P('Đề nghị đơn vị chịu trách nhiệm về tính đầy đủ, chính xác và kịp thời của số liệu; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
