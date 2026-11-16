@@ -1155,6 +1155,23 @@ function buildQuickDoc(D, data, picked) {
   const decU = mv.filter(x => x.dd < -0.0005);
   if (decU.length) s5.push('Yêu cầu ' + qrJoin(decU.map(x => nm(x.u.name))) + ' giải trình việc số giải ngân giảm so với ' + prevName + '.');
   if (!s5.length) s5.push('Tiếp tục theo dõi, đôn đốc các đơn vị duy trì tiến độ giải ngân.');
+  // Kiến nghị riêng theo từng đơn vị: ưu tiên hành động có thể giao và kiểm tra lại.
+  const unitAdvice = u => {
+    const r = ratio(u), actions = [], n = nm(u.name), late = !!u.late;
+    if (!u.submittedAt) actions.push('khẩn trương cập nhật và gửi báo cáo kỳ ' + (P0.label || 'này') + ' đúng thời hạn');
+    else if (late) actions.push('chấn chỉnh việc gửi báo cáo, bảo đảm đúng hạn từ kỳ sau');
+    if (r == null) actions.push('rà soát, hoàn thiện số liệu dự toán và số đã giải ngân trên hệ thống');
+    else if (r < 0.3) actions.push('xây dựng kế hoạch giải ngân theo tuần/tháng, xác định rõ hồ sơ và khối lượng cần hoàn thành');
+    else if (r < 0.5) actions.push('tập trung tháo gỡ hồ sơ, thủ tục và đẩy nhanh các khoản chi còn chậm');
+    else if (r < BQ.x - 1e-9) actions.push('rà soát các nguồn có tỷ lệ thấp hơn bình quân, phân công đầu mối và mốc hoàn thành cụ thể');
+    else if (r >= 0.9) actions.push('tiếp tục duy trì tiến độ, cập nhật số liệu kịp thời và không để phát sinh khoản chi tồn đọng');
+    else actions.push('duy trì đà giải ngân và chủ động cập nhật tiến độ các khoản chi còn lại');
+    const left = Number(u.planned) - Number(u.disbursed || 0);
+    if (Number(u.planned) > 0 && left > Number(u.planned) * 0.3) actions.push('lập danh sách phần kinh phí còn lại, nêu rõ thời điểm dự kiến giải ngân');
+    if (hasPrev && Number(u.prevDisbursed) >= 0 && Number(u.disbursed || 0) < Number(u.prevDisbursed)) actions.push('giải trình nguyên nhân số giải ngân giảm so với ' + prevName);
+    if (!actions.length) actions.push('tiếp tục theo dõi và cập nhật tiến độ theo kỳ');
+    return '**' + n + ':** ' + actions.join('; ') + '.';
+  };
   const dAvg = SUM.x - BQ.x, eq = Math.abs(dAvg) < 0.0005, dT = SUM.x - TIME;
   const cmpAvg = (x, b) => Math.abs(x - b) < 0.0005 ? 'tương đương' : x > b ? 'cao hơn' : 'thấp hơn';
   const body = [];
@@ -1235,10 +1252,17 @@ function buildQuickDoc(D, data, picked) {
   if (pend.length) s4.push(qrJoin(pend.map(nm)) + ' chưa gửi; ' + (closed ? 'số liệu trên là số đơn vị đang nhập tại thời điểm chốt kỳ.' : 'số liệu trên là số đang nhập, có thể thay đổi đến hạn chốt ' + deadline + '.'));
   else s4.push('cả ' + kN + ' đơn vị đã gửi báo cáo kỳ này.');
   body.push(B(s4.join('. ').replace(/^./, c => c.toUpperCase())));
-  // ---- 4. Đề xuất ----
-  body.push(H('4. Đề xuất'));
+  // ---- 4. Đề xuất, kiến nghị ----
+  body.push(H('4. Đề xuất, kiến nghị đối với đơn vị'));
+  body.push(P('Đề nghị các đơn vị thực hiện các nội dung dưới đây, cập nhật kết quả và khó khăn, vướng mắc vào kỳ báo cáo tiếp theo:', { size: 13, ni: 1, al: J, after: 50 }));
   s5.forEach(t => body.push(B(t)));
-  body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 200 }));
+  body.push(P('Kiến nghị cụ thể theo đơn vị', { bold: 1, ni: 1, al: L, size: 13, before: 100, after: 50, kn: 1 }));
+  const adviceRows = sel.slice().sort((a, b) => (ratio(a) == null ? -1 : ratio(a)) - (ratio(b) == null ? -1 : ratio(b)));
+  const adviceLimit = 16;
+  adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
+  if (adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
+  body.push(P('Đề nghị đơn vị chịu trách nhiệm về tính đầy đủ, chính xác và kịp thời của số liệu; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
+  body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
   return new Document({ creator: 'Lục Hồng Kỳ', title: 'Báo cáo nhanh tình hình giải ngân ' + kN + ' ' + kindW + ' – kỳ ' + (P0.label || ''), styles: { default: { document: { run: { font: F, size: 28 } } } },
     sections: [{ properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } },
       headers: { default: new Header({ children: [new Paragraph({ alignment: C, children: [new TextRun({ children: [PageNumber.CURRENT], font: F, size: 26 })] })] }), first: new Header({ children: [new Paragraph({ children: [] })] }) }, children: body }] });
