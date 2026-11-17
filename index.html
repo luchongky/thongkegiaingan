@@ -1322,6 +1322,47 @@ function reportData() {
   if (p.closed && /^\d{4}-\d{2}-\d{2}$/.test(p.key || '')) period.end = p.key + 'T16:00:00+07:00';
   return { units, period, prevName: state.prevAt ? 'mốc ' + state.prevAt : '', leaderOf, generatedAt: state.generatedAt || new Date().toISOString() };
 }
+function submitAiQuickReport(names) {
+  const pin = window.prompt('Nhập mã quản trị để tạo nhận xét AI. Mã được kiểm tra tại Apps Script và không lưu trên trang.');
+  if (!pin) return false;
+  const data = reportData(), picked = data.units.filter(u => names.includes(u.name));
+  if (!picked.length) { alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
+  const planned = picked.reduce((n, u) => n + (Number(u.planned) || 0), 0);
+  const disbursed = picked.reduce((n, u) => n + (Number(u.disbursed) || 0), 0);
+  const sent = picked.filter(u => u.submittedAt !== null).length;
+  const payload = {
+    period: data.period.label || '',
+    cutoffText: data.period.cutoffText || '',
+    generatedAt: data.generatedAt,
+    summary: {
+      unitCount: picked.length,
+      planned: fmt(planned),
+      disbursed: fmt(disbursed),
+      remaining: fmt(planned - disbursed),
+      rate: planned ? (disbursed / planned * 100).toFixed(1) + '%' : '—',
+      submitted: sent,
+      pending: picked.length - sent,
+      late: picked.filter(u => u.late).length,
+      below50: picked.filter(u => u.planned > 0 && u.disbursed / u.planned < .5).length
+    },
+    units: picked.map(u => ({
+      name: u.name, planned: u.planned, disbursed: u.disbursed,
+      remaining: u.planned - u.disbursed,
+      rate: u.planned ? Math.round(u.disbursed / u.planned * 1000) / 10 : null,
+      submitted: u.submittedAt !== null, late: !!u.late, explainedDecreaseItems: u.explained || 0,
+      sections: u.sections
+    }))
+  };
+  const form = document.createElement('form');
+  form.method = 'POST'; form.action = CONFIG.API_URL; form.target = '_blank'; form.style.display = 'none';
+  [['api', 'ai-report'], ['pin', pin], ['payload', JSON.stringify(payload)]].forEach(([name, value]) => {
+    const input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = value; form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => form.remove(), 1000);
+  return true;
+}
 function pickUnits(names) {
   return new Promise(resolve => {
     const ov = document.createElement('div');
@@ -1341,7 +1382,7 @@ function pickUnits(names) {
       + '<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">'
       + '<span style="margin-right:auto;font-size:13px">Đã chọn <b id="qrN">0</b></span>'
       + '<button type="button" id="qrClear" class="btn">Bỏ chọn</button><button type="button" id="qrCancel" class="btn">Hủy</button>'
-      + '<button type="button" id="qrOk" class="btn primary">Xuất Word</button></div></div>';
+      + '<button type="button" id="qrAI" class="btn">Soạn nhận xét AI · quản trị</button><button type="button" id="qrOk" class="btn primary">Xuất Word</button></div></div>';
     document.body.appendChild(ov);
     const order = [], boxes = () => Array.from(ov.querySelectorAll('#qrList input'));
     const sync = () => {
@@ -1361,6 +1402,10 @@ function pickUnits(names) {
     const onKey = e => { if (e.key === 'Escape') done(null); };
     document.addEventListener('keydown', onKey);
     ov.querySelector('#qrCancel').onclick = () => done(null);
+    ov.querySelector('#qrAI').onclick = () => {
+      if (!order.length) { alert('Chọn ít nhất một xã, phường.'); return; }
+      if (submitAiQuickReport(order.slice())) done(null);
+    };
     ov.querySelector('#qrOk').onclick = () => { if (!order.length) { alert('Chọn ít nhất một xã, phường.'); return; } done(order.slice()); };
     ov.addEventListener('click', e => { if (e.target === ov) done(null); });
   });
