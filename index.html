@@ -1323,10 +1323,13 @@ function reportData() {
   return { units, period, prevName: state.prevAt ? 'mốc ' + state.prevAt : '', leaderOf, generatedAt: state.generatedAt || new Date().toISOString() };
 }
 function submitAiQuickReport(names) {
+  const targetName = 'aiReport_' + Date.now();
+  const reportWindow = window.open('about:blank', targetName);
+  if (!reportWindow) { alert('Trình duyệt đang chặn cửa sổ bật lên. Hãy cho phép cửa sổ bật lên cho trang này rồi thử lại.'); return false; }
   const pin = window.prompt('Nhập mã quản trị để tạo nhận xét AI. Mã được kiểm tra tại Apps Script và không lưu trên trang.');
-  if (!pin) return false;
+  if (!pin) { reportWindow.close(); return false; }
   const data = reportData(), picked = data.units.filter(u => names.includes(u.name));
-  if (!picked.length) { alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
+  if (!picked.length) { reportWindow.close(); alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
   const planned = picked.reduce((n, u) => n + (Number(u.planned) || 0), 0);
   const disbursed = picked.reduce((n, u) => n + (Number(u.disbursed) || 0), 0);
   const sent = picked.filter(u => u.submittedAt !== null).length;
@@ -1354,13 +1357,14 @@ function submitAiQuickReport(names) {
     }))
   };
   const form = document.createElement('form');
-  form.method = 'POST'; form.action = CONFIG.API_URL; form.target = '_blank'; form.style.display = 'none';
+  form.method = 'POST'; form.action = CONFIG.API_URL; form.target = targetName; form.style.display = 'none';
   [['api', 'ai-report'], ['pin', pin], ['payload', JSON.stringify(payload)]].forEach(([name, value]) => {
     const input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = value; form.appendChild(input);
   });
   document.body.appendChild(form);
   form.submit();
   setTimeout(() => form.remove(), 1000);
+  reportWindow.focus();
   return true;
 }
 function pickUnits(names) {
