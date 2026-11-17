@@ -1323,48 +1323,58 @@ function reportData() {
   return { units, period, prevName: state.prevAt ? 'mốc ' + state.prevAt : '', leaderOf, generatedAt: state.generatedAt || new Date().toISOString() };
 }
 function submitAiQuickReport(names) {
-  const targetName = 'aiReport_' + Date.now();
-  const reportWindow = window.open('about:blank', targetName);
-  if (!reportWindow) { alert('Trình duyệt đang chặn cửa sổ bật lên. Hãy cho phép cửa sổ bật lên cho trang này rồi thử lại.'); return false; }
-  const pin = window.prompt('Nhập mã quản trị để tạo nhận xét AI. Mã được kiểm tra tại Apps Script và không lưu trên trang.');
-  if (!pin) { reportWindow.close(); return false; }
   const data = reportData(), picked = data.units.filter(u => names.includes(u.name));
-  if (!picked.length) { reportWindow.close(); alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
+  if (!picked.length) { alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
   const planned = picked.reduce((n, u) => n + (Number(u.planned) || 0), 0);
   const disbursed = picked.reduce((n, u) => n + (Number(u.disbursed) || 0), 0);
   const sent = picked.filter(u => u.submittedAt !== null).length;
   const payload = {
-    period: data.period.label || '',
-    cutoffText: data.period.cutoffText || '',
-    generatedAt: data.generatedAt,
+    period: data.period.label || '', cutoffText: data.period.cutoffText || '', generatedAt: data.generatedAt,
     summary: {
-      unitCount: picked.length,
-      planned: fmt(planned),
-      disbursed: fmt(disbursed),
-      remaining: fmt(planned - disbursed),
-      rate: planned ? (disbursed / planned * 100).toFixed(1) + '%' : '—',
-      submitted: sent,
-      pending: picked.length - sent,
+      unitCount: picked.length, planned: fmt(planned), disbursed: fmt(disbursed), remaining: fmt(planned - disbursed),
+      rate: planned ? (disbursed / planned * 100).toFixed(1) + '%' : '—', submitted: sent, pending: picked.length - sent,
       late: picked.filter(u => u.late).length,
       below50: picked.filter(u => u.planned > 0 && u.disbursed / u.planned < .5).length
     },
     units: picked.map(u => ({
-      name: u.name, planned: u.planned, disbursed: u.disbursed,
-      remaining: u.planned - u.disbursed,
+      name: u.name, planned: u.planned, disbursed: u.disbursed, remaining: u.planned - u.disbursed,
       rate: u.planned ? Math.round(u.disbursed / u.planned * 1000) / 10 : null,
-      submitted: u.submittedAt !== null, late: !!u.late, explainedDecreaseItems: u.explained || 0,
-      sections: u.sections
+      submitted: u.submittedAt !== null, late: !!u.late, explainedDecreaseItems: u.explained || 0, sections: u.sections
     }))
   };
-  const form = document.createElement('form');
-  form.method = 'POST'; form.action = CONFIG.API_URL; form.target = targetName; form.style.display = 'none';
-  [['api', 'ai-report'], ['pin', pin], ['payload', JSON.stringify(payload)]].forEach(([name, value]) => {
-    const input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = value; form.appendChild(input);
-  });
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(() => form.remove(), 1000);
-  reportWindow.focus();
+  const ov = document.createElement('div');
+  ov.className = 'no-print';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,30,22,.58);z-index:220;display:flex;align-items:center;justify-content:center;padding:14px';
+  ov.innerHTML = '<div role="dialog" aria-modal="true" aria-labelledby="aiPinTitle" style="background:var(--surface,#fff);color:var(--text,#1d2b24);border-radius:14px;max-width:430px;width:100%;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.3)">'
+    + '<div id="aiPinTitle" style="font-weight:800;font-size:17px">Xác nhận quản trị viên</div>'
+    + '<p style="font-size:12.5px;opacity:.8;margin:7px 0 14px">Nhập mã quản trị để soạn nhận xét. Mã được gửi qua POST đến Apps Script để kiểm tra và không lưu trên trang.</p>'
+    + '<label for="aiPinInput" style="display:block;font-size:12px;font-weight:600;margin-bottom:6px">Mã quản trị</label>'
+    + '<input id="aiPinInput" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line,#cbd7cf);border-radius:9px;font:inherit">'
+    + '<div id="aiPinError" role="status" style="min-height:18px;color:#a33527;font-size:12px;margin-top:5px"></div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" id="aiPinCancel" class="btn">Hủy</button><button type="button" id="aiPinGo" class="btn primary">Tạo báo cáo AI</button></div></div>';
+  document.body.appendChild(ov);
+  const input = ov.querySelector('#aiPinInput'), error = ov.querySelector('#aiPinError');
+  const close = () => ov.remove();
+  ov.querySelector('#aiPinCancel').onclick = close;
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#aiPinGo').onclick = () => {
+    const pin = input.value;
+    if (!pin) { error.textContent = 'Nhập mã quản trị để tiếp tục.'; input.focus(); return; }
+    const targetName = 'aiReport_' + Date.now();
+    const reportWindow = window.open('about:blank', targetName);
+    if (!reportWindow) { error.textContent = 'Trình duyệt đang chặn cửa sổ kết quả. Hãy cho phép cửa sổ bật lên cho trang này.'; return; }
+    const form = document.createElement('form');
+    form.method = 'POST'; form.action = CONFIG.API_URL; form.target = targetName; form.style.display = 'none';
+    [['api', 'ai-report'], ['pin', pin], ['payload', JSON.stringify(payload)]].forEach(([name, value]) => {
+      const field = document.createElement('input'); field.type = 'hidden'; field.name = name; field.value = value; form.appendChild(field);
+    });
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => form.remove(), 1000);
+    close();
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') ov.querySelector('#aiPinGo').click(); });
+  input.focus();
   return true;
 }
 function pickUnits(names) {
