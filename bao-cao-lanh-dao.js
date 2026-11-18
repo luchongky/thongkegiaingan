@@ -219,6 +219,8 @@ function buildLeaderDoc(scope) {
   var sent = rows.filter(function (r) { return r.submitted; }).length;
   var notSent = rows.filter(function (r) { return !r.submitted; });
   var giam = rows.filter(function (r) { return r.giam; });
+  var per0 = state.period || {};
+  var closed = !!per0.closed;
 
   var floor = gi * 0.005;
   var sig = rows.filter(function (r) { return r.gi >= floor; });
@@ -242,7 +244,8 @@ function buildLeaderDoc(scope) {
     '<div><div class="k">Đã giải ngân</div><div class="v">' + n0(gn) + '</div><div class="n">lũy kế đến kỳ báo cáo</div></div>' +
     '<div><div class="k">Tỷ lệ giải ngân</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">so với dự toán giao</div></div>' +
     '<div><div class="k">Còn lại</div><div class="v">' + n0(gi - gn) + '</div><div class="n">chưa giải ngân</div></div>' +
-    '<div><div class="k">Nộp báo cáo</div><div class="v">' + sent + '/' + rows.length + '</div><div class="n">' + notSent.length + ' đơn vị chưa gửi</div></div>' +
+    '<div><div class="k">Nộp báo cáo</div><div class="v">' + sent + '/' + rows.length + '</div><div class="n">' +
+      (closed ? notSent.length + ' đơn vị chưa gửi' : 'đang trong thời gian nhận báo cáo') + '</div></div>' +
     '</div>';
 
   h += '<div class="row">' +
@@ -271,13 +274,17 @@ function buildLeaderDoc(scope) {
     h += i++ + '. Xét theo từng nguồn vốn, tỷ lệ giải ngân thấp hơn mức chung tập trung ở: ' +
       esc2(low.map(function (x) { return x.label + ' (' + pcTxt(x.tl) + ')'; }).join('; ')) + '.<br>';
   }
-  if (giam.length) {
+  if (closed && giam.length) {
     h += i++ + '. <span class="warn">Số liệu giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
       esc2(giam.slice(0, 12).map(function (r) { return r.name; }).join('; ')) + (giam.length > 12 ? '…' : '') + '. Đề nghị các đơn vị giải trình.<br>';
   }
-  if (notSent.length) {
+  if (closed && notSent.length) {
     h += i++ + '. <b>Chưa gửi báo cáo kỳ này (' + notSent.length + '):</b> ' +
       esc2(notSent.map(function (r) { return r.name; }).join('; ')) + '.<br>';
+  }
+  if (!closed) {
+    h += i++ + '. Kỳ báo cáo chưa đến hạn chốt' + (per0.cutoffText ? ' (' + esc2(per0.cutoffText) + ')' : '') +
+      ', các đơn vị đang trong thời gian cập nhật, gửi số liệu; báo cáo chưa đánh giá tình hình nộp báo cáo và biến động so với kỳ trước.<br>';
   }
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
   h += '</div></div></div>';
@@ -638,6 +645,7 @@ function buildQuickHtml(picked) {
   var giam = rows.filter(function (r) { return r.giam; });
   var chuaGui = rows.filter(function (r) { return !r.submitted; });
   var per = state.period || {};
+  var closed = !!per.closed;
 
   var sub = '<b>Kỳ báo cáo: ' + esc2(per.label || '—') + '</b>' +
             (per.cutoffText ? ' · Chốt số liệu: ' + esc2(per.cutoffText) : '') +
@@ -654,7 +662,8 @@ function buildQuickHtml(picked) {
     '<div><div class="k">Đã giải ngân</div><div class="v">' + n0(gn) + '</div><div class="n">lũy kế đến kỳ báo cáo</div></div>' +
     '<div><div class="k">Tỷ lệ nhóm</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' bình quân tỉnh</div></div>' +
     '<div><div class="k">Bình quân tỉnh</div><div class="v">' + pcTxt(avg) + '</div><div class="n">tiến độ thời gian ' + pcTxt(tpc) + '</div></div>' +
-    '<div><div class="k">Nộp báo cáo</div><div class="v">' + (rows.length - chuaGui.length) + '/' + rows.length + '</div><div class="n">' + chuaGui.length + ' đơn vị chưa gửi</div></div>' +
+    '<div><div class="k">Nộp báo cáo</div><div class="v">' + (rows.length - chuaGui.length) + '/' + rows.length + '</div><div class="n">' +
+      (closed ? chuaGui.length + ' đơn vị chưa gửi' : 'đang trong thời gian nhận báo cáo') + '</div></div>' +
     '</div>';
 
   if (rows.length <= 26) {
@@ -677,13 +686,17 @@ function buildQuickHtml(picked) {
          esc2(chuaPS.map(function (r) { return r.name; }).join('; ')) +
          '. Đề nghị xác định rõ nguyên nhân, trách nhiệm, các bước còn phải hoàn thành và dự kiến thời điểm giải ngân.<br>';
   }
-  if (giam.length) {
+  if (closed && giam.length) {
     h += i++ + '. <span class="warn">Số giải ngân giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
          esc2(giam.map(function (r) { return r.name; }).join('; ')) + '. Đề nghị giải trình nguyên nhân và biện pháp khắc phục.<br>';
   }
-  if (chuaGui.length) {
+  if (closed && chuaGui.length) {
     h += i++ + '. Chưa gửi báo cáo kỳ ' + esc2(per.label || '') + ': <b>' + esc2(chuaGui.map(function (r) { return r.name; }).join('; ')) +
          '</b>. Đề nghị khẩn trương cập nhật và gửi báo cáo đúng thời hạn.<br>';
+  }
+  if (!closed) {
+    h += i++ + '. Kỳ báo cáo chưa đến hạn chốt' + (per.cutoffText ? ' (' + esc2(per.cutoffText) + ')' : '') +
+         ', các đơn vị đang trong thời gian cập nhật, gửi số liệu; báo cáo chưa đánh giá tình hình nộp báo cáo và biến động so với kỳ trước.<br>';
   }
   h += i++ + '. Đề nghị các đơn vị tiếp tục theo dõi, cập nhật tiến độ theo kỳ và có kế hoạch giải ngân cụ thể đến 31/12/2026.<br>';
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
