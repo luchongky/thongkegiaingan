@@ -22,6 +22,11 @@ function pc(a, b) { return b > 0 ? (a / b) * 100 : 0; }
 function pcTxt(v) { return (Number(v) || 0).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
 function esc2(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
 
+function timePct() {
+  var now = new Date(), y = now.getFullYear();
+  return (now - new Date(y, 0, 1)) / (new Date(y + 1, 0, 1) - new Date(y, 0, 1)) * 100;
+}
+
 function inScope(u, scope) {
   if (scope === 'agency') return u.kind !== 'commune';
   if (scope === 'commune') return u.kind === 'commune';
@@ -56,9 +61,9 @@ function collect(scope) {
   return { key: key, progLabel: prog ? prog.label : 'Tổng các nguồn', rows: rows };
 }
 
-/* ---------- biểu đồ SVG ---------- */
-function barsBySource(scope) {
-  var list = (PROGRAMS || []).filter(function (p) { return p.key !== 'all'; }).map(function (p) {
+/* ---------- thống kê theo từng nguồn vốn ---------- */
+function sourceStats(scope) {
+  return (PROGRAMS || []).filter(function (p) { return p.key !== 'all'; }).map(function (p) {
     var gi = 0, gn = 0;
     (state.units || []).forEach(function (u) {
       if (!inScope(u, scope)) return;
@@ -66,6 +71,11 @@ function barsBySource(scope) {
     });
     return { label: p.label, gi: gi, gn: gn, tl: pc(gn, gi) };
   }).filter(function (x) { return x.gi > 0; });
+}
+
+/* ---------- biểu đồ SVG ---------- */
+function barsBySource(scope) {
+  var list = sourceStats(scope);
 
   var H = 22, W = 420, LBL = 150, BW = W - LBL - 46;
   var svg = '<svg viewBox="0 0 ' + W + ' ' + (list.length * H + 6) + '" width="100%">';
@@ -172,21 +182,25 @@ function header(h1, sub) {
   return '<div class="hd"><div class="org">Ủy ban nhân dân tỉnh Cao Bằng · Sở Tài chính</div>' +
          '<h1>' + esc2(h1) + '</h1><div class="sub">' + sub + '</div></div>';
 }
-/* ---------- kiến nghị đối với đơn vị giải ngân chậm ---------- */
+/* ---------- kiến nghị, đôn đốc (lời văn của Sở Tài chính) ----------
+   Căn cứ: CV 4099/UBND-TH ngày 22/10/2026 và CV 4055/UBND-KT ngày 20/10/2026 của UBND tỉnh.
+   Không tự đặt ngưỡng tỷ lệ; mốc so sánh lấy từ tiến độ thời gian và bình quân toàn tỉnh. */
 function kienNghiBox(mode) {
   var it = [];
-  it.push('Tập trung chỉ đạo đơn vị được giao kinh phí đôn đốc nhà thầu đẩy nhanh tiến độ thi công; tổ chức nghiệm thu, thanh toán ngay khi có khối lượng hoàn thành, không để dồn vào cuối năm.');
-  it.push('Đối với công trình, nhiệm vụ chi xác định không thể giải ngân hết trong năm 2026: báo cáo bằng văn bản về Sở Tài chính, nêu rõ số kinh phí, nguyên nhân và đề xuất xử lý để Sở tham mưu Ủy ban nhân dân tỉnh điều chuyển.');
-  it.push('Rà soát, hoàn thiện hồ sơ thanh toán gửi Kho bạc Nhà nước; không để hồ sơ tồn đọng, chậm luân chuyển làm ảnh hưởng tiến độ giải ngân.');
-  it.push('Phân công lãnh đạo trực tiếp theo dõi từng nhiệm vụ chi; xây dựng kế hoạch giải ngân chi tiết theo các mốc 10/12, 20/12 và 31/12/2026, cam kết tiến độ với Ủy ban nhân dân tỉnh.');
+  it.push('Rà soát từng nhiệm vụ, dự án được giao dự toán; xác định rõ nguyên nhân chậm, trách nhiệm của đơn vị và cá nhân phụ trách; xây dựng tiến độ giải ngân cụ thể theo từng nhiệm vụ, phấn đấu hoàn thành kế hoạch vốn được giao.');
+  it.push('Tập trung chỉ đạo, đôn đốc nhà thầu đẩy nhanh tiến độ thi công; tổ chức nghiệm thu, hoàn thiện hồ sơ và thanh toán ngay khi có khối lượng hoàn thành, không để dồn vào cuối năm.');
   if (mode === 'baolu') {
-    it.push('Đơn vị chưa lựa chọn xong nhà thầu khẩn trương hoàn thành thủ tục đấu thầu, khởi công; trường hợp không thể hoàn thành trong năm phải báo cáo ngay để xử lý theo quy định về nguồn kinh phí khắc phục hậu quả thiên tai.');
+    it.push('Đơn vị chưa lựa chọn xong nhà thầu khẩn trương hoàn thành thủ tục đấu thầu, khởi công; chủ động xử lý vướng mắc thuộc thẩm quyền, khó khăn vượt thẩm quyền thì tổng hợp rõ nội dung, cơ quan có trách nhiệm xử lý và kiến nghị cấp có thẩm quyền xem xét.');
   } else {
-    it.push('Cập nhật đầy đủ, kịp thời số liệu trên hệ thống theo đúng thời hạn từng kỳ; đơn vị chưa gửi báo cáo chịu trách nhiệm trước Ủy ban nhân dân tỉnh.');
+    it.push('Đối với vốn các Chương trình mục tiêu quốc gia: tăng cường kiểm tra, đôn đốc chủ đầu tư và đơn vị thực hiện; khẩn trương hoàn thiện thủ tục, hồ sơ thanh toán và xử lý vướng mắc thuộc thẩm quyền; khó khăn vượt thẩm quyền thì tổng hợp rõ nội dung, cơ quan có trách nhiệm xử lý và kiến nghị cấp có thẩm quyền xem xét.');
   }
-  it.push('Giao Sở Tài chính theo dõi, tổng hợp, định kỳ báo cáo Ủy ban nhân dân tỉnh; đề xuất biểu dương đơn vị giải ngân tốt và phê bình đơn vị giải ngân chậm, không có chuyển biến qua các kỳ.');
-  var h = '<div class="row"><div class="box" style="flex:1"><div class="t">Kiến nghị đối với đơn vị giải ngân chậm</div><div class="note">';
+  it.push('Đối với nguồn vốn, nhiệm vụ đến thời điểm báo cáo chưa phát sinh giải ngân: xác định rõ nguyên nhân, trách nhiệm, các bước còn phải hoàn thành và dự kiến thời điểm giải ngân, báo cáo về Sở Tài chính.');
+  it.push('Đối với công trình, nhiệm vụ chi xác định không thể giải ngân hết trong năm 2026: báo cáo bằng văn bản về Sở Tài chính, nêu rõ số kinh phí, nguyên nhân và đề xuất xử lý để Sở Tài chính tham mưu Ủy ban nhân dân tỉnh điều chuyển.');
+  it.push('Cập nhật đầy đủ, kịp thời số liệu trên hệ thống theo đúng thời hạn từng kỳ; chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.');
+  var h = '<div class="row"><div class="box" style="flex:1"><div class="t">Kiến nghị, đôn đốc đối với đơn vị giải ngân chậm</div><div class="note">';
+  h += 'Thực hiện Công văn số 4099/UBND-TH ngày 22/10/2026 và Công văn số 4055/UBND-KT ngày 20/10/2026 của Ủy ban nhân dân tỉnh, Sở Tài chính đề nghị các đơn vị:<br>';
   it.forEach(function (x, i) { h += (i + 1) + '. ' + x + '<br>'; });
+  h += 'Sở Tài chính tiếp tục theo dõi, tổng hợp tiến độ giải ngân của từng đơn vị và định kỳ báo cáo Ủy ban nhân dân tỉnh; kính đề nghị Ủy ban nhân dân tỉnh xem xét biểu dương đơn vị giải ngân tốt, phê bình đơn vị giải ngân chậm, không có chuyển biến qua các kỳ.';
   return h + '</div></div></div>';
 }
 
@@ -242,8 +256,21 @@ function buildLeaderDoc(scope) {
   h += '<div class="row"><div class="box" style="flex:1"><div class="t">Nhận xét, đề nghị</div><div class="note">';
   h += '1. ' + esc2(scopeText(scope)) + ' giải ngân <b>' + n0(gn) + '/' + n0(gi) + ' ' + UNIT_TXT + '</b>, đạt <b>' + pcTxt(tl) +
        '</b> dự toán giao; số còn lại phải giải ngân là <b>' + n0(gi - gn) + ' ' + UNIT_TXT + '</b>.<br>';
-  h += '2. Có <b>' + rows.filter(function (r) { return r.tl < 50; }).length + ' đơn vị</b> giải ngân dưới 50%, đề nghị kiểm điểm tiến độ và cam kết lộ trình hoàn thành trước 31/12/2026.<br>';
+  var tpc = timePct();
+  var duoiTD = rows.filter(function (r) { return r.tl < tpc; });
+  var chuaPS = rows.filter(function (r) { return r.gn <= 0; });
+  h += '2. So với tiến độ thời gian (' + pcTxt(tpc) + '): <b>' + duoiTD.length + '/' + rows.length +
+       ' đơn vị</b> có tỷ lệ giải ngân thấp hơn tiến độ' +
+       (chuaPS.length ? ', trong đó <b>' + chuaPS.length + ' đơn vị chưa phát sinh giải ngân</b> (' +
+         esc2(chuaPS.slice(0, 10).map(function (r) { return r.name; }).join('; ')) + (chuaPS.length > 10 ? '…' : '') + ')' : '') +
+       '. Đề nghị rà soát từng nhiệm vụ, dự án, xác định nguyên nhân, trách nhiệm và thời hạn khắc phục.<br>';
+  var low = sourceStats(scope).filter(function (x) { return x.tl < tl; })
+            .sort(function (a, b) { return a.tl - b.tl; });
   var i = 3;
+  if (low.length) {
+    h += i++ + '. Xét theo từng nguồn vốn, tỷ lệ giải ngân thấp hơn mức chung tập trung ở: ' +
+      esc2(low.map(function (x) { return x.label + ' (' + pcTxt(x.tl) + ')'; }).join('; ')) + '.<br>';
+  }
   if (giam.length) {
     h += i++ + '. <span class="warn">Số liệu giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
       esc2(giam.slice(0, 12).map(function (r) { return r.name; }).join('; ')) + (giam.length > 12 ? '…' : '') + '. Đề nghị các đơn vị giải trình.<br>';
@@ -309,7 +336,6 @@ function buildBaoLuDoc() {
 
   var byRate = rows.slice().sort(function (a, b) { return a.tl - b.tl; });
   var half = Math.ceil(byRate.length / 2);
-  var duoi50 = rows.filter(function (r) { return r.tl < 50; });
 
   var sub = '<b>Kỳ báo cáo: ' + esc2(per.label || '—') + '</b>' +
             (bl.preloadedAsOf ? ' · Số liệu nền đến ' + esc2(bl.preloadedAsOf) : '') +
@@ -340,7 +366,14 @@ function buildBaoLuDoc() {
   h += '<div class="row"><div class="box" style="flex:1"><div class="t">Nhận xét, đề nghị</div><div class="note">';
   h += '1. Toàn tỉnh đã thanh toán <b>' + n0(gn) + '/' + n0(gi) + ' ' + UNIT_TXT + '</b>, đạt <b>' + pcTxt(tl) +
        '</b> vốn NSTW giao; số còn lại là <b>' + n0(gi - gn) + ' ' + UNIT_TXT + '</b>.<br>';
-  h += '2. Có <b>' + duoi50.length + ' đơn vị</b> thanh toán dưới 50%, đề nghị khẩn trương hoàn thiện thủ tục nghiệm thu, thanh toán.<br>';
+  var tpcB = timePct();
+  var duoiTDB = rows.filter(function (r) { return r.tl < tpcB; });
+  var chuaPSB = rows.filter(function (r) { return r.gn <= 0; });
+  h += '2. So với tiến độ thời gian (' + pcTxt(tpcB) + '): <b>' + duoiTDB.length + '/' + rows.length +
+       ' đơn vị</b> thanh toán thấp hơn tiến độ' +
+       (chuaPSB.length ? ', trong đó <b>' + chuaPSB.length + ' đơn vị chưa phát sinh thanh toán</b> (' +
+         esc2(chuaPSB.slice(0, 10).map(function (r) { return r.name; }).join('; ')) + (chuaPSB.length > 10 ? '…' : '') + ')' : '') +
+       '. Đề nghị khẩn trương hoàn thiện thủ tục nghiệm thu, hồ sơ thanh toán.<br>';
   h += '3. Kinh phí Mục VI <b>không tổng hợp</b> vào tổng dự toán, tổng giải ngân và tỷ lệ giải ngân các Mục I–V.<br>';
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
   h += '</div></div></div>';
@@ -554,21 +587,25 @@ function barsQuick(rows, avg, tpc) {
   return svg + '</svg>';
 }
 
-/* ---------- kiến nghị đối với đơn vị giải ngân chậm ---------- */
+/* ---------- kiến nghị, đôn đốc (lời văn của Sở Tài chính) ----------
+   Căn cứ: CV 4099/UBND-TH ngày 22/10/2026 và CV 4055/UBND-KT ngày 20/10/2026 của UBND tỉnh.
+   Không tự đặt ngưỡng tỷ lệ; mốc so sánh lấy từ tiến độ thời gian và bình quân toàn tỉnh. */
 function kienNghiBox(mode) {
   var it = [];
-  it.push('Tập trung chỉ đạo đơn vị được giao kinh phí đôn đốc nhà thầu đẩy nhanh tiến độ thi công; tổ chức nghiệm thu, thanh toán ngay khi có khối lượng hoàn thành, không để dồn vào cuối năm.');
-  it.push('Đối với công trình, nhiệm vụ chi xác định không thể giải ngân hết trong năm 2026: báo cáo bằng văn bản về Sở Tài chính, nêu rõ số kinh phí, nguyên nhân và đề xuất xử lý để Sở tham mưu Ủy ban nhân dân tỉnh điều chuyển.');
-  it.push('Rà soát, hoàn thiện hồ sơ thanh toán gửi Kho bạc Nhà nước; không để hồ sơ tồn đọng, chậm luân chuyển làm ảnh hưởng tiến độ giải ngân.');
-  it.push('Phân công lãnh đạo trực tiếp theo dõi từng nhiệm vụ chi; xây dựng kế hoạch giải ngân chi tiết theo các mốc 10/12, 20/12 và 31/12/2026, cam kết tiến độ với Ủy ban nhân dân tỉnh.');
+  it.push('Rà soát từng nhiệm vụ, dự án được giao dự toán; xác định rõ nguyên nhân chậm, trách nhiệm của đơn vị và cá nhân phụ trách; xây dựng tiến độ giải ngân cụ thể theo từng nhiệm vụ, phấn đấu hoàn thành kế hoạch vốn được giao.');
+  it.push('Tập trung chỉ đạo, đôn đốc nhà thầu đẩy nhanh tiến độ thi công; tổ chức nghiệm thu, hoàn thiện hồ sơ và thanh toán ngay khi có khối lượng hoàn thành, không để dồn vào cuối năm.');
   if (mode === 'baolu') {
-    it.push('Đơn vị chưa lựa chọn xong nhà thầu khẩn trương hoàn thành thủ tục đấu thầu, khởi công; trường hợp không thể hoàn thành trong năm phải báo cáo ngay để xử lý theo quy định về nguồn kinh phí khắc phục hậu quả thiên tai.');
+    it.push('Đơn vị chưa lựa chọn xong nhà thầu khẩn trương hoàn thành thủ tục đấu thầu, khởi công; chủ động xử lý vướng mắc thuộc thẩm quyền, khó khăn vượt thẩm quyền thì tổng hợp rõ nội dung, cơ quan có trách nhiệm xử lý và kiến nghị cấp có thẩm quyền xem xét.');
   } else {
-    it.push('Cập nhật đầy đủ, kịp thời số liệu trên hệ thống theo đúng thời hạn từng kỳ; đơn vị chưa gửi báo cáo chịu trách nhiệm trước Ủy ban nhân dân tỉnh.');
+    it.push('Đối với vốn các Chương trình mục tiêu quốc gia: tăng cường kiểm tra, đôn đốc chủ đầu tư và đơn vị thực hiện; khẩn trương hoàn thiện thủ tục, hồ sơ thanh toán và xử lý vướng mắc thuộc thẩm quyền; khó khăn vượt thẩm quyền thì tổng hợp rõ nội dung, cơ quan có trách nhiệm xử lý và kiến nghị cấp có thẩm quyền xem xét.');
   }
-  it.push('Giao Sở Tài chính theo dõi, tổng hợp, định kỳ báo cáo Ủy ban nhân dân tỉnh; đề xuất biểu dương đơn vị giải ngân tốt và phê bình đơn vị giải ngân chậm, không có chuyển biến qua các kỳ.');
-  var h = '<div class="row"><div class="box" style="flex:1"><div class="t">Kiến nghị đối với đơn vị giải ngân chậm</div><div class="note">';
+  it.push('Đối với nguồn vốn, nhiệm vụ đến thời điểm báo cáo chưa phát sinh giải ngân: xác định rõ nguyên nhân, trách nhiệm, các bước còn phải hoàn thành và dự kiến thời điểm giải ngân, báo cáo về Sở Tài chính.');
+  it.push('Đối với công trình, nhiệm vụ chi xác định không thể giải ngân hết trong năm 2026: báo cáo bằng văn bản về Sở Tài chính, nêu rõ số kinh phí, nguyên nhân và đề xuất xử lý để Sở Tài chính tham mưu Ủy ban nhân dân tỉnh điều chuyển.');
+  it.push('Cập nhật đầy đủ, kịp thời số liệu trên hệ thống theo đúng thời hạn từng kỳ; chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.');
+  var h = '<div class="row"><div class="box" style="flex:1"><div class="t">Kiến nghị, đôn đốc đối với đơn vị giải ngân chậm</div><div class="note">';
+  h += 'Thực hiện Công văn số 4099/UBND-TH ngày 22/10/2026 và Công văn số 4055/UBND-KT ngày 20/10/2026 của Ủy ban nhân dân tỉnh, Sở Tài chính đề nghị các đơn vị:<br>';
   it.forEach(function (x, i) { h += (i + 1) + '. ' + x + '<br>'; });
+  h += 'Sở Tài chính tiếp tục theo dõi, tổng hợp tiến độ giải ngân của từng đơn vị và định kỳ báo cáo Ủy ban nhân dân tỉnh; kính đề nghị Ủy ban nhân dân tỉnh xem xét biểu dương đơn vị giải ngân tốt, phê bình đơn vị giải ngân chậm, không có chuyển biến qua các kỳ.';
   return h + '</div></div></div>';
 }
 
@@ -634,6 +671,12 @@ function buildQuickHtml(picked) {
        esc2(duoiBQ.map(function (r) { return r.name + ' (' + pcTxt(r.tl) + ')'; }).join('; ')) +
        '. Đề nghị đẩy nhanh giải ngân, lập danh sách phần kinh phí còn lại và nêu rõ thời điểm dự kiến giải ngân.'
        : 'không có đơn vị nào.') + '<br>';
+  var chuaPS = rows.filter(function (r) { return r.gn <= 0; });
+  if (chuaPS.length) {
+    h += i++ + '. <b>Chưa phát sinh giải ngân</b> đến thời điểm báo cáo: ' +
+         esc2(chuaPS.map(function (r) { return r.name; }).join('; ')) +
+         '. Đề nghị xác định rõ nguyên nhân, trách nhiệm, các bước còn phải hoàn thành và dự kiến thời điểm giải ngân.<br>';
+  }
   if (giam.length) {
     h += i++ + '. <span class="warn">Số giải ngân giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
          esc2(giam.map(function (r) { return r.name; }).join('; ')) + '. Đề nghị giải trình nguyên nhân và biện pháp khắc phục.<br>';
