@@ -27,6 +27,19 @@ function timePct() {
   return (now - new Date(y, 0, 1)) / (new Date(y + 1, 0, 1) - new Date(y, 0, 1)) * 100;
 }
 
+function remindNotSent() {
+  /* Chỉ nhắc đơn vị chưa gửi khi in vào NGÀY KẾ TIẾP ngày chốt kỳ.
+     In trước khi hết kỳ: không nhắc. Quá 1 ngày sau chốt: coi như đã sang kỳ mới, không nhắc. */
+  var k = (state.period || {}).key;
+  if (!k) return false;
+  var a = k.split('-');
+  if (a.length !== 3) return false;
+  var d0 = new Date(+a[0], +a[1] - 1, +a[2]);
+  var now = new Date();
+  var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((t0 - d0) / 86400000) === 1;
+}
+
 function inScope(u, scope) {
   if (scope === 'agency') return u.kind !== 'commune';
   if (scope === 'commune') return u.kind === 'commune';
@@ -204,6 +217,23 @@ function kienNghiBox(mode) {
   return h + '</div></div></div>';
 }
 
+function baoLuSummaryBox(scope) {
+  var rows = baoLuRows().filter(function (r) { return inScope(r, scope); });
+  if (!rows.length) return '';
+  var gi = 0, gn = 0, dt = 0, tx = 0, prj = 0, ctr = 0;
+  rows.forEach(function (r) { gi += r.gi; gn += r.gn; dt += r.dt; tx += r.tx; prj += r.projects; ctr += r.contracted; });
+  var duoiTD = rows.filter(function (r) { return r.tl < timePct(); });
+  return '<div class="row"><div class="box" style="flex:1">' +
+    '<div class="t">Mục VI · Kinh phí bão lũ nguồn NSTW giao trong năm (theo dõi riêng, không tính vào các số liệu trên)</div>' +
+    '<div class="note">' +
+    'Vốn NSTW giao <b>' + n0(gi) + ' ' + UNIT_TXT + '</b> cho ' + rows.length + ' đơn vị; đã thanh toán <b>' + n0(gn) +
+    ' ' + UNIT_TXT + '</b>, đạt <b>' + pcTxt(pc(gn, gi)) + '</b>; còn lại <b>' + n0(gi - gn) + ' ' + UNIT_TXT + '</b>' +
+    ' (chi đầu tư ' + n0(dt) + ', chi thường xuyên ' + n0(tx) + ').<br>' +
+    'Công trình đã lựa chọn xong nhà thầu: <b>' + ctr + '/' + prj + '</b>; có <b>' + duoiTD.length + '/' + rows.length +
+    ' đơn vị</b> thanh toán thấp hơn tiến độ thời gian. Chi tiết tại báo cáo riêng "Mục VI – Kinh phí bão lũ".' +
+    '</div></div></div>';
+}
+
 function signBlock() {
   var now = new Date();
   return '<div class="sign"><div>Cao Bằng, ngày ' + now.getDate() + ' tháng ' + (now.getMonth() + 1) + ' năm ' + now.getFullYear() +
@@ -221,6 +251,7 @@ function buildLeaderDoc(scope) {
   var giam = rows.filter(function (r) { return r.giam; });
   var per0 = state.period || {};
   var closed = !!per0.closed;
+  var nhac = remindNotSent();
 
   var floor = gi * 0.005;
   var sig = rows.filter(function (r) { return r.gi >= floor; });
@@ -245,7 +276,7 @@ function buildLeaderDoc(scope) {
     '<div><div class="k">Tỷ lệ giải ngân</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">so với dự toán giao</div></div>' +
     '<div><div class="k">Còn lại</div><div class="v">' + n0(gi - gn) + '</div><div class="n">chưa giải ngân</div></div>' +
     '<div><div class="k">Nộp báo cáo</div><div class="v">' + sent + '/' + rows.length + '</div><div class="n">' +
-      (closed ? notSent.length + ' đơn vị chưa gửi' : 'đang trong thời gian nhận báo cáo') + '</div></div>' +
+      (nhac ? notSent.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
   h += '<div class="row">' +
@@ -274,21 +305,21 @@ function buildLeaderDoc(scope) {
     h += i++ + '. Xét theo từng nguồn vốn, tỷ lệ giải ngân thấp hơn mức chung tập trung ở: ' +
       esc2(low.map(function (x) { return x.label + ' (' + pcTxt(x.tl) + ')'; }).join('; ')) + '.<br>';
   }
-  if (closed && giam.length) {
+  if (giam.length) {
     h += i++ + '. <span class="warn">Số liệu giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
       esc2(giam.slice(0, 12).map(function (r) { return r.name; }).join('; ')) + (giam.length > 12 ? '…' : '') + '. Đề nghị các đơn vị giải trình.<br>';
   }
-  if (closed && notSent.length) {
+  if (nhac && notSent.length) {
     h += i++ + '. <b>Chưa gửi báo cáo kỳ này (' + notSent.length + '):</b> ' +
       esc2(notSent.map(function (r) { return r.name; }).join('; ')) + '.<br>';
-  }
-  if (!closed) {
+  } else if (!closed) {
     h += i++ + '. Kỳ báo cáo chưa đến hạn chốt' + (per0.cutoffText ? ' (' + esc2(per0.cutoffText) + ')' : '') +
-      ', các đơn vị đang trong thời gian cập nhật, gửi số liệu; báo cáo chưa đánh giá tình hình nộp báo cáo và biến động so với kỳ trước.<br>';
+      ', các đơn vị đang trong thời gian cập nhật, gửi số liệu.<br>';
   }
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
   h += '</div></div></div>';
 
+  h += baoLuSummaryBox(scope);
   h += kienNghiBox('all');
   h += signBlock();
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. Ký hiệu: ▼ số liệu giảm so với kỳ trước; ✓ đã gửi báo cáo.</div>';
@@ -573,6 +604,17 @@ function timePct() {
   return (now - start) / (end - start) * 100;
 }
 
+function remindNotSent() {
+  var k = (state.period || {}).key;
+  if (!k) return false;
+  var a = k.split('-');
+  if (a.length !== 3) return false;
+  var d0 = new Date(+a[0], +a[1] - 1, +a[2]);
+  var now = new Date();
+  var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((t0 - d0) / 86400000) === 1;
+}
+
 /* biểu đồ thanh: tỷ lệ từng đơn vị + mốc bình quân tỉnh + mốc tiến độ thời gian */
 function barsQuick(rows, avg, tpc) {
   var H = 17, W = 460, LBL = 168, BW = W - LBL - 40;
@@ -646,6 +688,7 @@ function buildQuickHtml(picked) {
   var chuaGui = rows.filter(function (r) { return !r.submitted; });
   var per = state.period || {};
   var closed = !!per.closed;
+  var nhac = remindNotSent();
 
   var sub = '<b>Kỳ báo cáo: ' + esc2(per.label || '—') + '</b>' +
             (per.cutoffText ? ' · Chốt số liệu: ' + esc2(per.cutoffText) : '') +
@@ -663,7 +706,7 @@ function buildQuickHtml(picked) {
     '<div><div class="k">Tỷ lệ nhóm</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' bình quân tỉnh</div></div>' +
     '<div><div class="k">Bình quân tỉnh</div><div class="v">' + pcTxt(avg) + '</div><div class="n">tiến độ thời gian ' + pcTxt(tpc) + '</div></div>' +
     '<div><div class="k">Nộp báo cáo</div><div class="v">' + (rows.length - chuaGui.length) + '/' + rows.length + '</div><div class="n">' +
-      (closed ? chuaGui.length + ' đơn vị chưa gửi' : 'đang trong thời gian nhận báo cáo') + '</div></div>' +
+      (nhac ? chuaGui.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
   if (rows.length <= 26) {
@@ -686,17 +729,16 @@ function buildQuickHtml(picked) {
          esc2(chuaPS.map(function (r) { return r.name; }).join('; ')) +
          '. Đề nghị xác định rõ nguyên nhân, trách nhiệm, các bước còn phải hoàn thành và dự kiến thời điểm giải ngân.<br>';
   }
-  if (closed && giam.length) {
+  if (giam.length) {
     h += i++ + '. <span class="warn">Số giải ngân giảm so với kỳ trước</span> tại ' + giam.length + ' đơn vị: ' +
          esc2(giam.map(function (r) { return r.name; }).join('; ')) + '. Đề nghị giải trình nguyên nhân và biện pháp khắc phục.<br>';
   }
-  if (closed && chuaGui.length) {
+  if (nhac && chuaGui.length) {
     h += i++ + '. Chưa gửi báo cáo kỳ ' + esc2(per.label || '') + ': <b>' + esc2(chuaGui.map(function (r) { return r.name; }).join('; ')) +
          '</b>. Đề nghị khẩn trương cập nhật và gửi báo cáo đúng thời hạn.<br>';
-  }
-  if (!closed) {
+  } else if (!closed) {
     h += i++ + '. Kỳ báo cáo chưa đến hạn chốt' + (per.cutoffText ? ' (' + esc2(per.cutoffText) + ')' : '') +
-         ', các đơn vị đang trong thời gian cập nhật, gửi số liệu; báo cáo chưa đánh giá tình hình nộp báo cáo và biến động so với kỳ trước.<br>';
+         ', các đơn vị đang trong thời gian cập nhật, gửi số liệu.<br>';
   }
   h += i++ + '. Đề nghị các đơn vị tiếp tục theo dõi, cập nhật tiến độ theo kỳ và có kế hoạch giải ngân cụ thể đến 31/12/2026.<br>';
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
