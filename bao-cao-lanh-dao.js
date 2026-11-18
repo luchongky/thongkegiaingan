@@ -690,9 +690,13 @@ function buildQuickHtml(picked) {
   var closed = !!per.closed;
   var nhac = remindNotSent();
 
+  var ld = rows.length && rows[0].leader && rows.every(function (r) { return r.leader === rows[0].leader; })
+           ? rows[0].leader : '';
   var sub = '<b>Kỳ báo cáo: ' + esc2(per.label || '—') + '</b>' +
             (per.cutoffText ? ' · Chốt số liệu: ' + esc2(per.cutoffText) : '') +
-            ' · ' + rows.length + ' đơn vị được chọn · Đơn vị tính: triệu đồng';
+            ' · ' + rows.length + ' đơn vị được chọn' +
+            (ld ? ' · Lãnh đạo UBND tỉnh phụ trách: đ/c ' + esc2(ld) : '') +
+            ' · Đơn vị tính: triệu đồng';
 
   var h = '<div class="noprint bar"><button onclick="window.print()">In báo cáo</button>' +
           '<span>Báo cáo hiển thị trực tiếp, không cần tải file. Khi in, bỏ chọn "Headers and footers".</span></div>';
@@ -805,6 +809,60 @@ function openQuickPicker() {
     tools.appendChild(b);
   });
   card.appendChild(tools);
+
+  /* chọn nhanh theo lãnh đạo phụ trách — dùng đúng danh sách của bộ lọc "Lãnh đạo phụ trách" trên trang */
+  var byId = {};
+  (((typeof ASSIGNMENT_DATA !== 'undefined' && ASSIGNMENT_DATA) || {}).leaders || [])
+    .forEach(function (L) { byId[L.id] = L; });
+
+  function areasOf(L) {
+    return (L.areas || []).filter(function (nm) {
+      return rows.some(function (r) { return r.name === nm; });
+    });
+  }
+
+  var leaders = [];
+  var ls = document.getElementById('leaderSelect');
+  if (ls) {
+    [].forEach.call(ls.options, function (o) {
+      if (String(o.value).indexOf('reference:') !== 0) return;
+      var L = byId[String(o.value).slice(10)];
+      if (!L) return;
+      var areas = areasOf(L);
+      if (areas.length) leaders.push({ label: (o.textContent || '').trim(), areas: areas });
+    });
+  }
+  if (!leaders.length) {
+    Object.keys(byId).map(function (k) { return byId[k]; })
+      .sort(function (a, b) { return (a.order || 0) - (b.order || 0); })
+      .forEach(function (L, i) {
+        var areas = areasOf(L);
+        if (areas.length) leaders.push({ label: (i + 1 < 10 ? '0' : '') + (i + 1) + '. Đ/c ' + L.name, areas: areas });
+      });
+  }
+
+  if (leaders.length) {
+    var sel = document.createElement('select');
+    sel.style.cssText = 'width:100%;margin-bottom:8px;padding:7px 9px;border:1px solid #d7dce3;border-radius:7px;font-size:13px;background:#fafbfc';
+    var o0 = document.createElement('option');
+    o0.value = ''; o0.textContent = 'Chọn nhanh theo lãnh đạo phụ trách…';
+    sel.appendChild(o0);
+    leaders.forEach(function (L, idx) {
+      var o = document.createElement('option');
+      o.value = String(idx);
+      o.textContent = L.label + ' (' + L.areas.length + ' đơn vị)';
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () {
+      var L = leaders[Number(sel.value)];
+      if (!L) return;
+      list.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+        cb.checked = L.areas.indexOf(cb.value) >= 0;
+      });
+      count();
+    });
+    card.appendChild(sel);
+  }
 
   var list = document.createElement('div');
   list.style.cssText = 'flex:1;overflow:auto;border:1px solid #e5e9ef;border-radius:8px;padding:6px';
