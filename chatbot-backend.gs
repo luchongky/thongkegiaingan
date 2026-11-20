@@ -3,9 +3,9 @@
  *
  * IMPORTANT: a fetch POST to an Apps Script web app does NOT reach doPost
  * with a JSON body. Google answers POST with an HTML sandbox page, so the
- * widget calls this with GET (?action=chat&question=...&context=...).
+ * widget calls this with GET (?api=chat&question=...&context=...).
  * Add ONE line at the top of the project's existing doGet:
- *   if (e.parameter.action === 'chat') return doGetChat(e);
+ *   if (e.parameter.api === 'chat') return doGetChat(e);
  * POST still works through doPostChat if the project's doPost routes
  * action 'chat' to it.
  *
