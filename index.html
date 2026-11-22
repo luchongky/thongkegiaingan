@@ -813,7 +813,7 @@ async function load(force=false){
  if(state.loading)return;state.loading=true;state.lastAttempt=Date.now();renderAll();
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),CONFIG.TIMEOUT_MS);
  try{
-  const url=new URL(CONFIG.API_URL);url.searchParams.set('api','data');if(force)url.searchParams.set('nocache',String(Date.now()));
+  const url=new URL('/api/data',location.origin);if(force)url.searchParams.set('nocache',String(Date.now()));
   const response=await fetch(url.toString(),{method:'GET',signal:controller.signal,redirect:'follow',credentials:'omit'});
   if(!response.ok)throw new Error('Máy chủ trả về HTTP '+response.status+'. Kiểm tra bản triển khai Apps Script.');
   const text=await response.text();let data;
