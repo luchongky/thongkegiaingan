@@ -740,8 +740,17 @@ function renderKpis(){
  $('#qualityNote').hidden=!ready||!notes.length;$('#qualityNote').textContent=notes.join(' ');
  const us=kindUnits(),yes=us.filter(u=>u.submitted===true).length,no=us.filter(u=>u.submitted===false).length,unknown=us.length-yes-no;
  const ontime=us.filter(u=>u.status==='on_time').length,late=us.filter(u=>u.status==='late').length,unspecified=us.filter(u=>u.status==='submitted_unknown').length,sameN=us.filter(u=>u.unchanged).length;
+ { const tn=$('.report-title').firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=state.period?.isPrev&&ready?'Tỷ lệ giải ngân kỳ trước ':'Đơn vị đã nộp báo cáo '; }
+ if(state.period?.isPrev&&ready){
+  const cu=state.cur.units.filter(u=>state.kind==='all'||u.kind===state.kind),tot=(arr,f)=>arr.reduce((a,u)=>{const x=f(u);return x?[a[0]+x[0],a[1]+x[1]]:a;},[0,0]);
+  const P=tot(cu,u=>u.prev[state.program]),C=tot(cu,u=>u.p[state.program]),r=x=>x[0]>0?x[1]/x[0]*100:null,d=C[1]-P[1];
+  const up=cu.filter(u=>{const a=u.prev[state.program],b=u.p[state.program];return a&&b&&b[1]-a[1]>.0005;}).length;
+  $('#reportCount').textContent=pct(r(P));$('#reportMeter').style.width=clamp(r(P))+'%';
+  $('#reportDesc').textContent='Kỳ '+state.period.label+': đã giải ngân '+fmt0(P[1])+' triệu đồng ('+pct(r(P))+'). Đến nay (kỳ '+(state.cur.period?.label||'hiện tại')+'): '+fmt0(C[1])+' triệu đồng ('+pct(r(C))+'), '+(d>=0?'tăng ':'giảm ')+fmt0(Math.abs(d))+' triệu đồng; '+up+' đơn vị có số tăng.';
+ }else{
  $('#reportCount').textContent=ready?yes+' / '+us.length:'—';$('#reportMeter').style.width=(us.length?yes/us.length*100:0)+'%';
  $('#reportDesc').textContent=(state.reportSchema>=2?'Đúng hạn '+ontime+' · Gửi muộn '+late+(sameN?' · Không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
+ }
  $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
  const decUnits=rows.filter(v=>v.u.decreaseCount>0).length,decLines=rows.reduce((s,v)=>s+v.u.decreaseCount,0);
  $('#decreaseBtn').hidden=!ready||state.reportSchema<2||!decUnits;$('#decreaseBtn span').textContent=decUnits+' đơn vị có '+decLines+' khoản mục giảm đã giải trình';
@@ -818,7 +827,7 @@ function applyPeriodView(){
  const c=state.cur;if(!c)return;
  if(state.viewPrev&&c.prevAt){
   const d=prevDateOf(c.prevAt),m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  state.units=c.units.map(u=>({...u,p:u.prev,prev:{},mtqg:{},submitted:null,status:'unknown',late:false,unchanged:false,decreaseCount:0,reportSource:'snapshot',mismatch:false}));
+  state.units=c.units.map(u=>({...u,p:u.prev,prev:{},mtqg:{},submitted:null,status:'unknown',late:false,unchanged:false,decreaseCount:0,reportSource:'legacy',mismatch:false}));
   state.period={label:d,key:m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'prev',cutoffText:'số liệu chụp lúc '+c.prevAt,graceText:'',closed:true,isPrev:true};
   state.prevAt='';state.mtqgPrograms=[];
  }else{state.viewPrev=false;state.units=c.units;state.period=c.period;state.prevAt=c.prevAt;state.mtqgPrograms=c.mtqgPrograms;}
