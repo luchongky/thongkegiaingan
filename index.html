@@ -533,10 +533,11 @@ function normalizePayload(data){
   const reportSource=['submitted','snapshot','draft','unavailable'].includes(u.reportSource)?u.reportSource:'legacy';
   const decreaseCount=Number.isSafeInteger(u.decreaseCount)&&u.decreaseCount>=0?u.decreaseCount:0;
   const unchanged=u.unchanged===true&&submitted===true;
-  return{id,name,short,kind,p,prev,mtqg:mtqgPairs(u.mtqg),submitted,status,reportSource,decreaseCount,unchanged,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
+  const prevStatus=['on_time','late','not_submitted'].includes(u.prevStatus)?u.prevStatus:typeof u.prevSubmitted==='boolean'?(u.prevSubmitted?'on_time':'not_submitted'):null;
+  return{id,name,short,kind,p,prev,prevStatus,prevUnchanged:u.prevUnchanged===true,mtqg:mtqgPairs(u.mtqg),submitted,status,reportSource,decreaseCount,unchanged,updated:str(u.updated,250),mismatch,_fold:fold(name+' '+short+' '+id)};
  });
  const period=data.period&&typeof data.period==='object'&&str(data.period.label)?{label:str(data.period.label),key:str(data.period.key,50),cutoffText:str(data.period.cutoffText),graceText:str(data.period.graceText),closed:data.period.closed===true}:null;
- return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250),baoLu:normalizeBaoLu(data.baoLu),mtqgPrograms:mtqgProgramList(data.mtqgPrograms)};
+ return{ok:true,units,period,reportSchema:Number(data.schemaVersion)||1,generatedAt:validISO(data.generatedAt),prevAt:str(data.prevAt,250),prevPeriod:data.prevPeriod&&typeof data.prevPeriod==='object'&&str(data.prevPeriod.label)?{key:str(data.prevPeriod.key,50),label:str(data.prevPeriod.label),cutoffText:str(data.prevPeriod.cutoffText),official:data.prevPeriod.official===true}:null,baoLu:normalizeBaoLu(data.baoLu),mtqgPrograms:mtqgProgramList(data.mtqgPrograms)};
 }
 
 
@@ -685,11 +686,11 @@ function renderReportPeriod(){
  const pending=state.loading&&!state.hasData;
  const showPrev=!!state.period?.isPrev,curAt=state.cur?.prevAt||'',prevDate=prevDateOf(curAt),curLabel=state.cur?.period?.label||'';
  const periodText=showPrev?'Kỳ đang xem: '+label:label?'Kỳ đang xem: '+label:pending?'Kỳ báo cáo: Đang tải…':'Kỳ báo cáo: Chưa xác định';
- const prevBtn=$('#prevPeriodBtn');prevBtn.hidden=!curAt;prevBtn.textContent=showPrev?'Kỳ hiện tại: '+(curLabel||'—')+' →':'← Kỳ trước: '+prevDate;prevBtn.title=showPrev?'Quay lại kỳ đang theo dõi':'Xem số liệu chụp lúc '+curAt;prevBtn.setAttribute('aria-pressed',String(showPrev));
+ const prevBtn=$('#prevPeriodBtn');prevBtn.hidden=!curAt;prevBtn.textContent=showPrev?'Kỳ hiện tại: '+(curLabel||'—')+' →':'← Kỳ trước: '+prevDate;prevBtn.title=showPrev?'Quay lại kỳ đang theo dõi':state.cur?.prevPeriod?.official?'Xem số liệu chốt kỳ '+prevDate:'Xem số liệu chụp lúc '+curAt;prevBtn.setAttribute('aria-pressed',String(showPrev));
  const cutoffText=cutoff?'Mốc chốt: '+cutoff:'';
  const graceText=typeof state.period?.graceText==='string'&&state.period.graceText.trim()?' · Nhận gửi muộn đến '+state.period.graceText.trim():'';
  const notices=[];
- if(showPrev)notices.push('Số liệu giải ngân chụp lúc '+curAt+'; hệ thống không lưu trạng thái gửi báo cáo và chi tiết Chương trình MTQG của kỳ này.');
+ if(showPrev)notices.push(state.period.official?'Số liệu chốt chính thức kỳ '+label+'; không có chi tiết Chương trình MTQG của kỳ này.':'Số liệu giải ngân chụp lúc '+curAt+'; hệ thống không lưu trạng thái gửi báo cáo và chi tiết Chương trình MTQG của kỳ này.');
  if(state.hasData&&!label)notices.push('Hệ thống chưa cung cấp kỳ báo cáo của các số liệu này.');
  if(state.hasData&&state.reportSchema<2)notices.push('API hiện chưa hỗ trợ trạng thái gửi muộn hoặc xác nhận số liệu đúng kỳ; cần triển khai Api.gs cập nhật.');
  if(state.source==='cache')notices.push('Bản lưu trên thiết bị; chưa đồng bộ số liệu mới.');
@@ -740,8 +741,8 @@ function renderKpis(){
  $('#qualityNote').hidden=!ready||!notes.length;$('#qualityNote').textContent=notes.join(' ');
  const us=kindUnits(),yes=us.filter(u=>u.submitted===true).length,no=us.filter(u=>u.submitted===false).length,unknown=us.length-yes-no;
  const ontime=us.filter(u=>u.status==='on_time').length,late=us.filter(u=>u.status==='late').length,unspecified=us.filter(u=>u.status==='submitted_unknown').length,sameN=us.filter(u=>u.unchanged).length;
- { const tn=$('.report-title').firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=state.period?.isPrev&&ready?'Tỷ lệ giải ngân kỳ trước ':'Đơn vị đã nộp báo cáo '; }
- if(state.period?.isPrev&&ready){
+ { const tn=$('.report-title').firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=state.period?.isPrev&&!state.period.official&&ready?'Tỷ lệ giải ngân kỳ trước ':'Đơn vị đã nộp báo cáo '; }
+ if(state.period?.isPrev&&!state.period.official&&ready){
   const cu=state.cur.units.filter(u=>state.kind==='all'||u.kind===state.kind),tot=(arr,f)=>arr.reduce((a,u)=>{const x=f(u);return x?[a[0]+x[0],a[1]+x[1]]:a;},[0,0]);
   const P=tot(cu,u=>u.prev[state.program]),C=tot(cu,u=>u.p[state.program]),r=x=>x[0]>0?x[1]/x[0]*100:null,d=C[1]-P[1];
   const up=cu.filter(u=>{const a=u.prev[state.program],b=u.p[state.program];return a&&b&&b[1]-a[1]>.0005;}).length;
@@ -751,7 +752,7 @@ function renderKpis(){
  $('#reportCount').textContent=ready?yes+' / '+us.length:'—';$('#reportMeter').style.width=(us.length?yes/us.length*100:0)+'%';
  $('#reportDesc').textContent=(state.reportSchema>=2?'Đúng hạn '+ontime+' · Gửi muộn '+late+(sameN?' · Không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
  }
- const pv=!!state.period?.isPrev;['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=pv;});
+ const pv=!!state.period?.isPrev&&!state.period.official;['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=pv;});
  $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';if(pv){['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=true;});$('#quickYes b').textContent='—';$('#quickLate b').textContent='—';$('#quickNo b').textContent='—';}$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
  const decUnits=rows.filter(v=>v.u.decreaseCount>0).length,decLines=rows.reduce((s,v)=>s+v.u.decreaseCount,0);
  $('#decreaseBtn').hidden=!ready||state.reportSchema<2||!decUnits;$('#decreaseBtn span').textContent=decUnits+' đơn vị có '+decLines+' khoản mục giảm đã giải trình';
@@ -820,7 +821,7 @@ function setView(v,scrollTop=false){
 }
 function jumpToList(){setView('details');document.getElementById('details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}
 function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();renderBaoLu();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
-function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;state.cur={units:state.units,period:state.period,prevAt:state.prevAt,mtqgPrograms:state.mtqgPrograms};applyPeriodView();if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.prevPeriod=pack.prevPeriod||null;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;state.cur={units:state.units,period:state.period,prevAt:state.prevAt,prevPeriod:state.prevPeriod,mtqgPrograms:state.mtqgPrograms};applyPeriodView();if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
 /* Kỳ liền kề: khi xem kỳ trước, thay số liệu đang hiển thị bằng bản chụp mốc trước (u.prev),
    để bảng, biểu đồ và mọi báo cáo in/xuất dùng đúng số kỳ đó. Người lập: Lục Hồng Kỳ. */
 function prevDateOf(at){return(String(at||'').match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[String(at||'')])[0];}
@@ -828,8 +829,10 @@ function applyPeriodView(){
  const c=state.cur;if(!c)return;
  if(state.viewPrev&&c.prevAt){
   const d=prevDateOf(c.prevAt),m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  state.units=c.units.map(u=>({...u,p:u.prev,prev:{},mtqg:{},submitted:null,status:'unknown',late:false,unchanged:false,decreaseCount:0,reportSource:'legacy',mismatch:false}));
-  state.period={label:d,key:m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'prev',cutoffText:'số liệu chụp lúc '+c.prevAt,graceText:'',closed:true,isPrev:true};
+  const off=c.prevPeriod&&c.prevPeriod.official?c.prevPeriod:null;
+  state.units=c.units.map(u=>{const st=off&&u.prevStatus?u.prevStatus:null;return{...u,p:u.prev,prev:{},mtqg:{},submitted:st?st!=='not_submitted':null,status:st||'unknown',late:st==='late',unchanged:!!(st&&u.prevUnchanged),decreaseCount:0,reportSource:st==='not_submitted'?'snapshot':st?'submitted':'legacy',mismatch:false};});
+  state.period=off?{label:off.label,key:off.key||'prev',cutoffText:off.cutoffText||'đã chốt',graceText:'',closed:true,isPrev:true,official:true}
+   :{label:d,key:m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'prev',cutoffText:'số liệu chụp lúc '+c.prevAt,graceText:'',closed:true,isPrev:true};
   state.prevAt='';state.mtqgPrograms=[];
  }else{state.viewPrev=false;state.units=c.units;state.period=c.period;state.prevAt=c.prevAt;state.mtqgPrograms=c.mtqgPrograms;}
 }
@@ -1787,7 +1790,7 @@ BTN.addEventListener('click', pick);
       ov.innerHTML = '<div style="background:var(--surface);color:var(--ink);border-radius:16px;padding:20px 22px;width:min(460px,100%);box-shadow:0 25px 80px #0004">'
         + '<div style="font-weight:700;font-size:16px">In báo cáo kỳ nào?</div>'
         + opt('cur', 'Kỳ ' + esc2(cur.label || 'hiện tại') + ' (kỳ hiện tại)', cur.closed ? 'Đã chốt' : 'Chưa đến hạn chốt' + (cur.cutoffText ? ' · ' + esc2(cur.cutoffText) : ''), false)
-        + (prevAt ? opt('prev', 'Kỳ ' + esc2(prevDateOf(prevAt)) + ' (kỳ trước)', isMtqg ? 'Không có chi tiết Chương trình MTQG của kỳ này' : 'Số liệu chụp lúc ' + esc2(prevAt), isMtqg) : '')
+        + (prevAt ? opt('prev', 'Kỳ ' + esc2(prevDateOf(prevAt)) + ' (kỳ trước)', isMtqg ? 'Không có chi tiết Chương trình MTQG của kỳ này' : (c.prevPeriod && c.prevPeriod.official ? 'Số liệu chốt chính thức' : 'Số liệu chụp lúc ' + esc2(prevAt)), isMtqg) : '')
         + '<div id="pcWarn" role="alert" style="display:none;margin-top:12px;padding:10px 12px;border-radius:10px;background:#fdecea;color:#8a1c12;border:1px solid #f2b8b0;font-size:13px"></div>'
         + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="btn" data-pc="no">Hủy</button><button type="button" class="btn primary" data-pc="ok">Tiếp tục</button></div></div>';
       document.body.appendChild(ov);
