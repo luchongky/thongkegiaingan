@@ -153,7 +153,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 @media print{.report-source{font-size:7px}.report-explain{font-size:8px}}
 
 /* Mục VI – kinh phí bão lũ nguồn NSTW (theo dõi riêng, không cộng vào tổng) */
-.report-period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.prev-period-btn{font:inherit;font-size:12px;font-weight:600;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--brand);cursor:pointer}.prev-period-btn[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand)}@media print{.prev-period-btn{display:none}}
+.report-period-row{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:0 0 8px}.report-period-row .report-period{margin:0;display:flex;align-items:center}.prev-period-btn{font:inherit;font-size:12px;font-weight:600;line-height:1.65;padding:5px 11px;border:1px dashed var(--brand);border-radius:7px;background:var(--surface);color:var(--brand);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}.prev-period-btn:hover{background:var(--tint)}.prev-period-btn[aria-pressed=true]{border-style:solid}@media print{.prev-period-btn{display:none}}
 #baoLu{margin:26px 0 0}body[data-view=assign] #baoLu{display:none!important}
 body[data-bl="1"] .overview>:not(.scope-panel),body[data-bl="1"] #details{display:none!important}body[data-bl="1"] #baoLu{margin-top:14px}#programTabs button[data-bltab]{border-style:dashed}
 #baoLu .bl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -684,8 +684,8 @@ function renderReportPeriod(){
  const cutoff=typeof state.period?.cutoffText==='string'?state.period.cutoffText.trim():'';
  const pending=state.loading&&!state.hasData;
  const showPrev=!!state.period?.isPrev,curAt=state.cur?.prevAt||'',prevDate=prevDateOf(curAt),curLabel=state.cur?.period?.label||'';
- const periodText=showPrev?'Kỳ báo cáo đang xem: '+label+' (kỳ trước)':label?'Kỳ báo cáo đang xem: '+label:pending?'Kỳ báo cáo: Đang tải…':'Kỳ báo cáo: Chưa xác định';
- const prevBtn=$('#prevPeriodBtn');prevBtn.hidden=!curAt;prevBtn.textContent=showPrev?'← Về kỳ '+(curLabel||'hiện tại'):'Kỳ trước: '+prevDate;prevBtn.title=showPrev?'Quay lại kỳ đang theo dõi':'Xem số liệu chụp lúc '+curAt;prevBtn.setAttribute('aria-pressed',String(showPrev));
+ const periodText=showPrev?'Kỳ báo cáo đang xem: '+label:label?'Kỳ báo cáo đang xem: '+label:pending?'Kỳ báo cáo: Đang tải…':'Kỳ báo cáo: Chưa xác định';
+ const prevBtn=$('#prevPeriodBtn');prevBtn.hidden=!curAt;prevBtn.textContent=showPrev?'Kỳ hiện tại: '+(curLabel||'—')+' →':'← Kỳ trước: '+prevDate;prevBtn.title=showPrev?'Quay lại kỳ đang theo dõi':'Xem số liệu chụp lúc '+curAt;prevBtn.setAttribute('aria-pressed',String(showPrev));
  const cutoffText=cutoff?'Mốc chốt: '+cutoff:'';
  const graceText=typeof state.period?.graceText==='string'&&state.period.graceText.trim()?' · Nhận gửi muộn đến '+state.period.graceText.trim():'';
  const notices=[];
@@ -751,7 +751,8 @@ function renderKpis(){
  $('#reportCount').textContent=ready?yes+' / '+us.length:'—';$('#reportMeter').style.width=(us.length?yes/us.length*100:0)+'%';
  $('#reportDesc').textContent=(state.reportSchema>=2?'Đúng hạn '+ontime+' · Gửi muộn '+late+(sameN?' · Không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
  }
- $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
+ const pv=!!state.period?.isPrev;['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=pv;});
+ $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';if(pv){['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=true;});$('#quickYes b').textContent='—';$('#quickLate b').textContent='—';$('#quickNo b').textContent='—';}$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
  const decUnits=rows.filter(v=>v.u.decreaseCount>0).length,decLines=rows.reduce((s,v)=>s+v.u.decreaseCount,0);
  $('#decreaseBtn').hidden=!ready||state.reportSchema<2||!decUnits;$('#decreaseBtn span').textContent=decUnits+' đơn vị có '+decLines+' khoản mục giảm đã giải trình';
  $('#decreaseBtn').setAttribute('aria-pressed',String(state.decreaseOnly));
