@@ -823,7 +823,7 @@ function setView(v,scrollTop=false){
 }
 function jumpToList(){setView('details');document.getElementById('details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}
 function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();renderBaoLu();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
-function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.prevPeriod=pack.prevPeriod||null;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;state.cur={units:state.units,period:state.period,prevAt:state.prevAt,prevPeriod:state.prevPeriod,mtqgPrograms:state.mtqgPrograms};applyPeriodView();if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+function apply(pack,source,receivedAt){if(pack.prevPeriod)pack.prevAt=pack.prevPeriod.label;state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.prevPeriod=pack.prevPeriod||null;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;state.cur={units:state.units,period:state.period,prevAt:state.prevAt,prevPeriod:state.prevPeriod,mtqgPrograms:state.mtqgPrograms};applyPeriodView();if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
 /* Kỳ liền kề: khi xem kỳ trước, thay số liệu đang hiển thị bằng bản chụp mốc trước (u.prev),
    để bảng, biểu đồ và mọi báo cáo in/xuất dùng đúng số kỳ đó. Người lập: Lục Hồng Kỳ. */
 function prevDateOf(at){return(String(at||'').match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[String(at||'')])[0];}
@@ -850,7 +850,7 @@ async function load(force=false){
   if(!response.ok)throw new Error('Máy chủ trả về HTTP '+response.status+'. Kiểm tra bản triển khai Apps Script.');
   const text=await response.text();let data;
   try{data=JSON.parse(text);}catch{throw new Error('API không trả về JSON. Kiểm tra đường dẫn /exec, quyền truy cập và tham số api=data.');}
-  const pack=normalizePayload(data),receivedAt=new Date().toISOString();apply(pack,'live',receivedAt);state.lastError='';
+  const pack=normalizePayload(data);if(pack.prevPeriod)pack.prevAt=pack.prevPeriod.label;const receivedAt=new Date().toISOString();apply(pack,'live',receivedAt);state.lastError='';
   // Only validated API responses are cached. No invented numbers or demo fallback.
   store.set(CACHE_KEY,{version:5,api:CONFIG.API_URL,receivedAt,pack});
  }catch(e){state.lastError=messageFor(e);if(state.hasData)state.source='cache';else{const c=readCache();if(c)apply(c.pack,'cache',c.receivedAt);else state.source='error';}}
