@@ -153,6 +153,7 @@ html{scroll-padding-top:calc(var(--header-height,80px) + 16px)}
 @media print{.report-source{font-size:7px}.report-explain{font-size:8px}}
 
 /* Mục VI – kinh phí bão lũ nguồn NSTW (theo dõi riêng, không cộng vào tổng) */
+.report-period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.prev-period-btn{font:inherit;font-size:12px;font-weight:600;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--brand);cursor:pointer}.prev-period-btn[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand)}@media print{.prev-period-btn{display:none}}
 #baoLu{margin:26px 0 0}body[data-view=assign] #baoLu{display:none!important}
 body[data-bl="1"] .overview>:not(.scope-panel),body[data-bl="1"] #details{display:none!important}body[data-bl="1"] #baoLu{margin-top:14px}#programTabs button[data-bltab]{border-style:dashed}
 #baoLu .bl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -383,7 +384,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
    <article class="kpi"><div class="kpi-heading">Dự toán còn lại<svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></div><strong class="kpi-value num" id="kLeft">—</strong><div class="kpi-note" id="kLeftNote">Dự toán trừ số đã giải ngân</div></article>
    <article class="kpi accent"><div class="kpi-heading">Tỷ lệ giải ngân<svg class="icon" aria-hidden="true"><use href="#i-percent"/></svg></div><strong class="kpi-value num" id="kRate">—</strong><div class="kpi-line" aria-hidden="true"><i id="rateMeter"></i></div><div class="kpi-note" id="kRateNote">Tính trên tổng dự toán</div><div class="kpi-progress-note" id="kRateContext">Đang chờ số liệu</div></article>
   </div><p class="quality-note" id="qualityNote" hidden></p>
-  <div class="report-strip"><div class="report-overview"><span class="report-icon"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg></span><div class="report-content"><div class="report-period" id="reportPeriod" role="status">Kỳ báo cáo: Đang tải…</div><div class="report-title">Đơn vị đã nộp báo cáo <b class="num" id="reportCount">—</b></div><div class="report-cutoff" id="reportCutoff" hidden></div><div class="report-context-notice" id="reportPeriodNotice" role="status" hidden></div><div class="report-desc" id="reportDesc">Tình hình nộp báo cáo theo kỳ; không phụ thuộc nguồn vốn đang chọn.</div><div class="report-meter" aria-hidden="true"><i id="reportMeter"></i></div></div></div><div class="report-actions">
+  <div class="report-strip"><div class="report-overview"><span class="report-icon"><svg class="icon" aria-hidden="true"><use href="#i-report"/></svg></span><div class="report-content"><div class="report-period-row"><div class="report-period" id="reportPeriod" role="status">Kỳ báo cáo: Đang tải…</div><button type="button" class="prev-period-btn" id="prevPeriodBtn" aria-pressed="false" hidden>Kỳ trước</button></div><div class="report-title">Đơn vị đã nộp báo cáo <b class="num" id="reportCount">—</b></div><div class="report-cutoff" id="reportCutoff" hidden></div><div class="report-context-notice" id="reportPeriodNotice" role="status" hidden></div><div class="report-desc" id="reportDesc">Tình hình nộp báo cáo theo kỳ; không phụ thuộc nguồn vốn đang chọn.</div><div class="report-meter" aria-hidden="true"><i id="reportMeter"></i></div></div></div><div class="report-actions">
    <button class="quick" id="quickYes" type="button" aria-pressed="false"><span>Đã nhận</span><b class="num">—</b></button>
    <button class="quick late" id="quickLate" type="button" aria-pressed="false" title="Lọc đơn vị gửi muộn"><span>Gửi muộn</span><b class="num">—</b></button>
    <button class="quick" id="quickNo" type="button" aria-pressed="false"><span>Chưa gửi</span><b class="num">—</b></button>
@@ -464,7 +465,7 @@ const clamp=n=>Number.isFinite(n)?Math.max(0,Math.min(100,n)):0;
 const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 // New API-specific cache: old demo-capable caches are intentionally ignored.
 const CACHE_KEY='gn_dashboard_verified_v5:'+CONFIG.API_URL,PREF_KEY='gn_dashboard_prefs_v4';
-const state={units:[],hasData:false,source:'none',loading:false,generatedAt:'',receivedAt:'',period:null,prevAt:'',lastError:'',lastAttempt:0,program:'all',kind:'all',q:'',unitId:null,leader:'all',sub:'all',band:'all',attention:false,decreaseOnly:false,reportSchema:1,sort:'rate-asc',rank:'bottom',openId:null};
+const state={units:[],hasData:false,source:'none',loading:false,generatedAt:'',receivedAt:'',period:null,prevAt:'',lastError:'',lastAttempt:0,program:'all',kind:'all',q:'',unitId:null,leader:'all',sub:'all',band:'all',attention:false,decreaseOnly:false,reportSchema:1,sort:'rate-asc',rank:'bottom',openId:null,viewPrev:false,cur:null};
 const sortValues=[...$('#sortSelect').options].map(o=>o.value),prefs=store.get(PREF_KEY)||store.get('gn_prefs')||{};
 if(PROGRAMS.some(p=>p.key===prefs.program))state.program=prefs.program;
 if(KINDS.some(k=>k.key===prefs.kind))state.kind=prefs.kind;
@@ -682,10 +683,13 @@ function renderReportPeriod(){
  const label=typeof state.period?.label==='string'?state.period.label.trim():'';
  const cutoff=typeof state.period?.cutoffText==='string'?state.period.cutoffText.trim():'';
  const pending=state.loading&&!state.hasData;
- const periodText=label?'Kỳ báo cáo đang xem: '+label:pending?'Kỳ báo cáo: Đang tải…':'Kỳ báo cáo: Chưa xác định';
+ const showPrev=!!state.period?.isPrev,curAt=state.cur?.prevAt||'',prevDate=prevDateOf(curAt),curLabel=state.cur?.period?.label||'';
+ const periodText=showPrev?'Kỳ báo cáo đang xem: '+label+' (kỳ trước)':label?'Kỳ báo cáo đang xem: '+label:pending?'Kỳ báo cáo: Đang tải…':'Kỳ báo cáo: Chưa xác định';
+ const prevBtn=$('#prevPeriodBtn');prevBtn.hidden=!curAt;prevBtn.textContent=showPrev?'← Về kỳ '+(curLabel||'hiện tại'):'Kỳ trước: '+prevDate;prevBtn.title=showPrev?'Quay lại kỳ đang theo dõi':'Xem số liệu chụp lúc '+curAt;prevBtn.setAttribute('aria-pressed',String(showPrev));
  const cutoffText=cutoff?'Mốc chốt: '+cutoff:'';
  const graceText=typeof state.period?.graceText==='string'&&state.period.graceText.trim()?' · Nhận gửi muộn đến '+state.period.graceText.trim():'';
  const notices=[];
+ if(showPrev)notices.push('Số liệu giải ngân chụp lúc '+curAt+'; hệ thống không lưu trạng thái gửi báo cáo và chi tiết Chương trình MTQG của kỳ này.');
  if(state.hasData&&!label)notices.push('Hệ thống chưa cung cấp kỳ báo cáo của các số liệu này.');
  if(state.hasData&&state.reportSchema<2)notices.push('API hiện chưa hỗ trợ trạng thái gửi muộn hoặc xác nhận số liệu đúng kỳ; cần triển khai Api.gs cập nhật.');
  if(state.source==='cache')notices.push('Bản lưu trên thiết bị; chưa đồng bộ số liệu mới.');
@@ -806,7 +810,20 @@ function setView(v,scrollTop=false){
 }
 function jumpToList(){setView('details');document.getElementById('details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}
 function renderAll(){renderAssignmentCoverage();renderControls();renderMetadata();renderKpis();renderCharts();renderTable();renderBaoLu();if($('#unitDialog').open&&state.openId)renderDetail(state.openId);if(document.activeElement===$('#searchInput')&&!$('#searchPanel').hidden)renderSearchSuggestions();}
-function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+function apply(pack,source,receivedAt){state.units=pack.units;state.baoLu=pack.baoLu||null;state.mtqgPrograms=pack.mtqgPrograms||[];state.hasData=true;state.source=source;state.period=pack.period;state.generatedAt=pack.generatedAt;state.prevAt=pack.prevAt;state.reportSchema=pack.reportSchema||1;state.receivedAt=receivedAt;state.cur={units:state.units,period:state.period,prevAt:state.prevAt,mtqgPrograms:state.mtqgPrograms};applyPeriodView();if(state.kind==='other'&&!state.units.some(u=>u.kind==='other'))state.kind='all';}
+/* Kỳ liền kề: khi xem kỳ trước, thay số liệu đang hiển thị bằng bản chụp mốc trước (u.prev),
+   để bảng, biểu đồ và mọi báo cáo in/xuất dùng đúng số kỳ đó. Người lập: Lục Hồng Kỳ. */
+function prevDateOf(at){return(String(at||'').match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[String(at||'')])[0];}
+function applyPeriodView(){
+ const c=state.cur;if(!c)return;
+ if(state.viewPrev&&c.prevAt){
+  const d=prevDateOf(c.prevAt),m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  state.units=c.units.map(u=>({...u,p:u.prev,prev:{},mtqg:{},submitted:null,status:'unknown',late:false,unchanged:false,decreaseCount:0,reportSource:'snapshot',mismatch:false}));
+  state.period={label:d,key:m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'prev',cutoffText:'số liệu chụp lúc '+c.prevAt,graceText:'',closed:true,isPrev:true};
+  state.prevAt='';state.mtqgPrograms=[];
+ }else{state.viewPrev=false;state.units=c.units;state.period=c.period;state.prevAt=c.prevAt;state.mtqgPrograms=c.mtqgPrograms;}
+}
+function setPeriodView(prev){state.viewPrev=!!prev;applyPeriodView();renderAll();}
 function readCache(){const c=store.get(CACHE_KEY);if(!c)return null;try{if(c.version!==5||c.api!==CONFIG.API_URL||!validISO(c.receivedAt))throw new Error('cache');const age=Date.now()-new Date(c.receivedAt).getTime();if(age< -300000||age>CONFIG.CACHE_MAX_DAYS*86400000)throw new Error('cache');return{pack:normalizePayload(c.pack),receivedAt:c.receivedAt};}catch{store.remove(CACHE_KEY);return null;}}
 function messageFor(e){if(e.name==='AbortError')return 'Quá thời gian chờ 25 giây. Vui lòng thử lại sau ít phút.';if(e instanceof TypeError)return 'Không nhận được phản hồi. Cần kiểm tra mạng, quyền truy cập và kết nối API từ trang web.';return str(e.message,400)||'Không thể tải số liệu.';}
 async function load(force=false){
@@ -929,6 +946,7 @@ document.addEventListener('click',e=>{
 
 $('#leaderSelect').addEventListener('change',e=>setLeaderFilter(e.target.value,false));
 document.addEventListener('click',e=>{const b=e.target.closest('[data-leader-filter]');if(b){setLeaderFilter(b.dataset.leaderFilter,true);return;}if(e.target.closest('[data-clear-leader]'))setLeaderFilter('all',false);});
+$('#prevPeriodBtn').addEventListener('click',()=>setPeriodView(!state.period?.isPrev));
 $('#kindSeg').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b)changeKind(b.dataset.kind);});
 $('#detailKindSeg').addEventListener('click',e=>{const b=e.target.closest('[data-kind]');if(b)changeKind(b.dataset.kind);});
 (()=>{const t=$('#programTabs');const f=()=>{t.classList.toggle('fade-r',t.scrollLeft+t.clientWidth<t.scrollWidth-4);t.classList.toggle('fade-l',t.scrollLeft>4);};t.addEventListener('scroll',f,{passive:true});addEventListener('resize',f);if(typeof ResizeObserver==='function')new ResizeObserver(f).observe(t);setTimeout(f,300);})();
@@ -1740,4 +1758,51 @@ BTN.addEventListener('click', pick);
 })();
 </script>
 <script src="bao-cao-lanh-dao.js"></script>
+<script id="period-choice-js">
+/* Hỏi in kỳ nào trước mọi lệnh in/xuất; cảnh báo khi kỳ hiện tại chưa đến hạn chốt. Người lập: Lục Hồng Kỳ. */
+(function () {
+  const IDS = ['printBtn', 'quickReportBtn', 'mtqgPrintBtn', 'leaderPrintBtn'];
+  let bypass = false;
+  const esc2 = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function ask(btn) {
+    const c = state.cur || {}, cur = c.period || {}, prevAt = c.prevAt || '', isMtqg = btn.id === 'mtqgPrintBtn';
+    const warnCur = cur.closed ? '' : 'Kỳ ' + esc2(cur.label || 'hiện tại') + ' chưa đến hạn chốt' + (cur.cutoffText ? ' (' + esc2(cur.cutoffText) + ')' : '') + '. Số liệu các đơn vị đang nhập, còn có thể thay đổi; báo cáo in ra chỉ mang tính tạm thời.';
+    if (!prevAt && !warnCur) return Promise.resolve(false);
+    return new Promise(resolve => {
+      const ov = document.createElement('div');
+      ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Chọn kỳ báo cáo để in');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0007;display:flex;align-items:center;justify-content:center;padding:16px';
+      const opt = (v, t, sub, dis) => '<label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;' + (dis ? 'opacity:.5' : 'cursor:pointer') + '"><input type="radio" name="pcK" value="' + v + '"' + (dis ? ' disabled' : '') + ' style="margin-top:3px"><span><b>' + t + '</b><br><span style="font-size:12.5px;opacity:.75">' + sub + '</span></span></label>';
+      const prevSel = !!(state.period && state.period.isPrev) && !isMtqg;
+      ov.innerHTML = '<div style="background:var(--surface);color:var(--ink);border-radius:16px;padding:20px 22px;width:min(460px,100%);box-shadow:0 25px 80px #0004">'
+        + '<div style="font-weight:700;font-size:16px">In báo cáo kỳ nào?</div>'
+        + opt('cur', 'Kỳ ' + esc2(cur.label || 'hiện tại') + ' (kỳ hiện tại)', cur.closed ? 'Đã chốt' : 'Chưa đến hạn chốt' + (cur.cutoffText ? ' · ' + esc2(cur.cutoffText) : ''), false)
+        + (prevAt ? opt('prev', 'Kỳ ' + esc2(prevDateOf(prevAt)) + ' (kỳ trước)', isMtqg ? 'Không có chi tiết Chương trình MTQG của kỳ này' : 'Số liệu chụp lúc ' + esc2(prevAt), isMtqg) : '')
+        + '<div id="pcWarn" role="alert" style="display:none;margin-top:12px;padding:10px 12px;border-radius:10px;background:#fdecea;color:#8a1c12;border:1px solid #f2b8b0;font-size:13px"></div>'
+        + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="btn" data-pc="no">Hủy</button><button type="button" class="btn primary" data-pc="ok">Tiếp tục</button></div></div>';
+      document.body.appendChild(ov);
+      const radios = [...ov.querySelectorAll('input[name=pcK]')], warn = ov.querySelector('#pcWarn'), ok = ov.querySelector('[data-pc=ok]');
+      (radios.find(r => r.value === (prevSel ? 'prev' : 'cur')) || radios[0]).checked = true;
+      const sync = () => { const v = (radios.find(r => r.checked) || {}).value; const w = v === 'cur' && warnCur; warn.style.display = w ? 'block' : 'none'; warn.innerHTML = w ? '⚠ ' + warnCur : ''; ok.textContent = w ? 'Vẫn in kỳ này' : 'Tiếp tục'; };
+      radios.forEach(r => r.addEventListener('change', sync)); sync();
+      const done = v => { document.removeEventListener('keydown', onKey, true); ov.remove(); resolve(v); };
+      const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(null); } };
+      document.addEventListener('keydown', onKey, true);
+      ov.addEventListener('click', e => { if (e.target === ov) done(null); const b = e.target.closest('[data-pc]'); if (!b) return; done(b.dataset.pc === 'ok' ? (radios.find(r => r.checked) || {}).value === 'prev' : null); });
+      ok.focus();
+    });
+  }
+  document.addEventListener('click', e => {
+    if (bypass) return;
+    const btn = e.target.closest && e.target.closest(IDS.map(i => '#' + i).join(','));
+    if (!btn || btn.disabled || !state.hasData || !state.cur) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    ask(btn).then(prev => {
+      if (prev === null) return;
+      if (!!(state.period && state.period.isPrev) !== prev) setPeriodView(prev);
+      bypass = true; try { btn.click(); } finally { bypass = false; }
+    });
+  }, true);
+})();
+</script>
 </body></html>
