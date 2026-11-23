@@ -428,7 +428,7 @@ h1,.hero h1{font-size:20px;line-height:1.3}
     <div class="search-suggest-panel" id="searchPanel" hidden><div class="suggest-caption" id="suggestCaption"></div><ul class="search-suggestions" id="searchSuggestions" role="listbox" aria-label="Gợi ý đơn vị và lãnh đạo"></ul><div class="suggest-note">Chọn đơn vị để xem riêng; các bộ lọc danh sách khác sẽ được bỏ.</div></div>
    </div><span class="sr-only" id="searchGuide">Gõ từ một chữ cái, có hoặc không dấu. Dùng mũi tên lên, xuống và Enter để chọn gợi ý; Escape để đóng.</span><span class="sr-only" id="searchFeedback" role="status" aria-live="polite"></span></div>
    <div class="field leader-field"><label for="leaderSelect">Lãnh đạo theo dõi, đôn đốc</label><select id="leaderSelect" aria-describedby="assignmentFilterNote"><option value="all">Tất cả lãnh đạo</option></select></div>
-   <div class="field"><label for="subSelect">Tình hình nộp</label><select id="subSelect"><option value="all">Tất cả</option><option value="yes">Đã gửi</option><option value="same">Xác nhận không thay đổi</option><option value="no">Chưa gửi</option><option value="unknown">Chưa xác định</option></select></div>
+   <div class="field"><label for="subSelect">Tình hình nộp</label><select id="subSelect"><option value="all">Tất cả</option><option value="yes">Đã gửi</option><option value="same">Xác nhận không thay đổi</option><option value="exempt">Đã giải ngân 100% (không tính)</option><option value="no">Chưa gửi</option><option value="unknown">Chưa xác định</option></select></div>
    <div class="field"><label for="bandSelect">Mức giải ngân</label><select id="bandSelect"><option value="all">Tất cả các mức</option><option value="risk">Dưới 50%</option><option value="warn">50% – dưới 70%</option><option value="mid">70% – dưới 90%</option><option value="high">Từ 90%</option><option value="none">Chưa phân mức</option></select></div>
    <div class="field sort-field"><label for="sortSelect">Sắp xếp danh sách</label><select id="sortSelect"><option value="rate-asc">Tỷ lệ: thấp → cao</option><option value="rate-desc">Tỷ lệ: cao → thấp</option><option value="plan-desc">Dự toán lớn nhất</option><option value="spent-desc">Giải ngân nhiều nhất</option><option value="left-desc">Còn lại nhiều nhất</option><option value="delta-desc">Tỷ lệ tăng nhiều nhất</option><option value="delta-asc">Tỷ lệ tăng ít nhất</option><option value="leader-desc">Thứ tự phân công: đảo ngược</option><option value="leader-asc">Theo thứ tự phân công</option><option value="name-asc">Tên đơn vị: A → Z</option><option value="name-desc">Tên đơn vị: Z → A</option><option value="plan-asc">Dự toán nhỏ nhất</option><option value="spent-asc">Giải ngân ít nhất</option><option value="left-asc">Còn lại ít nhất</option></select></div>
   </div><div class="filter-meta"><span id="resultMeta" aria-live="polite">Đang kết nối nguồn dữ liệu…</span><button class="text-btn" id="clearBtn" type="button" hidden>Xóa bộ lọc</button></div>
@@ -485,6 +485,8 @@ function pairs(input){
   if(a[0]==null||a[1]==null||a[0]===''||a[1]==='')continue;result[p.key]=[numeric(a[0]),numeric(a[1])];}
  if(!result.all&&PROGRAMS.slice(1).every(p=>result[p.key]))result.all=PROGRAMS.slice(1).reduce((a,p)=>[a[0]+result[p.key][0],a[1]+result[p.key][1]],[0,0]);return result;
 }
+// Đơn vị đã giải ngân 100% vốn giao (23/11/2026): không phải nhập/gửi tiếp; nếu kỳ đó không gửi thì không tính vào thống kê đã gửi/chưa gửi.
+function fullPaid(a){return !!(a&&a[0]>0&&a[1]+.0005>=a[0]);}
 function submission(v){if(v===true||v===1||v==='true'||v==='1')return true;if(v===false||v===0||v==='false'||v==='0')return false;return null;}
 // Mục VI – kinh phí bão lũ nguồn NSTW: dữ liệu riêng từ API (data.baoLu), không cộng vào p.all.
 function normalizeBaoLu(b){
@@ -530,7 +532,8 @@ function normalizePayload(data){
   const mismatch=!!(p.all&&sums&&(Math.abs(p.all[0]-sums[0])>.005||Math.abs(p.all[1]-sums[1])>.005));
   const name=str(u.name).normalize('NFC'),short=str(u.short,250).normalize('NFC');
   const apiSubmitted=submission(u.submitted);
-  const status=u.status==='late'?'on_time':['on_time','not_submitted'].includes(u.status)?u.status:apiSubmitted===true?'submitted_unknown':apiSubmitted===false?'not_submitted':'unknown';
+  const status0=u.status==='late'?'on_time':['on_time','not_submitted'].includes(u.status)?u.status:apiSubmitted===true?'submitted_unknown':apiSubmitted===false?'not_submitted':'unknown';
+  const status=status0==='not_submitted'&&(u.exempt===true||fullPaid(p.all))?'exempt':status0;
   const submitted=['on_time','late','submitted_unknown'].includes(status)?true:status==='not_submitted'?false:null;
   const reportSource=['submitted','snapshot','draft','unavailable'].includes(u.reportSource)?u.reportSource:'legacy';
   const decreaseCount=Number.isSafeInteger(u.decreaseCount)&&u.decreaseCount>=0?u.decreaseCount:0;
@@ -644,14 +647,14 @@ function aggregate(rows){
  return{P,S,L:P-S,rate,delta,known:known.length,total:rows.length,missing:rows.length-known.length};
 }
 function filtered(){
- const q=fold(state.q.trim()),rows=scope().filter(v=>(!state.unitId||v.u.id===state.unitId)&&(!q||assignmentSearch(v.u).includes(q))&&matchesLeader(v.u)&&(state.sub==='all'||(state.sub==='yes'?v.u.submitted===true:state.sub==='ontime'?v.u.status==='on_time':state.sub==='late'?v.u.status==='late':state.sub==='same'?v.u.unchanged===true:state.sub==='no'?v.u.submitted===false:v.u.submitted==null))&&(state.band==='all'||(state.band==='none'?!v.band:v.band?.key===state.band))&&(!state.attention||v.anomaly)&&(!state.decreaseOnly||v.u.decreaseCount>0));
+ const q=fold(state.q.trim()),rows=scope().filter(v=>(!state.unitId||v.u.id===state.unitId)&&(!q||assignmentSearch(v.u).includes(q))&&matchesLeader(v.u)&&(state.sub==='all'||(state.sub==='yes'?v.u.submitted===true:state.sub==='ontime'?v.u.status==='on_time':state.sub==='late'?v.u.status==='late':state.sub==='same'?v.u.unchanged===true:state.sub==='no'?v.u.submitted===false:state.sub==='exempt'?v.u.status==='exempt':v.u.submitted==null&&v.u.status!=='exempt'))&&(state.band==='all'||(state.band==='none'?!v.band:v.band?.key===state.band))&&(!state.attention||v.anomaly)&&(!state.decreaseOnly||v.u.decreaseCount>0));
  const[key,dir]=state.sort.split('-'),sign=dir==='asc'?1:-1;
  return rows.sort((a,b)=>{if(key==='leader'){const ak=primaryLeaderOrder(a.u),bk=primaryLeaderOrder(b.u);if(ak===999||bk===999)return ak===bk?a.u.name.localeCompare(b.u.name,'vi'):ak===999?1:-1;return (ak-bk)*sign||a.u.name.localeCompare(b.u.name,'vi');}if(key==='name')return a.u.name.localeCompare(b.u.name,'vi')*sign;const av=a[key],bv=b[key];if(av==null&&bv==null)return a.u.name.localeCompare(b.u.name,'vi');if(av==null)return 1;if(bv==null)return -1;return(av-bv)*sign||a.u.name.localeCompare(b.u.name,'vi');});
 }
 function bandText(v){if(v.anomaly)return 'Cần đối chiếu';if(v.band)return v.band.label;return v.pair?'Chưa xác định tỷ lệ':'Chưa có số liệu';}
 function deltaHTML(v){if(v==null||!Number.isFinite(v))return '';const flat=Math.abs(v)<.05;return `<span class="delta ${flat?'flat':v<0?'down':''}" title="So với mốc ${esc(state.prevAt)}">${flat?'=':v>0?'+':'−'}${PF.format(flat?0:Math.abs(v))} điểm %</span>`;}
-function subLabel(u){return u.status==='late'?'Gửi muộn':u.status==='on_time'?'Đã gửi':u.submitted===true?'Đã gửi':u.submitted===false?'Chưa gửi':'Chưa xác định';}
-function subHTML(u){return `<span class="pill ${u.status==='late'?'late':u.submitted===true?'yes':u.submitted===false?'no':''}">${esc(subLabel(u))}</span>`;}
+function subLabel(u){return u.status==='exempt'?'Đã giải ngân 100%':u.status==='late'?'Gửi muộn':u.status==='on_time'?'Đã gửi':u.submitted===true?'Đã gửi':u.submitted===false?'Chưa gửi':'Chưa xác định';}
+function subHTML(u){return `<span class="pill ${u.status==='late'?'late':u.submitted===true||u.status==='exempt'?'yes':u.submitted===false?'no':''}">${esc(subLabel(u))}</span>`;}
 function reportOrigin(u){
  if(u.reportSource==='snapshot')return 'Số chụp khi chốt · chưa gửi';
  if(u.reportSource==='draft')return 'Số đang nhập · chưa gửi';
@@ -741,7 +744,7 @@ function renderKpis(){
  if(snapshotCount||draftCount)notes.push(noSent+' đơn vị chưa gửi báo cáo; tổng số đang tạm tính số liệu chưa chính thức của '+(snapshotCount+draftCount)+' đơn vị trong số này'+(snapshotCount?' (số chụp khi chốt)':' (số đang nhập)')+'.');
  if(state.reportSchema<2&&ready)notes.push('API chưa được nâng cấp để đối chiếu nguồn gốc số liệu của kỳ.');
  $('#qualityNote').hidden=!ready||!notes.length;$('#qualityNote').textContent=notes.join(' ');
- const us=kindUnits(),yes=us.filter(u=>u.submitted===true).length,no=us.filter(u=>u.submitted===false).length,unknown=us.length-yes-no;
+ const usAll=kindUnits(),exN=usAll.filter(u=>u.status==='exempt').length,us=usAll.filter(u=>u.status!=='exempt'),yes=us.filter(u=>u.submitted===true).length,no=us.filter(u=>u.submitted===false).length,unknown=us.length-yes-no;
  const ontime=us.filter(u=>u.status==='on_time').length,late=us.filter(u=>u.status==='late').length,unspecified=us.filter(u=>u.status==='submitted_unknown').length,sameN=us.filter(u=>u.unchanged).length;
  { const tn=$('.report-title').firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=state.period?.isPrev&&!state.period.official&&ready?'Tỷ lệ giải ngân kỳ trước ':'Đơn vị đã nộp báo cáo '; }
  if(state.period?.isPrev&&!state.period.official&&ready){
@@ -752,7 +755,7 @@ function renderKpis(){
   $('#reportDesc').textContent='Kỳ '+state.period.label+': đã giải ngân '+fmt0(P[1])+' triệu đồng ('+pct(r(P))+'). Đến nay (kỳ '+(state.cur.period?.label||'hiện tại')+'): '+fmt0(C[1])+' triệu đồng ('+pct(r(C))+'), '+(d>=0?'tăng ':'giảm ')+fmt0(Math.abs(d))+' triệu đồng; '+up+' đơn vị có số tăng.';
  }else{
  $('#reportCount').textContent=ready?yes+' / '+us.length:'—';$('#reportMeter').style.width=(us.length?yes/us.length*100:0)+'%';
- $('#reportDesc').textContent=(state.reportSchema>=2?'Đã gửi '+yes+' · Chưa gửi '+no+(sameN?' · Xác nhận không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'');
+ $('#reportDesc').textContent=(state.reportSchema>=2?'Đã gửi '+yes+' · Chưa gửi '+no+(sameN?' · Xác nhận không đổi số '+sameN:''):kindName(state.kind))+(unspecified?' '+unspecified+' bản đã gửi chưa xác định đúng/muộn.':'')+(unknown?' '+unknown+' đơn vị chưa rõ trạng thái nộp.':'')+(exN?' Không tính '+exN+' đơn vị đã giải ngân 100%.':'');
  }
  const pv=!!state.period?.isPrev&&!state.period.official;['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=pv;});
  $('#quickYes b').textContent=ready?yes:'—';$('#quickLate b').textContent=ready&&state.reportSchema>=2?late:'—';$('#quickLate').disabled=!ready||state.reportSchema<2;$('#quickNo b').textContent=ready?no:'—';if(pv){['#quickYes','#quickLate','#quickNo'].forEach(id=>{$(id).disabled=true;});$('#quickYes b').textContent='—';$('#quickLate b').textContent='—';$('#quickNo b').textContent='—';}$('#quickLow b').textContent=ready?rows.filter(v=>v.band?.key==='risk').length:'—';
@@ -832,7 +835,7 @@ function applyPeriodView(){
  if(state.viewPrev&&c.prevAt){
   const d=prevDateOf(c.prevAt),m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   const off=c.prevPeriod&&c.prevPeriod.official?c.prevPeriod:null;
-  state.units=c.units.map(u=>{const st=off&&u.prevStatus?u.prevStatus:null;return{...u,p:u.prev,prev:{},mtqg:{},submitted:st?st!=='not_submitted':null,status:st||'unknown',late:st==='late',unchanged:!!(st&&u.prevUnchanged),decreaseCount:0,reportSource:st==='not_submitted'?'snapshot':st?'submitted':'legacy',mismatch:false};});
+  state.units=c.units.map(u=>{const st0=off&&u.prevStatus?u.prevStatus:null,st=st0==='not_submitted'&&fullPaid(u.prev&&u.prev.all)?'exempt':st0;return{...u,p:u.prev,prev:{},mtqg:{},submitted:st==='exempt'?null:st?st!=='not_submitted':null,status:st||'unknown',late:st==='late',unchanged:!!(st&&u.prevUnchanged),decreaseCount:0,reportSource:st==='not_submitted'?'snapshot':st?'submitted':'legacy',mismatch:false};});
   state.period=off?{label:off.label,key:off.key||'prev',cutoffText:off.cutoffText||'đã chốt',graceText:'',closed:true,isPrev:true,official:true}
    :{label:d,key:m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'prev',cutoffText:'số liệu chụp lúc '+c.prevAt,graceText:'',closed:true,isPrev:true};
   state.prevAt='';state.mtqgPrograms=[];
@@ -863,7 +866,7 @@ function renderDetail(id){
 function openDetail(id){state.openId=String(id);renderDetail(state.openId);if(!$('#unitDialog').open)$('#unitDialog').showModal();}
 function filterDescription(){
  const d=[kindName(state.kind),programName()];if(state.leader!=='all')d.push(leaderFilterLabel());if(state.q.trim())d.push('Từ khóa: '+state.q.trim());
- if(state.sub!=='all')d.push('Nộp báo cáo: '+({yes:'Đã nhận',ontime:'Đúng hạn',late:'Gửi muộn',no:'Chưa gửi',unknown:'Chưa xác định'}[state.sub]));
+ if(state.sub!=='all')d.push('Nộp báo cáo: '+({yes:'Đã nhận',ontime:'Đúng hạn',late:'Gửi muộn',no:'Chưa gửi',exempt:'Đã giải ngân 100% (không tính)',unknown:'Chưa xác định'}[state.sub]));
  if(state.band!=='all')d.push('Mức: '+(state.band==='none'?'Chưa phân mức':BANDS.find(b=>b.key===state.band).label));
  if(state.attention)d.push('Chỉ đơn vị cần đối chiếu');if(state.decreaseOnly)d.push('Có khoản mục giảm đã giải trình');d.push('Sắp xếp: '+$('#sortSelect').selectedOptions[0].textContent);return d.join(' · ');
 }
@@ -1170,7 +1173,7 @@ function buildQuickDoc(D, data, picked) {
   const nP = sel.filter(u => /^Phường/i.test(u.name)).length;
   const kindW = !nP ? 'xã' : nP === sel.length ? 'phường' : 'xã, phường';
   const bqName = 'bình quân ' + N + ' xã, phường';
-  const status = u => u.submittedAt ? 'Đã gửi' : 'Chưa gửi';
+  const status = u => u.submittedAt ? 'Đã gửi' : u.exempt ? 'Đã GN 100%' : 'Chưa gửi';
   const deadline = String(P0.cutoffText || '') + (/\d{2}\/\d{2}$/.test(String(P0.cutoffText || '')) ? '/' + String(P0.key || '').slice(0, 4) : '');
   // ---- khối dựng văn bản ----
   const runs = (text, o) => String(text).split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(s => {
@@ -1201,7 +1204,7 @@ function buildQuickDoc(D, data, picked) {
   const leaderOf = typeof data.leaderOf === 'function' ? data.leaderOf : () => '';
   const mv = sel.filter(u => hasPrev && u.prevDisbursed != null && Number(u.planned) > 0)
     .map(u => ({ u, a: Number(u.prevDisbursed) / (Number(u.prevPlanned) > 0 ? Number(u.prevPlanned) : Number(u.planned)), b: ratio(u), dd: (Number(u.disbursed) || 0) - Number(u.prevDisbursed) }));
-  const sent = sel.filter(u => u.submittedAt), pend = sel.filter(u => !u.submittedAt);
+  const sent = sel.filter(u => u.submittedAt), pend = sel.filter(u => !u.submittedAt && !u.exempt), full = sel.filter(u => !u.submittedAt && u.exempt);
   const s5 = [];
   if (pend.length) s5.push(closed ? 'Nhắc nhở ' + qrJoin(pend.map(nm)) + ' chưa gửi báo cáo kỳ ' + P0.label + '; yêu cầu cập nhật, gửi báo cáo đúng hạn trong kỳ tiếp theo.'
     : 'Đôn đốc ' + qrJoin(pend.map(nm)) + ' gửi báo cáo trước ' + deadline + '.');
@@ -1219,7 +1222,7 @@ function buildQuickDoc(D, data, picked) {
   // Kiến nghị riêng theo từng đơn vị: ưu tiên hành động có thể giao và kiểm tra lại.
   const unitAdvice = u => {
     const r = ratio(u), actions = [], n = nm(u.name), late = !!u.late;
-    if (!u.submittedAt) actions.push('khẩn trương cập nhật và gửi báo cáo kỳ ' + (P0.label || 'này') + ' đúng thời hạn');
+    if (!u.submittedAt && !u.exempt) actions.push('khẩn trương cập nhật và gửi báo cáo kỳ ' + (P0.label || 'này') + ' đúng thời hạn');
     else if (late) actions.push('chấn chỉnh việc gửi báo cáo, bảo đảm đúng hạn từ kỳ sau');
     if (r == null) actions.push('rà soát, hoàn thiện số liệu dự toán và số đã giải ngân trên hệ thống');
     else if (r < 0.3) actions.push('xây dựng kế hoạch giải ngân theo tuần/tháng, xác định rõ hồ sơ và khối lượng cần hoàn thành');
@@ -1249,7 +1252,7 @@ function buildQuickDoc(D, data, picked) {
     else if (r < BQ.x) parts.push('Chưa theo kịp mặt bằng chung; cần xác định rõ khâu đang làm chậm tiến độ và trách nhiệm xử lý.');
     else if (r >= 0.9) parts.push('Kết quả tốt; cần tiếp tục cập nhật kịp thời và kiểm soát phần kinh phí còn lại để tránh dồn hồ sơ cuối kỳ.');
     else parts.push('Tiến độ ở mức có thể tiếp tục đôn đốc theo kế hoạch, đồng thời theo dõi sát phần kinh phí còn lại.');
-    if (!u.submittedAt) parts.push('Đơn vị chưa gửi báo cáo kỳ này, vì vậy cần hoàn thiện cả số liệu và phần giải trình tiến độ.');
+    if (!u.submittedAt && !u.exempt) parts.push('Đơn vị chưa gửi báo cáo kỳ này, vì vậy cần hoàn thiện cả số liệu và phần giải trình tiến độ.');
     else if (u.late) parts.push('Báo cáo đã gửi muộn; cần chấn chỉnh kỷ luật báo cáo để bảo đảm dữ liệu phục vụ điều hành đúng thời điểm.');
     const old = mv.find(x => x.u.name === u.name);
     if (old && old.dd < -0.0005) parts.push('Số giải ngân giảm so với ' + prevName + ', cần giải trình nguyên nhân và biện pháp khắc phục.');
@@ -1276,7 +1279,7 @@ function buildQuickDoc(D, data, picked) {
   body.push(P('Tổng dự toán của ' + kN + ' ' + kindW + ' là ' + ty(SUM.p) + ', đã giải ngân ' + ty(SUM.d) + ', đạt **' + pc(SUM.x) + '**, '
     + (eq ? 'tương đương ' + bqName + ' (' + pc(BQ.x) + ')' : cmpAvg(SUM.x, BQ.x) + ' ' + bqName + ' (' + pc(BQ.x) + ') ' + ptsN(dAvg, 1) + ' điểm %')
     + '; đã qua ' + pc(TIME) + ' thời gian năm, tỷ lệ giải ngân ' + (Math.abs(dT) < 0.0005 ? 'tương đương tiến độ thời gian.' : cmpAvg(SUM.x, TIME) + ' tiến độ thời gian ' + ptsN(dT, 1) + ' điểm %.')));
-  const subAll = all.filter(u => u.submittedAt).length;
+  const subAll = all.filter(u => u.submittedAt).length, allNeed = all.filter(u => u.submittedAt || !u.exempt).length;
   const t1 = sel.map(u => {
     const r = ratio(u), rk = rankOf(u), st = status(u);
     return [cell(nm(u.name)), cell(num(u.planned), { al: R }), cell(num(u.disbursed), { al: R }), cell(num((Number(u.planned) || 0) - (Number(u.disbursed) || 0)), { al: R }),
@@ -1286,7 +1289,7 @@ function buildQuickDoc(D, data, picked) {
   t1.push([cell('Cộng ' + kN + ' ' + kindW, { bold: 1, fill: TOT }), cell(num(SUM.p), { al: R, bold: 1, fill: TOT }), cell(num(SUM.d), { al: R, bold: 1, fill: TOT }), cell(num(SUM.p - SUM.d), { al: R, bold: 1, fill: TOT }),
     cell(pc(SUM.x), { al: C, bold: 1, fill: TOT }), cell(sgn(dAvg, 1), { al: C, bold: 1, fill: TOT }), cell('', { fill: TOT }), cell('', { fill: TOT })]);
   t1.push([cell('Bình quân ' + N + ' xã', { fill: GREY }), cell(num(BQ.p), { al: R, fill: GREY }), cell(num(BQ.d), { al: R, fill: GREY }), cell(num(BQ.p - BQ.d), { al: R, fill: GREY }),
-    cell(pc(BQ.x), { al: C, fill: GREY }), cell('', { fill: GREY }), cell('', { fill: GREY }), cell(subAll + '/' + all.length + ' đã gửi', { al: C, fill: GREY })]);
+    cell(pc(BQ.x), { al: C, fill: GREY }), cell('', { fill: GREY }), cell('', { fill: GREY }), cell(subAll + '/' + allNeed + ' đã gửi', { al: C, fill: GREY })]);
   body.push(P('Đơn vị tính: triệu đồng', { it: 1, size: 12, ni: 1, al: R, after: 40, kn: 1 }));
   body.push(table([1500, 1300, 1300, 1300, 800, 1000, 800, 1071], ['Xã', 'Dự toán', 'Đã giải ngân', 'Còn lại', 'Tỷ lệ', 'So BQ ' + N + ' xã (điểm %)', 'Xếp hạng /' + N, 'Báo cáo kỳ ' + String(P0.label || '').slice(0, 5)], t1));
   const prevMap = new Map(mv.map(x => [x.u.name, x.a]));
@@ -1336,7 +1339,8 @@ function buildQuickDoc(D, data, picked) {
   const s4 = [];
   if (sent.length) s4.push(sent.map(u => nm(u.name) + ' đã gửi' + when(u)).join('; '));
   if (pend.length) s4.push(qrJoin(pend.map(nm)) + ' chưa gửi; ' + (closed ? 'số liệu trên là số đơn vị đang nhập tại thời điểm chốt kỳ.' : 'số liệu trên là số đang nhập, có thể thay đổi đến hạn chốt ' + deadline + '.'));
-  else s4.push('cả ' + kN + ' đơn vị đã gửi báo cáo kỳ này.');
+  else s4.push('cả ' + two(sel.length - full.length) + ' đơn vị phải báo cáo đã gửi báo cáo kỳ này.');
+  if (full.length) s4.push(qrJoin(full.map(nm)) + ' đã giải ngân 100% kinh phí được giao, không phải tiếp tục cập nhật số liệu nên không tính vào số đơn vị chưa gửi.');
   body.push(B(s4.join('. ').replace(/^./, c => c.toUpperCase())));
   // ---- 4. Đề xuất, kiến nghị ----
   body.push(H('4. Đề xuất, kiến nghị đối với đơn vị'));
@@ -1365,7 +1369,7 @@ function reportData() {
     const a = u.p.all, sections = {};
     ['I', 'II', 'III', 'IV', 'V'].forEach(k => { if (u.p[k]) sections[k] = { planned: u.p[k][0], disbursed: u.p[k][1] }; });
     return { name: u.name, kind: 'xa', planned: a ? a[0] : 0, disbursed: a ? a[1] : 0, sections,
-      submittedAt: u.submitted === true ? (parseVN(u.updated) || 'x') : null, late: u.status === 'late', explained: u.decreaseCount || 0,
+      submittedAt: u.submitted === true ? (parseVN(u.updated) || 'x') : null, exempt: u.status === 'exempt', late: u.status === 'late', explained: u.decreaseCount || 0,
       prevDisbursed: state.prevAt && u.prev.all ? u.prev.all[1] : null, prevPlanned: state.prevAt && u.prev.all ? u.prev.all[0] : null };
   });
   const p = state.period || {};
@@ -1378,19 +1382,19 @@ function submitAiQuickReport(names) {
   if (!picked.length) { alert('Không có đơn vị hợp lệ trong lựa chọn.'); return false; }
   const planned = picked.reduce((n, u) => n + (Number(u.planned) || 0), 0);
   const disbursed = picked.reduce((n, u) => n + (Number(u.disbursed) || 0), 0);
-  const sent = picked.filter(u => u.submittedAt !== null).length;
+  const sent = picked.filter(u => u.submittedAt !== null).length, fullN = picked.filter(u => u.submittedAt === null && u.exempt).length;
   const payload = {
     period: data.period.label || '', cutoffText: data.period.cutoffText || '', generatedAt: data.generatedAt,
     summary: {
       unitCount: picked.length, planned: fmt(planned), disbursed: fmt(disbursed), remaining: fmt(planned - disbursed),
-      rate: planned ? (disbursed / planned * 100).toFixed(1) + '%' : '—', submitted: sent, pending: picked.length - sent,
+      rate: planned ? (disbursed / planned * 100).toFixed(1) + '%' : '—', submitted: sent, pending: picked.length - sent - fullN, fullyDisbursedNotRequired: fullN,
       late: picked.filter(u => u.late).length,
       below50: picked.filter(u => u.planned > 0 && u.disbursed / u.planned < .5).length
     },
     units: picked.map(u => ({
       name: u.name, planned: u.planned, disbursed: u.disbursed, remaining: u.planned - u.disbursed,
       rate: u.planned ? Math.round(u.disbursed / u.planned * 1000) / 10 : null,
-      submitted: u.submittedAt !== null, late: !!u.late, explainedDecreaseItems: u.explained || 0, sections: u.sections
+      submitted: u.submittedAt !== null, fullyDisbursed: !!u.exempt, late: !!u.late, explainedDecreaseItems: u.explained || 0, sections: u.sections
     }))
   };
   const ov = document.createElement('div');
@@ -1528,7 +1532,7 @@ function units() {
   return state.units.filter(u => u.kind === 'commune');
 }
 const rate = (s, p) => p > 0 ? s / p * 100 : null;
-const status = u => u.submitted === true ? 'Đã gửi' : u.submitted === false ? 'Chưa gửi' : '—';
+const status = u => u.submitted === true ? 'Đã gửi' : u.status === 'exempt' ? 'Đã GN 100%' : u.submitted === false ? 'Chưa gửi' : '—';
 const origin = u => u.reportSource === 'snapshot' ? 'Số chụp khi chốt' : u.reportSource === 'draft' ? 'Số đang nhập' : u.reportSource === 'unavailable' ? 'Chưa có số' : '';
 
 function sortRows(rows, mode, val) {
@@ -1588,13 +1592,13 @@ function buildDoc(sel, mode) {
   const period = state.period ? 'Kỳ báo cáo đến ' + esc(state.period.label) + (state.period.cutoffText ? ' · Mốc chốt: ' + esc(state.period.cutoffText) : '') : 'Chưa có thông tin kỳ báo cáo';
   const when = (state.generatedAt ? 'Số liệu lúc ' + esc(dateLabel(state.generatedAt)) + ' · ' : '') + 'In lúc ' + esc(dateLabel(new Date().toISOString()));
   const warn = state.source === 'cache' ? '<p class="warn">BẢN LƯU TRÊN THIẾT BỊ — CHƯA ĐỒNG BỘ MỚI. Bấm "Cập nhật" trước khi in.</p>' : '';
-  const sentN = list.filter(u => u.submitted === true).length;
+  const sentN = list.filter(u => u.submitted === true).length, needN = list.filter(u => u.status !== 'exempt').length;
   const head = (title, sub) => `<div class="hd"><div class="org"><div>UBND TỈNH CAO BẰNG</div><b>SỞ TÀI CHÍNH</b></div><div class="unit">Đơn vị tính: triệu đồng</div></div><h1>${title}</h1><p class="sub">${sub}</p><p class="sub">${period}<br>${when}</p>${warn}`;
   let body = '';
   if (sel === 'all' && chosen.length > 1) {
     const t = summaryTable(chosen, list, mode);
     body += '<section>' + head('TÌNH HÌNH GIẢI NGÂN VỐN CÁC CHƯƠNG TRÌNH MỤC TIÊU QUỐC GIA<br>CHI TIẾT TỪNG XÃ, PHƯỜNG', 'Biểu tổng hợp các chương trình')
-      + t.html + `<p class="note">Có ${sentN}/${list.length} đơn vị đã gửi báo cáo kỳ này; đơn vị chưa gửi sử dụng số đang nhập hoặc số chụp khi chốt.${t.missing ? ' ' + t.missing + ' đơn vị chưa có số liệu, không cộng vào tổng.' : ''}</p></section>`;
+      + t.html + `<p class="note">Có ${sentN}/${needN} đơn vị phải báo cáo đã gửi báo cáo kỳ này${list.length > needN ? ' (không tính ' + (list.length - needN) + ' đơn vị đã giải ngân 100%)' : ''}; đơn vị chưa gửi sử dụng số đang nhập hoặc số chụp khi chốt.${t.missing ? ' ' + t.missing + ' đơn vị chưa có số liệu, không cộng vào tổng.' : ''}</p></section>`;
   }
   chosen.forEach(p => {
     const t = programTable(p, list, mode);

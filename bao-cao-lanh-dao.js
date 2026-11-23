@@ -65,7 +65,7 @@ function collect(scope) {
     .map(function (u) {
       var c = pick(u, key), p = pickPrev(u, key);
       return {
-        name: u.name, kind: u.kind, submitted: !!u.submitted,
+        name: u.name, kind: u.kind, submitted: !!u.submitted, exempt: u.status === 'exempt',
         gi: c.gi, gn: c.gn, con: c.gi - c.gn, tl: pc(c.gn, c.gi),
         giam: p.gn > 0 && c.gn < p.gn - 0.0001
       };
@@ -141,7 +141,7 @@ function detailHalf(arr, start) {
     h += '<tr><td class="c">' + (start + i) + '</td><td>' + esc2(r.name) + (r.giam ? ' <span class="warn">▼</span>' : '') + '</td>' +
          '<td class="r">' + n0(r.gi) + '</td><td class="r">' + n0(r.gn) + '</td>' +
          '<td class="r b ' + cls + '">' + pcTxt(r.tl) + '</td>' +
-         '<td class="c">' + (r.submitted ? '<span class="ok">✓</span>' : '<span class="no">–</span>') + '</td></tr>';
+         '<td class="c">' + (r.submitted ? '<span class="ok">✓</span>' : r.exempt ? '<span class="ok" title="Đã giải ngân 100%, không phải gửi">100%</span>' : '<span class="no">–</span>') + '</td></tr>';
   });
   return h + '</tbody></table>';
 }
@@ -247,7 +247,7 @@ function buildLeaderDoc(scope) {
   rows.forEach(function (r) { gi += r.gi; gn += r.gn; });
   var tl = pc(gn, gi);
   var sent = rows.filter(function (r) { return r.submitted; }).length;
-  var notSent = rows.filter(function (r) { return !r.submitted; });
+  var notSent = rows.filter(function (r) { return !r.submitted && !r.exempt; });
   var giam = rows.filter(function (r) { return r.giam; });
   var per0 = state.period || {};
   var closed = !!per0.closed;
@@ -275,7 +275,7 @@ function buildLeaderDoc(scope) {
     '<div><div class="k">Đã giải ngân</div><div class="v">' + n0(gn) + '</div><div class="n">lũy kế đến kỳ báo cáo</div></div>' +
     '<div><div class="k">Tỷ lệ giải ngân</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">so với dự toán giao</div></div>' +
     '<div><div class="k">Còn lại</div><div class="v">' + n0(gi - gn) + '</div><div class="n">chưa giải ngân</div></div>' +
-    '<div><div class="k">Nộp báo cáo</div><div class="v">' + sent + '/' + rows.length + '</div><div class="n">' +
+    '<div><div class="k">Nộp báo cáo</div><div class="v">' + sent + '/' + rows.filter(function (r) { return r.submitted || !r.exempt; }).length + '</div><div class="n">' +
       (nhac ? notSent.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
@@ -589,7 +589,7 @@ function allRows() {
     var gi = Number(a[0]) || 0, gn = Number(a[1]) || 0;
     var ptl = pc(Number(b[1]) || 0, Number(b[0]) || 0);
     return {
-      name: u.name, kind: u.kind, submitted: !!u.submitted,
+      name: u.name, kind: u.kind, submitted: !!u.submitted, exempt: u.status === 'exempt',
       gi: gi, gn: gn, con: gi - gn, tl: pc(gn, gi),
       delta: pc(gn, gi) - ptl,
       giam: (Number(b[1]) || 0) > 0 && gn < (Number(b[1]) || 0) - 0.0001,
@@ -667,7 +667,7 @@ function quickDetail(rows) {
          '<td class="r">' + n0(r.gi) + '</td><td class="r">' + n0(r.gn) + '</td><td class="r">' + n0(r.con) + '</td>' +
          '<td class="r b ' + cls + '">' + pcTxt(r.tl) + '</td>' +
          '<td class="r' + (r.giam ? ' warn' : '') + '">' + ptTxt(r.delta) + ' điểm %</td>' +
-         '<td class="c">' + (r.submitted ? '<span class="ok">✓</span>' : '<span class="no">–</span>') + '</td>' +
+         '<td class="c">' + (r.submitted ? '<span class="ok">✓</span>' : r.exempt ? '<span class="ok" title="Đã giải ngân 100%, không phải gửi">100%</span>' : '<span class="no">–</span>') + '</td>' +
          '<td>' + esc2(r.leader || '—') + '</td></tr>';
   });
   return h + '</tbody></table>';
@@ -685,7 +685,7 @@ function buildQuickHtml(picked) {
 
   var duoiBQ = rows.filter(function (r) { return r.tl < avg; });
   var giam = rows.filter(function (r) { return r.giam; });
-  var chuaGui = rows.filter(function (r) { return !r.submitted; });
+  var chuaGui = rows.filter(function (r) { return !r.submitted && !r.exempt; });
   var per = state.period || {};
   var closed = !!per.closed;
   var nhac = remindNotSent();
@@ -709,7 +709,7 @@ function buildQuickHtml(picked) {
     '<div><div class="k">Đã giải ngân</div><div class="v">' + n0(gn) + '</div><div class="n">lũy kế đến kỳ báo cáo</div></div>' +
     '<div><div class="k">Tỷ lệ nhóm</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' bình quân tỉnh</div></div>' +
     '<div><div class="k">Bình quân tỉnh</div><div class="v">' + pcTxt(avg) + '</div><div class="n">tiến độ thời gian ' + pcTxt(tpc) + '</div></div>' +
-    '<div><div class="k">Nộp báo cáo</div><div class="v">' + (rows.length - chuaGui.length) + '/' + rows.length + '</div><div class="n">' +
+    '<div><div class="k">Nộp báo cáo</div><div class="v">' + rows.filter(function (r) { return r.submitted; }).length + '/' + rows.filter(function (r) { return r.submitted || !r.exempt; }).length + '</div><div class="n">' +
       (nhac ? chuaGui.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
