@@ -83,18 +83,20 @@ export async function onRequest(context) {
     max_tokens: 900,
   };
 
-  // Thử khóa chính trước; khóa dự phòng chỉ dùng khi API chính không khả dụng.
+  // Chọn ngẫu nhiên khóa bắt đầu, sau đó thử vòng qua các khóa còn lại đúng một lần.
   const keys = [...new Set([env.FOSTA_API_KEY, env.FOSTA_API_KEY_2, env.FOSTA_API_KEY_3, env.FOSTA_API_KEY_4]
     .filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim()))];
+  const startIndex = Math.floor(Math.random() * keys.length);
+  const orderedKeys = keys.slice(startIndex).concat(keys.slice(0, startIndex));
   let errorStatus = 502;
-  for (let index = 0; index < keys.length; index++) {
+  for (let index = 0; index < orderedKeys.length; index++) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
     try {
       const upstream = await fetch(`${API_BASE}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${keys[index]}`,
+          'Authorization': `Bearer ${orderedKeys[index]}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
@@ -105,7 +107,7 @@ export async function onRequest(context) {
         const retryable = [401, 402, 403, 408, 429].includes(upstream.status) || upstream.status >= 500;
         errorStatus = upstream.status >= 500 ? 502 : upstream.status;
         if (upstream.body) await upstream.body.cancel();
-        if (retryable && index + 1 < keys.length) continue;
+        if (retryable && index + 1 < orderedKeys.length) continue;
         break;
       }
       const data = await upstream.json();
