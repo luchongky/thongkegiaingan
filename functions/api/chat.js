@@ -56,7 +56,7 @@ export async function onRequest(context) {
   }
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
   if (!allowed(request)) return json({ error: 'Không có quyền truy cập chatbot' }, 403, origin);
-  if (!env.FOSTA_API_KEY && !env.FOSTA_API_KEY_BACKUP) return json({ error: 'Chưa cấu hình FOSTA_API_KEY trên Cloudflare Pages' }, 500, origin);
+  if (![env.FOSTA_API_KEY, env.FOSTA_API_KEY_2, env.FOSTA_API_KEY_3, env.FOSTA_API_KEY_4].some((key) => typeof key === 'string' && key.trim())) return json({ error: 'Chưa cấu hình FOSTA_API_KEY trên Cloudflare Pages' }, 500, origin);
 
   let payload;
   try {
@@ -84,7 +84,7 @@ export async function onRequest(context) {
   };
 
   // Thử khóa chính trước; khóa dự phòng chỉ dùng khi API chính không khả dụng.
-  const keys = [...new Set([env.FOSTA_API_KEY, env.FOSTA_API_KEY_BACKUP]
+  const keys = [...new Set([env.FOSTA_API_KEY, env.FOSTA_API_KEY_2, env.FOSTA_API_KEY_3, env.FOSTA_API_KEY_4]
     .filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim()))];
   let errorStatus = 502;
   for (let index = 0; index < keys.length; index++) {
