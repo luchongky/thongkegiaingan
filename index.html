@@ -1830,6 +1830,42 @@ BTN.addEventListener('click', pick);
 #gnChatToggle:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 18px 36px #064b3960,0 0 0 6px var(--tint)}#gnChatToggle:after{content:'AI';position:absolute;right:-7px;top:-7px;min-width:25px;height:25px;padding:0 5px;border:3px solid var(--bg);border-radius:99px;background:#f0b34b;color:#4c3210;font-size:9px;font-weight:800;display:grid;place-items:center;letter-spacing:.04em}.gn-chat-bubble-icon{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.gn-chat-mascot{display:block;object-fit:contain;filter:drop-shadow(0 3px 3px #064b3930)}#gnChatToggle .gn-chat-mascot{width:49px;height:49px}#gnChatToggle.is-loading .gn-chat-mascot{animation:gnChatMascot 1s ease-in-out infinite}@keyframes gnChatFloat{50%{transform:translateY(-2px)}}@keyframes gnChatMascot{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-4px) rotate(2deg)}}
 #gnChatPanel{position:absolute;right:0;bottom:78px;width:min(390px,calc(100vw - 28px));height:min(580px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px #162f2830;display:flex;flex-direction:column;overflow:hidden}
 #gnChatPanel[hidden]{display:none}.gn-chat-head{padding:14px 16px;background:linear-gradient(135deg,var(--brand),#0b8a68);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}.gn-chat-brand{display:flex;align-items:center;gap:10px;min-width:0}.gn-chat-avatar{width:34px;height:34px;flex:none;border-radius:11px;background:#ffffff24;border:1px solid #ffffff55;display:grid;place-items:center;overflow:hidden}.gn-chat-avatar .gn-chat-mascot{width:38px;height:38px}.gn-chat-head strong{font-size:14px;display:block}.gn-chat-head small{font-size:10px;opacity:.88}.gn-chat-close{border:0;background:transparent;color:inherit;font-size:22px;line-height:1;padding:4px 8px}.gn-chat-scope{padding:9px 14px;background:var(--tint);border-bottom:1px solid var(--line);font-size:10px;line-height:1.55;color:var(--text)}.gn-chat-scope b{color:var(--brand)}.gn-chat-messages{flex:1;overflow:auto;padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:10px}.gn-chat-msg{max-width:88%;padding:10px 12px;border-radius:13px;font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word}.gn-chat-msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);color:var(--text)}.gn-chat-msg.user{align-self:flex-end;background:var(--brand);color:#fff}.gn-chat-msg.error{background:var(--risk-bg);color:var(--risk);border-color:var(--risk)}.gn-chat-typing{font-size:11px;color:var(--muted);padding:0 14px 8px}.gn-chat-typing:after{content:'  ·  ·  ·';color:var(--brand);letter-spacing:2px;animation:gnChatDots 1s steps(4,end) infinite}@keyframes gnChatDots{0%{opacity:.25}50%{opacity:1}100%{opacity:.25}}.gn-chat-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--surface)}.gn-chat-form textarea{resize:none;min-height:42px;max-height:100px;flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:var(--surface);font:inherit;font-size:12px;outline:none}.gn-chat-form textarea:focus{border-color:var(--brand);box-shadow:0 0 0 2px var(--tint)}.gn-chat-send{width:44px;border:0;border-radius:10px;background:var(--brand);color:#fff;font-weight:700}.gn-chat-send:disabled{opacity:.45}@media(max-width:600px){#gnChatWidget{right:14px;bottom:14px}#gnChatToggle{width:58px;height:58px;border-radius:18px}#gnChatToggle .gn-chat-mascot{width:44px;height:44px}#gnChatPanel{bottom:70px;height:min(430px,calc(100dvh - 120px));max-height:min(430px,calc(100dvh - 120px))}.gn-chat-head{padding:12px 13px}.gn-chat-scope{font-size:9px}}
+
+/* Responsive chat: independent message scrolling and touch-friendly controls. */
+#gnChatWidget{right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom))}
+#gnChatPanel{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:98px;width:min(410px,calc(100vw - 40px));height:min(600px,calc(100dvh - 120px));max-height:calc(100dvh - 120px)}
+.gn-chat-head,.gn-chat-scope,.gn-chat-typing,.gn-chat-form{flex-shrink:0}
+.gn-chat-head strong{font-size:15px}.gn-chat-head small{font-size:11px}
+.gn-chat-close{min-width:44px;min-height:44px;border-radius:10px;flex-shrink:0}
+.gn-chat-close:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.gn-chat-scope{font-size:12px;line-height:1.45}
+.gn-chat-messages{min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.gn-chat-msg{flex-shrink:0;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.gn-chat-form{align-items:flex-end;padding:12px;gap:8px}
+.gn-chat-form textarea{min-width:0;width:0;box-sizing:border-box;font-size:16px;line-height:1.4;min-height:46px;color:var(--text)}
+.gn-chat-send{flex:0 0 46px;width:46px;min-height:46px;font-size:20px}
+@media(min-width:601px) and (max-width:1024px){
+  #gnChatPanel{width:min(440px,calc(100vw - 40px));height:min(640px,74dvh,calc(100dvh - 120px))}
+}
+@media(max-width:600px){
+  #gnChatWidget{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}
+  #gnChatToggle{width:54px;height:54px;border-radius:18px}
+  #gnChatPanel{right:max(12px,env(safe-area-inset-right));bottom:calc(78px + env(safe-area-inset-bottom));width:calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));height:min(560px,72dvh,calc(100dvh - 100px - env(safe-area-inset-bottom)));max-height:calc(100dvh - 100px - env(safe-area-inset-bottom));border-radius:18px}
+  .gn-chat-head{padding:8px 10px}.gn-chat-brand{gap:8px}
+  .gn-chat-scope{padding:8px 12px;font-size:11px}
+  .gn-chat-messages{padding:12px;gap:10px}.gn-chat-msg{max-width:94%}
+  .gn-chat-form{padding:10px}
+}
+@media(max-height:500px) and (max-width:1024px){
+  #gnChatPanel{bottom:12px;height:calc(100dvh - 24px);max-height:calc(100dvh - 24px)}
+  .gn-chat-scope{display:none}
+}
+@media(max-width:1024px){
+  #gnChatWidget.keyboard-open #gnChatPanel{bottom:calc(var(--gn-keyboard-inset,0px) + 8px);height:calc(var(--gn-visible-height,100dvh) - 16px);max-height:calc(var(--gn-visible-height,100dvh) - 16px)}
+  #gnChatWidget.keyboard-open #gnChatToggle{visibility:hidden}
+  #gnChatWidget.keyboard-open .gn-chat-scope{display:none}
+}
+@media(prefers-reduced-motion:reduce){#gnChatToggle,#gnChatToggle.is-loading .gn-chat-mascot,.gn-chat-typing:after{animation:none}}
 </style>
 <div id="gnChatWidget" class="no-print">
   <section id="gnChatPanel" hidden aria-label="Trợ lý giải ngân">
@@ -1848,7 +1884,24 @@ BTN.addEventListener('click', pick);
   const add=(text,role='bot',error=false)=>{const el=document.createElement('div');el.className='gn-chat-msg '+role+(error?' error':'');el.textContent=text;list.appendChild(el);list.scrollTop=list.scrollHeight;};
   const context=()=>{try{const rows=(state.units||[]).map(u=>{let v=null;try{v=view(u,state.program||'all')}catch(e){};return {name:u.name,kind:u.kind,plan:v?.plan??null,spent:v?.spent??null,rate:v?.rate??null,submitted:u.submitted};});return JSON.stringify({period:state.period?.label||null,program:state.program||'all',source:state.source||'none',generatedAt:state.generatedAt||null,filters:{kind:state.kind,q:state.q,leader:state.leader,band:state.band},units:rows.slice(0,120)});}catch(e){return '{}'}};
   const system='Bạn là Trợ lý giải ngân của Sở Tài chính tỉnh Cao Bằng. Trả lời bằng tiếng Việt, ngắn gọn, rõ ràng. Phạm vi được phép: (1) tra cứu, so sánh và giải thích số liệu trong NGỮ CẢNH TRANG; (2) nhắc việc, cảnh báo rủi ro và đề xuất giải pháp liên quan trực tiếp đến nhiệm vụ theo dõi/đẩy nhanh giải ngân. Khi đề xuất, phải nói rõ đó là gợi ý tham khảo, không tự khẳng định quy định hay số liệu ngoài dữ liệu được cung cấp. Nếu người dùng hỏi chuyện không liên quan đến website hoặc nhiệm vụ giải ngân, hãy lịch sự từ chối và hướng họ quay lại nội dung này. Nếu thiếu dữ liệu hoặc là bản lưu cũ thì nói rõ, không bịa số liệu. Đơn vị tiền là triệu đồng. Khi tính tỷ lệ, làm tròn một chữ số thập phân.';
-  const open=()=>{panel.hidden=false;toggle.setAttribute('aria-expanded','true');input.focus()}; const hide=()=>{panel.hidden=true;toggle.setAttribute('aria-expanded','false')}; toggle.onclick=()=>panel.hidden?open():hide(); close.onclick=hide;
+  const widget=document.getElementById('gnChatWidget');
+  const syncViewport=()=>{
+    const viewport=window.visualViewport;
+    const inset=viewport?Math.max(0,window.innerHeight-viewport.height-viewport.offsetTop):0;
+    widget.style.setProperty('--gn-visible-height',(viewport?.height||window.innerHeight)+'px');
+    widget.style.setProperty('--gn-keyboard-inset',inset+'px');
+    widget.classList.toggle('keyboard-open',!panel.hidden&&document.activeElement===input&&inset>120);
+  };
+  window.visualViewport?.addEventListener('resize',syncViewport);
+  window.visualViewport?.addEventListener('scroll',syncViewport);
+  window.addEventListener('resize',syncViewport);
+  input.addEventListener('focus',syncViewport);
+  input.addEventListener('blur',()=>requestAnimationFrame(syncViewport));
+  const open=()=>{panel.hidden=false;toggle.setAttribute('aria-expanded','true');syncViewport();if(window.matchMedia('(min-width:1025px) and (pointer:fine)').matches)input.focus()};
+  const hide=()=>{input.blur();panel.hidden=true;toggle.setAttribute('aria-expanded','false');syncViewport();toggle.focus({preventScroll:true})};
+  toggle.onclick=()=>panel.hidden?open():hide();close.onclick=hide;
+  panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();hide()}});
+
   form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;input.value='';add(q,'user');history.push({role:'user',content:q});typing.textContent='Đang tra cứu số liệu';typing.hidden=false;send.disabled=true;toggle.classList.add('is-loading');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:system+'\nNGỮ CẢNH TRANG:\n'+context()},...history.slice(-10)]})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Không gọi được chatbot');const answer=String(d.reply||'Mình chưa nhận được câu trả lời.');history.push({role:'assistant',content:answer});add(answer,'bot')}catch(err){add(err.message||'Có lỗi kết nối. Vui lòng thử lại.','bot',true)}finally{typing.hidden=true;send.disabled=false;toggle.classList.remove('is-loading');input.focus()}});
   input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
 })();
