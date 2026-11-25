@@ -1866,6 +1866,16 @@ BTN.addEventListener('click', pick);
   #gnChatWidget.keyboard-open .gn-chat-scope{display:none}
 }
 @media(prefers-reduced-motion:reduce){#gnChatToggle,#gnChatToggle.is-loading .gn-chat-mascot,.gn-chat-typing:after{animation:none}}
+
+.gn-quota{padding:10px 12px;background:var(--tint);border-top:1px solid var(--line);flex-shrink:0;max-height:60%;overflow:auto;font-size:12px}
+.gn-quota[hidden],.gn-quota-form[hidden]{display:none}
+.gn-quota button{min-height:44px;border:1px solid var(--brand);border-radius:9px;padding:8px 12px;background:var(--surface);color:var(--brand);font:inherit;font-weight:600}
+.gn-quota button:disabled{opacity:.5}
+.gn-quota-form{display:grid;gap:8px;margin-top:8px}
+.gn-quota-form label{display:grid;gap:4px}
+.gn-quota-form input,.gn-quota-form textarea{width:100%;box-sizing:border-box;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;font-size:16px;background:var(--surface);color:var(--text)}
+.gn-quota-actions{display:flex;gap:8px;flex-wrap:wrap}
+.gn-quota-note{margin:6px 0;line-height:1.5}
 </style>
 <div id="gnChatWidget" class="no-print">
   <section id="gnChatPanel" hidden aria-label="Trợ lý giải ngân">
@@ -1873,6 +1883,17 @@ BTN.addEventListener('click', pick);
     <div class="gn-chat-scope"><b>Có thể hỗ trợ:</b> tra cứu số liệu trên trang, nhắc việc, cảnh báo và đề xuất giải pháp liên quan.</div>
     <div id="gnChatMessages" class="gn-chat-messages" aria-live="polite"><div class="gn-chat-msg bot">Xin chào. Tôi có thể tra cứu số liệu giải ngân trên trang, nhắc các việc cần theo dõi và gợi ý hướng xử lý phù hợp.</div></div>
     <div id="gnChatTyping" class="gn-chat-typing" hidden>Đang soạn trả lời…</div>
+    <div id="gnQuota" class="gn-quota" hidden>
+      <p id="gnQuotaStatus" class="gn-quota-note" role="status">Bạn đã hết lượt sử dụng trong tuần.</p>
+      <div class="gn-quota-actions"><button id="gnQuotaOpen" type="button">Đề nghị tăng hạn mức</button><button id="gnQuotaCheck" type="button">Kiểm tra kết quả</button></div>
+      <form id="gnQuotaForm" class="gn-quota-form" hidden>
+        <label>Họ và tên<input name="name" autocomplete="name" maxlength="80" required></label>
+        <label>Đơn vị<input name="unit" autocomplete="organization" maxlength="120" required></label>
+        <label>Lý do xin thêm lượt<textarea name="reason" rows="2" maxlength="500" required></textarea></label>
+        <p class="gn-quota-note">Tên, đơn vị và lý do sẽ gửi cho quản trị viên qua Telegram để xét thêm 20 lượt trong kỳ này. Hạn mức hiện tính theo địa chỉ mạng; người cùng mạng có thể dùng chung.</p>
+        <div class="gn-quota-actions"><button type="submit">Gửi đề nghị +20 lượt</button><button id="gnQuotaCancel" type="button">Hủy</button></div>
+      </form>
+    </div>
     <form id="gnChatForm" class="gn-chat-form"><textarea id="gnChatInput" rows="1" maxlength="2000" placeholder="Ví dụ: Xã nào giải ngân thấp nhất?" aria-label="Nhập câu hỏi"></textarea><button class="gn-chat-send" type="submit" aria-label="Gửi câu hỏi">↑</button></form>
   </section>
   <button id="gnChatToggle" type="button" aria-expanded="false" aria-controls="gnChatPanel" aria-label="Mở trợ lý giải ngân"><img class="gn-chat-mascot" src="/assets/gn-chat-mascot.png" alt=""/></button>
@@ -1880,6 +1901,26 @@ BTN.addEventListener('click', pick);
 <script id="gn-chat-js">
 (function(){
   const panel=document.getElementById('gnChatPanel'), toggle=document.getElementById('gnChatToggle'), close=document.querySelector('.gn-chat-close'), form=document.getElementById('gnChatForm'), input=document.getElementById('gnChatInput'), list=document.getElementById('gnChatMessages'), typing=document.getElementById('gnChatTyping'), send=form.querySelector('.gn-chat-send');
+  const quotaBox=document.getElementById('gnQuota'),quotaForm=document.getElementById('gnQuotaForm'),quotaStatus=document.getElementById('gnQuotaStatus'),quotaOpen=document.getElementById('gnQuotaOpen'),quotaCheck=document.getElementById('gnQuotaCheck');
+  const showQuotaStatus=d=>{
+    quotaForm.hidden=true;
+    quotaStatus.textContent=d.status==='approved'?'Đã được duyệt thêm 20 lượt. Còn '+d.remaining+' lượt.':d.status==='rejected'?'Đề nghị đã bị từ chối. Vui lòng chờ kỳ tiếp theo.':['pending','sending'].includes(d.status)?'Đã gửi đề nghị, đang chờ quản trị viên duyệt. Kết quả có thể mất khoảng một phút để cập nhật.':'Bạn có thể đề nghị tăng thêm 20 lượt trong kỳ hiện tại.';
+    quotaOpen.hidden=['approved','rejected','pending','sending'].includes(d.status);
+  };
+  quotaOpen.onclick=()=>{quotaForm.hidden=false};
+  document.getElementById('gnQuotaCancel').onclick=()=>{quotaForm.hidden=true};
+  quotaCheck.onclick=async()=>{
+    quotaCheck.disabled=true;
+    try{const r=await fetch('/api/quota-request',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error);showQuotaStatus(d);}
+    catch(e){quotaStatus.textContent=e.message||'Chưa kiểm tra được. Vui lòng thử lại.'}
+    finally{quotaCheck.disabled=false}
+  };
+  quotaForm.addEventListener('submit',async e=>{
+    e.preventDefault();const button=quotaForm.querySelector('button[type="submit"]');if(button.disabled)return;button.disabled=true;
+    try{const payload=Object.fromEntries(new FormData(quotaForm));const r=await fetch('/api/quota-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw new Error(d.error);showQuotaStatus(d);}
+    catch(e){quotaStatus.textContent=e.message||'Chưa gửi được yêu cầu.'}
+    finally{button.disabled=false}
+  });
   const history=[];
   const add=(text,role='bot',error=false)=>{const el=document.createElement('div');el.className='gn-chat-msg '+role+(error?' error':'');el.textContent=text;list.appendChild(el);list.scrollTop=list.scrollHeight;};
   const context=()=>{try{const rows=(state.units||[]).map(u=>{let v=null;try{v=view(u,state.program||'all')}catch(e){};return {name:u.name,kind:u.kind,plan:v?.plan??null,spent:v?.spent??null,rate:v?.rate??null,submitted:u.submitted};});return JSON.stringify({period:state.period?.label||null,program:state.program||'all',source:state.source||'none',generatedAt:state.generatedAt||null,filters:{kind:state.kind,q:state.q,leader:state.leader,band:state.band},units:rows.slice(0,120)});}catch(e){return '{}'}};
@@ -1902,7 +1943,7 @@ BTN.addEventListener('click', pick);
   toggle.onclick=()=>panel.hidden?open():hide();close.onclick=hide;
   panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();hide()}});
 
-  form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;input.value='';add(q,'user');history.push({role:'user',content:q});typing.textContent='Đang tra cứu số liệu';typing.hidden=false;send.disabled=true;toggle.classList.add('is-loading');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:system+'\nNGỮ CẢNH TRANG:\n'+context()},...history.slice(-10)]})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Không gọi được chatbot');const answer=String(d.reply||'Mình chưa nhận được câu trả lời.');history.push({role:'assistant',content:answer});add(answer,'bot')}catch(err){add(err.message||'Có lỗi kết nối. Vui lòng thử lại.','bot',true)}finally{typing.hidden=true;send.disabled=false;toggle.classList.remove('is-loading');input.focus()}});
+  form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;input.value='';add(q,'user');history.push({role:'user',content:q});typing.textContent='Đang tra cứu số liệu';typing.hidden=false;send.disabled=true;toggle.classList.add('is-loading');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:system+'\nNGỮ CẢNH TRANG:\n'+context()},...history.slice(-10)]})});const d=await r.json();if(!r.ok){if(d.code==='WEEKLY_LIMIT'&&d.requestEnabled){quotaBox.hidden=false;quotaOpen.hidden=false;quotaStatus.textContent=d.error;}throw new Error(d.error||'Không gọi được chatbot');}quotaBox.hidden=true;const answer=String(d.reply||'Mình chưa nhận được câu trả lời.');history.push({role:'assistant',content:answer});add(answer,'bot')}catch(err){add(err.message||'Có lỗi kết nối. Vui lòng thử lại.','bot',true)}finally{typing.hidden=true;send.disabled=false;toggle.classList.remove('is-loading');if(window.matchMedia('(min-width:1025px) and (pointer:fine)').matches)input.focus()}});
   input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
 })();
 </script>

@@ -1,3 +1,4 @@
+import {limitFor, configured} from '../_lib/telegram-quota.js';
 // Cloudflare Pages Function - proxy chatbot, không để lộ API key ra trình duyệt.
 const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev'];
 const API_BASE = 'https://codex.fosta.app/v1';
@@ -37,10 +38,11 @@ async function consumeWeeklyLimit(request, env) {
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
   const key = `${weekId()}:${ip.slice(0, 120)}`;
   const count = Number.parseInt(await env.CHAT_LIMITS.get(key) || '0', 10) || 0;
-  if (count >= WEEKLY_LIMIT) return { allowed: false, remaining: 0, resetAt: resetAt() };
+  const limit = await limitFor(env, key);
+  if (count >= limit) return { allowed: false, remaining: 0, totalLimit: limit, resetAt: resetAt() };
   const next = count + 1;
   await env.CHAT_LIMITS.put(key, String(next), { expirationTtl: 8 * 86400 });
-  return { allowed: true, remaining: WEEKLY_LIMIT - next, resetAt: resetAt() };
+  return { allowed: true, remaining: limit - next, resetAt: resetAt() };
 }
 
 export async function onRequest(context) {
@@ -70,7 +72,7 @@ export async function onRequest(context) {
   const messages = Array.isArray(payload.messages) ? payload.messages : [];
   if (!messages.length || messages.length > 20) return json({ error: 'Lịch sử hội thoại không hợp lệ' }, 400, origin);
   const limit = await consumeWeeklyLimit(request, env);
-  if (!limit.allowed) return json({ error: 'Bạn đã dùng hết 20 lượt thử nghiệm trong tuần này.', remaining: 0, resetAt: limit.resetAt }, 429, origin);
+  if (!limit.allowed) return json({ error: `Bạn đã dùng hết ${limit.totalLimit} lượt trong tuần này.`, code: 'WEEKLY_LIMIT', requestEnabled: configured(env) && limit.totalLimit === WEEKLY_LIMIT, remaining: 0, resetAt: limit.resetAt }, 429, origin);
 
   const safeMessages = messages.map((message) => ({
     role: message.role === 'assistant' ? 'assistant' : message.role === 'system' ? 'system' : 'user',
