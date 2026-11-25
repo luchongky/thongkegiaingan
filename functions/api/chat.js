@@ -56,7 +56,7 @@ export async function onRequest(context) {
   }
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
   if (!allowed(request)) return json({ error: 'Không có quyền truy cập chatbot' }, 403, origin);
-  if (!env.FOSTA_API_KEY) return json({ error: 'Chưa cấu hình FOSTA_API_KEY trên Cloudflare Pages' }, 500, origin);
+  if (!env.FOSTA_API_KEY && !env.FOSTA_API_KEY_BACKUP) return json({ error: 'Chưa cấu hình FOSTA_API_KEY trên Cloudflare Pages' }, 500, origin);
 
   let payload;
   try {
@@ -83,24 +83,43 @@ export async function onRequest(context) {
     max_tokens: 900,
   };
 
-  try {
-    const upstream = await fetch(`${API_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.FOSTA_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    const text = await upstream.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = { error: 'API chatbot trả về dữ liệu không hợp lệ' }; }
-    if (!upstream.ok) {
-      return json({ error: data?.error?.message || data?.error || 'Không gọi được API chatbot', remaining: limit.remaining }, upstream.status >= 500 ? 502 : upstream.status, origin);
+  // Thử khóa chính trước; khóa dự phòng chỉ dùng khi API chính không khả dụng.
+  const keys = [...new Set([env.FOSTA_API_KEY, env.FOSTA_API_KEY_BACKUP]
+    .filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim()))];
+  let errorStatus = 502;
+  for (let index = 0; index < keys.length; index++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    try {
+      const upstream = await fetch(`${API_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${keys[index]}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      if (!upstream.ok) {
+        const retryable = [401, 402, 403, 408, 429].includes(upstream.status) || upstream.status >= 500;
+        errorStatus = upstream.status >= 500 ? 502 : upstream.status;
+        if (upstream.body) await upstream.body.cancel();
+        if (retryable && index + 1 < keys.length) continue;
+        break;
+      }
+      const data = await upstream.json();
+      const reply = data?.choices?.[0]?.message?.content;
+      if (typeof reply !== 'string' || !reply.trim()) {
+        errorStatus = 502;
+        continue;
+      }
+      return json({ reply, remaining: limit.remaining, resetAt: limit.resetAt }, 200, origin);
+    } catch {
+      errorStatus = 502;
+    } finally {
+      clearTimeout(timeout);
     }
-    return json({ reply: data?.choices?.[0]?.message?.content || 'Mình chưa nhận được nội dung trả lời từ API.', remaining: limit.remaining, resetAt: limit.resetAt }, 200, origin);
-  } catch {
-    return json({ error: 'Không kết nối được API chatbot', remaining: limit.remaining }, 502, origin);
   }
+  return json({ error: 'API chatbot tạm thời không khả dụng. Vui lòng thử lại sau.', remaining: limit.remaining, resetAt: limit.resetAt }, errorStatus, origin);
 }
