@@ -6,11 +6,14 @@ export async function onRequest(context) {
   const request = context.request, env = context.env;
   if (request.method !== 'GET') return jsonResponse({ error: 'Method not allowed' }, 405);
   if (!isAllowed(request)) return jsonResponse({ error: 'Khong co quyen truy cap du lieu' }, 403);
-  if (!env.CHAT_LIMITS) return jsonResponse({ ok: true, periods: [] }, 200);
+  if (!env.GAS_URL || !env.GAS_SECRET) return jsonResponse({ error: 'Chua cau hinh GAS_URL hoac GAS_SECRET' }, 500);
+  const target = new URL(env.GAS_URL);
+  target.searchParams.set('api', 'history');
+  target.searchParams.set('key', env.GAS_SECRET);
   try {
-    const listed = await env.CHAT_LIMITS.list({ prefix: 'hist:' });
-    const names = listed.keys.map(k => k.name).sort().slice(-12);
-    const periods = (await Promise.all(names.map(n => env.CHAT_LIMITS.get(n, 'json')))).filter(Boolean);
-    return jsonResponse({ ok: true, periods }, 200);
+    const upstream = await fetch(target.toString(), { method: 'GET', redirect: 'follow', headers: { 'Accept': 'application/json' } });
+    if (!upstream.ok) return jsonResponse({ ok: true, periods: [] }, 200);
+    const data = JSON.parse(await upstream.text());
+    return jsonResponse({ ok: data && data.ok === true, periods: Array.isArray(data.periods) ? data.periods.slice(-12) : [] }, 200);
   } catch (e) { return jsonResponse({ ok: true, periods: [] }, 200); }
 }
