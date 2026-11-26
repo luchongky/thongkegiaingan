@@ -82,7 +82,7 @@ export async function onRequest(context) {
     model: env.FOSTA_MODEL || payload.model || 'gpt-6-luna',
     messages: safeMessages,
     temperature: 0.2,
-    max_tokens: 900,
+    max_tokens: 1800,
   };
 
   // Chọn ngẫu nhiên khóa bắt đầu, sau đó thử vòng qua các khóa còn lại đúng một lần.
