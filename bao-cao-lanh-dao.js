@@ -321,10 +321,11 @@ function buildLeaderDoc(scope) {
   h += '</div></div></div>';
 
   h += baoLuSummaryBox(scope);
-  h += AI_HTML;
   h += kienNghiBox('all');
   h += signBlock();
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. Ký hiệu: ▼ số liệu giảm so với kỳ trước; ✓ đã gửi báo cáo.</div>';
+
+  if (AI_HTML) h += '<div class="pb"><div class="sec">Nhận định và đề xuất chuyên sâu (AI hỗ trợ)</div>' + AI_HTML + '</div>';
 
   h += '<div class="pb"><div class="sec">Phụ lục: Chi tiết giải ngân từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
     '<div class="row">' +
@@ -459,7 +460,8 @@ function printLeaderReport(scope, useAi) {
   var w = window.open('', '_blank');
   if (w) { w.document.open(); w.document.write(window.gnAI.loadingPage()); w.document.close(); }
   var D = collect(scope), per = state.period || {};
-  window.gnAI.assess({ kind: 'lanhdao', title: 'Báo cáo lãnh đạo – ' + scopeText(scope), period: per.label || '', timePct: timePct(), rows: D.rows })
+  window.gnAI.assess({ kind: 'lanhdao', title: 'Báo cáo lãnh đạo – ' + scopeText(scope), period: per.label || '', timePct: timePct(), rows: D.rows,
+    sources: sourceStats(scope).map(function (x) { return { ten: x.label, tyLe: Math.round((Number(x.tl) || 0) * 10) / 10 }; }) })
     .then(function (text) { AI_HTML = window.gnAI.box(text); },
           function (err) { AI_HTML = ''; alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + '\nBáo cáo vẫn được lập, không có phần này.'); })
     .then(function () { var html = buildLeaderDoc(scope); AI_HTML = ''; printDoc(html, w); });
@@ -481,7 +483,7 @@ function openMenu() {
 
   var aiRow = document.createElement('label');
   aiRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 10–40 giây, mỗi lần dùng trừ 1 lượt AI trong tuần. Không áp dụng cho Mục VI.</span></span>';
+  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 20–60 giây, mỗi lần dùng trừ 1 lượt AI trong tuần. Không áp dụng cho Mục VI.</span></span>';
   card.appendChild(aiRow);
 
   SCOPES.forEach(function (s) {
@@ -930,7 +932,7 @@ function openQuickPicker() {
 
   var aiLab = document.createElement('label');
   aiLab.style.cssText = 'display:flex;gap:7px;align-items:flex-start;margin-top:10px;padding:7px 9px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 10–40 giây, trừ 1 lượt AI trong tuần)</span></span>';
+  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 20–60 giây, trừ 1 lượt AI trong tuần)</span></span>';
   card.appendChild(aiLab);
 
   function count() {
@@ -1017,13 +1019,15 @@ hookQuick();
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
 function r1(v) { return v == null ? null : Math.round(v * 10) / 10; }
 
-var SYS = 'Bạn là chuyên viên Phòng Ngân sách, Sở Tài chính tỉnh Cao Bằng, soạn phần "Nhận định và đề xuất" trong báo cáo giải ngân vốn thường xuyên gửi lãnh đạo. ' +
-  'Văn phong hành chính, ngắn gọn, khoảng 180–260 từ, tiếng Việt, đơn vị triệu đồng, tỷ lệ làm tròn một chữ số thập phân. ' +
-  'Trình bày đúng bốn phần, mỗi tiêu đề một dòng riêng: "1. Nhận định chung" (2–3 câu, nêu số liệu then chốt và xu hướng so với các kỳ trước nếu có dữ liệu); ' +
-  '"2. Đơn vị cần lưu ý" (nêu tên đơn vị giải ngân thấp, giảm so với kỳ trước hoặc chưa gửi báo cáo); ' +
-  '"3. Giải pháp, nhiệm vụ trọng tâm" (3–4 ý gạch đầu dòng bằng dấu gạch ngang, mỗi ý nêu việc cần làm, đầu mối và mốc thời gian đề xuất); ' +
-  '"4. Đề nghị" (1–2 câu, kèm nội dung nhắc nhở các đơn vị chưa gửi hoặc giải ngân thấp). ' +
-  'Chỉ dùng số liệu và tên đơn vị có trong dữ liệu; không bịa số liệu, văn bản pháp luật; nguyên nhân chỉ nêu là khả năng cần xác minh. ' +
+var SYS = 'Bạn là chuyên viên cao cấp Phòng Ngân sách, Sở Tài chính tỉnh Cao Bằng, soạn phần "Nhận định và đề xuất chuyên sâu" trong báo cáo giải ngân vốn thường xuyên gửi lãnh đạo tỉnh. ' +
+  'Văn phong hành chính, chặt chẽ, tiếng Việt, đơn vị triệu đồng, tỷ lệ làm tròn một chữ số thập phân, độ dài khoảng 450–650 từ. ' +
+  'Trình bày đúng năm phần, mỗi tiêu đề một dòng riêng: ' +
+  '"1. Nhận định chung" (3–4 câu: tỷ lệ giải ngân so với tiến độ thời gian của năm, xu hướng qua các kỳ nếu có dữ liệu, mức độ rủi ro không hoàn thành kế hoạch đến 31/12/2026 và 31/01/2027); ' +
+  '"2. Phân nhóm đơn vị và nguyên nhân có thể" (dựa vào phanNhom trong dữ liệu: nhóm giải ngân dưới 30%, từ 30% đến dưới 60%, từ 60% trở lên, nhóm giảm so với kỳ trước, nhóm chưa gửi báo cáo; nêu tên đơn vị trọng tâm và nguyên nhân chỉ ở mức khả năng cần xác minh); ' +
+  '"3. Giải pháp chuyên sâu" (4–6 ý gạch đầu dòng bằng dấu gạch ngang, mỗi ý theo từng nhóm đơn vị hoặc nguồn vốn, nêu rõ: việc cần làm cụ thể, cơ quan hoặc đầu mối chủ trì như Phòng Ngân sách, Phòng Hành chính sự nghiệp, UBND cấp xã, chủ đầu tư, Kho bạc Nhà nước, mốc hoàn thành gắn với các mốc báo cáo 30/11, 10/12, 20/12, 31/12/2026 và 31/01/2027, và kết quả đề xuất đạt được, ghi rõ là mục tiêu đề xuất); ' +
+  '"4. Kiến nghị, đề xuất cơ chế" (2–3 ý: giao ban, kiểm tra thực tế, điều chuyển kinh phí không thể giải ngân hết trong năm, biểu dương đơn vị giải ngân tốt, phê bình đơn vị chậm không chuyển biến); ' +
+  '"5. Nội dung nhắc nhở gửi đơn vị" (một đoạn văn bản soạn sẵn, lịch sự, đúng thể thức, nhắc đơn vị chưa gửi báo cáo, đơn vị giải ngân thấp, đơn vị có số giảm so với kỳ trước phải giải trình; có thể dẫn Công văn số 4099/UBND-TH ngày 22/10/2026 và Công văn số 4055/UBND-KT ngày 20/10/2026 của UBND tỉnh). ' +
+  'Giải pháp phải cụ thể, khác nhau giữa các nhóm, tránh nêu chung chung. Chỉ dùng số liệu và tên đơn vị có trong dữ liệu; không bịa số liệu hay văn bản pháp luật nào khác. ' +
   'Nếu dữ liệu các kỳ trước trống hoặc chỉ có một kỳ thì nói rõ chưa đủ cơ sở đánh giá xu hướng. Không dùng ký hiệu markdown (#, *, **).';
 
 function getHist() {
@@ -1053,7 +1057,7 @@ function loadingPage() {
   return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Đang lập báo cáo…</title></head>' +
     '<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1e3a5f;background:#f4f7fa">' +
     '<div style="text-align:center"><div style="font-size:18px;font-weight:700">Đang lập báo cáo có AI hỗ trợ…</div>' +
-    '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 10–40 giây, không đóng cửa sổ này.</div></div></body></html>';
+    '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 20–60 giây, không đóng cửa sổ này.</div></div></body></html>';
 }
 
 function assess(o) {
@@ -1065,10 +1069,22 @@ function assess(o) {
     var ctx = {
       loaiBaoCao: o.title, kyBaoCao: o.period, tienDoThoiGianNam: r1(o.timePct) + '%',
       tong: { soDonVi: rows.length, duToan: Math.round(gi), giaiNgan: Math.round(gn), tyLe: gi > 0 ? r1(gn / gi * 100) : null, daGui: sent, chuaGui: miss },
+      nguonVon: o.sources || null,
+      phanNhom: (function () {
+        function nm(a) { return a.slice(0, 30).map(function (r) { return r.name + ' (' + r1(r.tl) + '%)'; }); }
+        var act = rows.filter(function (r) { return !r.exempt; });
+        return {
+          duoi30: nm(act.filter(function (r) { return r.tl < 30; }).sort(function (a, b) { return a.tl - b.tl; })),
+          tu30Den60: nm(act.filter(function (r) { return r.tl >= 30 && r.tl < 60; }).sort(function (a, b) { return a.tl - b.tl; })),
+          tu60TroLen: nm(act.filter(function (r) { return r.tl >= 60; }).sort(function (a, b) { return b.tl - a.tl; })),
+          giamSoVoiKyTruoc: rows.filter(function (r) { return r.giam; }).slice(0, 30).map(function (r) { return r.name; }),
+          chuaGuiBaoCao: rows.filter(function (r) { return !r.submitted && !r.exempt; }).slice(0, 40).map(function (r) { return r.name; })
+        };
+      })(),
       donVi: rows.slice(0, 90).map(function (r) { return { ten: r.name, duToan: Math.round(r.gi), giaiNgan: Math.round(r.gn), tyLe: r1(r.tl), daGui: !!r.submitted, giamSoVoiKyTruoc: !!r.giam }; }),
       xuHuong: { ghiChu: 'tỷ lệ giải ngân (%) theo thứ tự các kỳ từ cũ đến mới; kỳ tạm tính là số chưa chốt', cacKy: tr.cacKy, theoDonVi: tr.lines.slice(0, 90) }
     };
-    var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 100000);
+    var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 110000);
     return fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
       body: JSON.stringify({ messages: [{ role: 'system', content: SYS }, { role: 'user', content: 'Soạn phần nhận định và đề xuất cho báo cáo sau, dựa trên số liệu:\n' + JSON.stringify(ctx) }] })
@@ -1084,7 +1100,7 @@ function box(text) {
     if (/^[-*•]\s+/.test(l)) return '<div style="padding-left:10px">– ' + esc(l.replace(/^[-*•]\s+/, '')) + '</div>';
     return '<div>' + esc(l) + '</div>';
   }).join('');
-  return '<div class="row"><div class="box" style="flex:1;border-color:#9fcdb8;background:#f7fbf9"><div class="t" style="color:#0b6b4f">Nhận định và đề xuất (AI hỗ trợ)</div><div class="note">' + html +
+  return '<div class="row"><div class="box" style="flex:1;border-color:#9fcdb8;background:#f7fbf9"><div class="t" style="color:#0b6b4f">Nhận định và đề xuất chuyên sâu (AI hỗ trợ)</div><div class="note">' + html +
     '<div style="margin-top:4px;font-size:7.8px;color:#6b7280"><i>Nội dung do AI hỗ trợ soạn từ số liệu hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.</i></div></div></div></div>';
 }
 
