@@ -82,7 +82,6 @@ export async function onRequest(context) {
     model: env.FOSTA_MODEL || payload.model || 'gpt-6-luna',
     messages: safeMessages,
     temperature: 0.2,
-    max_tokens: 1800,
   };
 
   // Chọn ngẫu nhiên khóa bắt đầu, sau đó thử vòng qua các khóa còn lại đúng một lần.
@@ -91,9 +90,12 @@ export async function onRequest(context) {
   const startIndex = Math.floor(Math.random() * keys.length);
   const orderedKeys = keys.slice(startIndex).concat(keys.slice(0, startIndex));
   let errorStatus = 502;
+  const deadline = Date.now() + 95000; // Cloudflare cắt phản hồi sau ~100 giây
   for (let index = 0; index < orderedKeys.length; index++) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs < 5000) break;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
+    const timeout = setTimeout(() => controller.abort(), Math.min(70000, remainingMs));
     try {
       const upstream = await fetch(`${API_BASE}/chat/completions`, {
         method: 'POST',
