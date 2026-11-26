@@ -63,7 +63,7 @@ export async function onRequest(context) {
   let payload;
   try {
     const raw = await request.text();
-    if (raw.length > 45000) return json({ error: 'Nội dung hội thoại quá dài' }, 413, origin);
+    if (raw.length > 120000) return json({ error: 'Nội dung hội thoại quá dài' }, 413, origin);
     payload = JSON.parse(raw);
   } catch {
     return json({ error: 'Dữ liệu gửi lên không hợp lệ' }, 400, origin);
@@ -76,7 +76,7 @@ export async function onRequest(context) {
 
   const safeMessages = messages.map((message) => ({
     role: message.role === 'assistant' ? 'assistant' : message.role === 'system' ? 'system' : 'user',
-    content: String(message.content || '').slice(0, 12000),
+    content: String(message.content || '').slice(0, 40000),
   }));
   const body = {
     model: env.FOSTA_MODEL || payload.model || 'gpt-6-luna',
