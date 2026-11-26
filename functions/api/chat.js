@@ -3,8 +3,6 @@ import {limitFor, configured} from '../_lib/telegram-quota.js';
 const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev'];
 const API_BASE = 'https://codex.fosta.app/v1';
 const WEEKLY_LIMIT = 20;
-const ANALYSIS_INSTRUCTIONS = 'Bạn là Trợ lý giải ngân của Sở Tài chính tỉnh Cao Bằng. Trả lời bằng tiếng Việt, phân tích sâu, rõ ràng và có căn cứ. Với yêu cầu đánh giá, trình bày: kết luận chính; số liệu và phép so sánh; rủi ro và nguyên nhân cần xác minh; giải pháp ưu tiên, đầu mối và mốc thời gian đề xuất. Không chỉ liệt kê số liệu. Phân biệt dữ kiện, suy luận và kiến nghị; không tự khẳng định nguyên nhân chưa được cung cấp. Nêu kỳ báo cáo, nguồn, đơn vị triệu đồng, trạng thái số liệu tạm tính/chưa gửi. Không bịa số liệu, văn bản pháp luật hoặc so sánh kỳ trước khi thiếu dữ liệu. Chỉ hỗ trợ tra cứu và nhiệm vụ liên quan giải ngân. Câu hỏi phân tích cần giải thích đầy đủ, thông thường 600–1000 từ khi dữ liệu đủ; câu hỏi đơn giản trả lời tương xứng, không kéo dài máy móc. Dùng tiêu đề ngắn và các đoạn dễ đọc; tỷ lệ làm tròn một chữ số thập phân.';
-
 
 function json(body, status = 200, origin = '') {
   const headers = {
@@ -60,12 +58,12 @@ export async function onRequest(context) {
   }
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
   if (!allowed(request)) return json({ error: 'Không có quyền truy cập chatbot' }, 403, origin);
-  if (![env.XINGCHI_API_KEY, env.FOSTA_API_KEY, env.FOSTA_API_KEY_2, env.FOSTA_API_KEY_3, env.FOSTA_API_KEY_4].some((key) => typeof key === 'string' && key.trim())) return json({ error: 'Chưa cấu hình API chatbot trên Cloudflare Pages' }, 500, origin);
+  if (![env.FOSTA_API_KEY, env.FOSTA_API_KEY_2, env.FOSTA_API_KEY_3, env.FOSTA_API_KEY_4].some((key) => typeof key === 'string' && key.trim())) return json({ error: 'Chưa cấu hình FOSTA_API_KEY trên Cloudflare Pages' }, 500, origin);
 
   let payload;
   try {
     const raw = await request.text();
-    if (raw.length > 120000) return json({ error: 'Nội dung hội thoại quá dài' }, 413, origin);
+    if (raw.length > 45000) return json({ error: 'Nội dung hội thoại quá dài' }, 413, origin);
     payload = JSON.parse(raw);
   } catch {
     return json({ error: 'Dữ liệu gửi lên không hợp lệ' }, 400, origin);
@@ -78,13 +76,13 @@ export async function onRequest(context) {
 
   const safeMessages = messages.map((message) => ({
     role: message.role === 'assistant' ? 'assistant' : message.role === 'system' ? 'system' : 'user',
-    content: String(message.content || '').slice(0, 40000),
+    content: String(message.content || '').slice(0, 12000),
   }));
   const body = {
-    model: env.FOSTA_MODEL || 'gpt-6-luna',
-    messages: [...safeMessages, { role: 'system', content: ANALYSIS_INSTRUCTIONS }],
+    model: env.FOSTA_MODEL || payload.model || 'gpt-6-luna',
+    messages: safeMessages,
     temperature: 0.2,
-    max_tokens: 6000,
+    max_tokens: 900,
   };
 
   // Chọn ngẫu nhiên khóa bắt đầu, sau đó thử vòng qua các khóa còn lại đúng một lần.
@@ -92,47 +90,30 @@ export async function onRequest(context) {
     .filter((key) => typeof key === 'string' && key.trim()).map((key) => key.trim()))];
   const startIndex = Math.floor(Math.random() * keys.length);
   const orderedKeys = keys.slice(startIndex).concat(keys.slice(0, startIndex));
-  const attempts = orderedKeys.map(key => ({ key, url: `${API_BASE}/chat/completions`, body }));
-  if (typeof env.XINGCHI_API_KEY === 'string' && env.XINGCHI_API_KEY.trim()) {
-    attempts.unshift({
-      key: env.XINGCHI_API_KEY.trim(),
-      url: 'https://api.xingchiapi.com/v1/responses',
-      responses: true,
-      body: {
-        model: env.XINGCHI_MODEL || 'gpt-6.1-sol',
-        instructions: ANALYSIS_INSTRUCTIONS,
-        input: safeMessages.map(message => ({ ...message, role: message.role === 'system' ? 'user' : message.role })),
-        max_output_tokens: 8000,
-        store: false,
-      },
-    });
-  }
   let errorStatus = 502;
-  for (let index = 0; index < attempts.length; index++) {
+  for (let index = 0; index < orderedKeys.length; index++) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), attempts[index].responses ? 90000 : 45000);
+    const timeout = setTimeout(() => controller.abort(), 25000);
     try {
-      const upstream = await fetch(attempts[index].url, {
+      const upstream = await fetch(`${API_BASE}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${attempts[index].key}`,
+          'Authorization': `Bearer ${orderedKeys[index]}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(attempts[index].body),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
       if (!upstream.ok) {
         const retryable = [401, 402, 403, 408, 429].includes(upstream.status) || upstream.status >= 500;
         errorStatus = upstream.status >= 500 ? 502 : upstream.status;
         if (upstream.body) await upstream.body.cancel();
-        if ((retryable || attempts[index].responses) && index + 1 < attempts.length) continue;
+        if (retryable && index + 1 < orderedKeys.length) continue;
         break;
       }
       const data = await upstream.json();
-      const reply = attempts[index].responses
-        ? (data.output_text || (data.output || []).filter(item => item.type === 'message').flatMap(item => item.content || []).filter(item => item.type === 'output_text').map(item => item.text || '').join('\n'))
-        : data?.choices?.[0]?.message?.content;
+      const reply = data?.choices?.[0]?.message?.content;
       if (typeof reply !== 'string' || !reply.trim()) {
         errorStatus = 502;
         continue;
