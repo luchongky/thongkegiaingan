@@ -9,6 +9,7 @@
 'use strict';
 
 var UNIT_TXT = 'triệu đồng';
+var AI_HTML = ''; // phần nhận định do AI hỗ trợ (nếu lãnh đạo chọn)
 
 var SCOPES = [
   { key: 'all',     label: 'Báo cáo tổng hợp toàn tỉnh',       note: 'Tất cả đơn vị có dự toán (khối tỉnh và khối xã)' },
@@ -320,6 +321,7 @@ function buildLeaderDoc(scope) {
   h += '</div></div></div>';
 
   h += baoLuSummaryBox(scope);
+  h += AI_HTML;
   h += kienNghiBox('all');
   h += signBlock();
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. Ký hiệu: ▼ số liệu giảm so với kỳ trước; ✓ đã gửi báo cáo.</div>';
@@ -430,8 +432,8 @@ function buildBaoLuDoc() {
 }
 
 /* ---------- mở & in ---------- */
-function printDoc(html) {
-  var w = window.open('', '_blank');
+function printDoc(html, pre) {
+  var w = pre || window.open('', '_blank');
   if (w) {
     w.document.open(); w.document.write(html); w.document.close();
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 400);
@@ -447,8 +449,20 @@ function printDoc(html) {
   }, 400);
 }
 
-function printLeaderReport(scope) {
-  printDoc(scope === 'baolu' ? buildBaoLuDoc() : buildLeaderDoc(scope || 'all'));
+function printLeaderReport(scope, useAi) {
+  scope = scope || 'all';
+  if (scope === 'baolu' || !useAi || !window.gnAI) {
+    AI_HTML = '';
+    printDoc(scope === 'baolu' ? buildBaoLuDoc() : buildLeaderDoc(scope));
+    return;
+  }
+  var w = window.open('', '_blank');
+  if (w) { w.document.open(); w.document.write(window.gnAI.loadingPage()); w.document.close(); }
+  var D = collect(scope), per = state.period || {};
+  window.gnAI.assess({ kind: 'lanhdao', title: 'Báo cáo lãnh đạo – ' + scopeText(scope), period: per.label || '', timePct: timePct(), rows: D.rows })
+    .then(function (text) { AI_HTML = window.gnAI.box(text); },
+          function (err) { AI_HTML = ''; alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + '\nBáo cáo vẫn được lập, không có phần này.'); })
+    .then(function () { var html = buildLeaderDoc(scope); AI_HTML = ''; printDoc(html, w); });
 }
 
 /* ---------- hộp chọn loại báo cáo ---------- */
@@ -465,6 +479,11 @@ function openMenu() {
   card.innerHTML = '<div style="font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:2px">Chọn loại báo cáo để in</div>' +
                    '<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Bản rút gọn 2 trang A4, có biểu đồ, phục vụ lãnh đạo tỉnh.</div>';
 
+  var aiRow = document.createElement('label');
+  aiRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
+  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 10–40 giây, mỗi lần dùng trừ 1 lượt AI trong tuần. Không áp dụng cho Mục VI.</span></span>';
+  card.appendChild(aiRow);
+
   SCOPES.forEach(function (s) {
     var b = document.createElement('button');
     b.type = 'button';
@@ -472,7 +491,7 @@ function openMenu() {
     b.innerHTML = '<span style="font-weight:700;color:#1e3a5f">' + s.label + '</span><br><span style="font-size:11px;color:#6b7280">' + s.note + '</span>';
     b.addEventListener('mouseenter', function () { b.style.background = '#eef2f7'; });
     b.addEventListener('mouseleave', function () { b.style.background = '#fafbfc'; });
-    b.addEventListener('click', function () { wrap.remove(); printLeaderReport(s.key); });
+    b.addEventListener('click', function () { var ai = !!(document.getElementById('leaderAiChk') && document.getElementById('leaderAiChk').checked); wrap.remove(); printLeaderReport(s.key, ai); });
     card.appendChild(b);
   });
 
@@ -529,6 +548,7 @@ var miv = setInterval(function () {
 (function () {
 'use strict';
 
+var AI_HTML = '';
 var BASE_CSS = '' +
   '@page{size:A4 portrait;margin:10mm 9mm}' +
   '*{box-sizing:border-box}' +
@@ -748,6 +768,7 @@ function buildQuickHtml(picked) {
   h += '<i>Các đơn vị chịu trách nhiệm trước Ủy ban nhân dân tỉnh về tính chính xác, trung thực của số liệu đã nhập.</i>';
   h += '</div></div></div>';
 
+  h += AI_HTML;
   h += kienNghiBox('all');
 
   h += '<div style="margin-top:7px"><div class="sec">Chi tiết từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
@@ -767,7 +788,23 @@ function buildQuickHtml(picked) {
          '</title><style>' + css + '</style></head><body><div class="doc">' + h + '</div></body></html>';
 }
 
-function showQuick(picked) {
+function showQuick(picked, useAi) {
+  if (useAi && window.gnAI) {
+    var w0 = window.open('', '_blank');
+    if (w0) { w0.document.open(); w0.document.write(window.gnAI.loadingPage()); w0.document.close(); }
+    var set = {}; picked.forEach(function (n) { set[n] = 1; });
+    var rows0 = allRows().filter(function (r) { return set[r.name]; }), per0 = state.period || {};
+    window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: per0.label || '', timePct: timePct(), rows: rows0 })
+      .then(function (text) { AI_HTML = window.gnAI.box(text); },
+            function (err) { AI_HTML = ''; alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + '\nBáo cáo vẫn được lập, không có phần này.'); })
+      .then(function () {
+        var h0 = buildQuickHtml(picked); AI_HTML = '';
+        if (w0) { w0.document.open(); w0.document.write(h0); w0.document.close(); try { w0.focus(); } catch (e) {} }
+        else alert('Trình duyệt đang chặn cửa sổ mới. Hãy cho phép pop-up cho trang này rồi bấm lại.');
+      });
+    return;
+  }
+  AI_HTML = '';
   var html = buildQuickHtml(picked);
   var w = window.open('', '_blank');
   if (w) { w.document.open(); w.document.write(html); w.document.close(); try { w.focus(); } catch (e) {} return; }
@@ -891,6 +928,11 @@ function openQuickPicker() {
   info.style.cssText = 'flex:1;font-size:12px;color:#6b7280';
   foot.appendChild(info);
 
+  var aiLab = document.createElement('label');
+  aiLab.style.cssText = 'display:flex;gap:7px;align-items:flex-start;margin-top:10px;padding:7px 9px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
+  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 10–40 giây, trừ 1 lượt AI trong tuần)</span></span>';
+  card.appendChild(aiLab);
+
   function count() {
     info.textContent = 'Đã chọn ' + list.querySelectorAll('input:checked').length + ' đơn vị';
   }
@@ -918,8 +960,9 @@ function openQuickPicker() {
   go.addEventListener('click', function () {
     var p = picked();
     if (!p.length) { info.textContent = 'Chưa chọn đơn vị nào'; return; }
+    var ai = !!(document.getElementById('quickAiChk') && document.getElementById('quickAiChk').checked);
     wrap.remove();
-    showQuick(p);
+    showQuick(p, ai);
   });
   foot.appendChild(go);
 
@@ -961,4 +1004,89 @@ var iv = setInterval(function () {
 }, 400);
 hookQuick();
 
+})();
+
+
+/* ============================================================
+   AI HỖ TRỢ cho báo cáo lãnh đạo và báo cáo nhanh.
+   AI soạn nhận định, giải pháp, nhắc nhở từ số liệu các kỳ; kết quả đặt trong khung riêng,
+   ghi rõ là tham khảo, cần rà soát trước khi sử dụng. Người lập: Lục Hồng Kỳ
+   ============================================================ */
+(function () {
+'use strict';
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function r1(v) { return v == null ? null : Math.round(v * 10) / 10; }
+
+var SYS = 'Bạn là chuyên viên Phòng Ngân sách, Sở Tài chính tỉnh Cao Bằng, soạn phần "Nhận định và đề xuất" trong báo cáo giải ngân vốn thường xuyên gửi lãnh đạo. ' +
+  'Văn phong hành chính, ngắn gọn, khoảng 180–260 từ, tiếng Việt, đơn vị triệu đồng, tỷ lệ làm tròn một chữ số thập phân. ' +
+  'Trình bày đúng bốn phần, mỗi tiêu đề một dòng riêng: "1. Nhận định chung" (2–3 câu, nêu số liệu then chốt và xu hướng so với các kỳ trước nếu có dữ liệu); ' +
+  '"2. Đơn vị cần lưu ý" (nêu tên đơn vị giải ngân thấp, giảm so với kỳ trước hoặc chưa gửi báo cáo); ' +
+  '"3. Giải pháp, nhiệm vụ trọng tâm" (3–4 ý gạch đầu dòng bằng dấu gạch ngang, mỗi ý nêu việc cần làm, đầu mối và mốc thời gian đề xuất); ' +
+  '"4. Đề nghị" (1–2 câu, kèm nội dung nhắc nhở các đơn vị chưa gửi hoặc giải ngân thấp). ' +
+  'Chỉ dùng số liệu và tên đơn vị có trong dữ liệu; không bịa số liệu, văn bản pháp luật; nguyên nhân chỉ nêu là khả năng cần xác minh. ' +
+  'Nếu dữ liệu các kỳ trước trống hoặc chỉ có một kỳ thì nói rõ chưa đủ cơ sở đánh giá xu hướng. Không dùng ký hiệu markdown (#, *, **).';
+
+function getHist() {
+  return fetch('/api/history', { credentials: 'omit' }).then(function (r) { return r.ok ? r.json() : { periods: [] }; })
+    .then(function (d) { return Array.isArray(d.periods) ? d.periods : []; }, function () { return []; });
+}
+
+function trendLines(names, hist) {
+  var cur = state.cur || { units: state.units || [], period: state.period };
+  var idOf = {}; (cur.units || []).forEach(function (u) { idOf[u.name] = String(u.id); });
+  var ps = hist.slice();
+  if (cur.period && cur.period.key && !ps.some(function (p) { return p.key === cur.period.key; })) {
+    ps.push({ key: cur.period.key, label: cur.period.label, final: false, units: (cur.units || []).filter(function (u) { return u.p && u.p.all; })
+      .map(function (u) { return [String(u.id), u.p.all[0], u.p.all[1], u.status]; }) });
+  }
+  ps.sort(function (a, b) { return a.key < b.key ? -1 : 1; });
+  var byP = ps.map(function (p) { var m = {}; (p.units || []).forEach(function (r) { m[String(r[0])] = r; }); return m; });
+  var lines = names.map(function (n) {
+    var id = idOf[n]; if (!id) return null;
+    var vals = byP.map(function (m) { var r = m[id]; return r && r[1] > 0 ? r1(r[2] / r[1] * 100) : '-'; });
+    return n + ': ' + vals.join(' > ');
+  }).filter(Boolean);
+  return { cacKy: ps.map(function (p) { return (p.label || p.key) + (p.final ? '' : ' (tạm tính)'); }), lines: lines };
+}
+
+function loadingPage() {
+  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Đang lập báo cáo…</title></head>' +
+    '<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1e3a5f;background:#f4f7fa">' +
+    '<div style="text-align:center"><div style="font-size:18px;font-weight:700">Đang lập báo cáo có AI hỗ trợ…</div>' +
+    '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 10–40 giây, không đóng cửa sổ này.</div></div></body></html>';
+}
+
+function assess(o) {
+  var rows = o.rows || [], gi = 0, gn = 0, sent = 0, miss = 0;
+  rows.forEach(function (r) { gi += r.gi; gn += r.gn; if (r.submitted) sent++; else if (!r.exempt) miss++; });
+  return getHist().then(function (hist) {
+    var names = rows.map(function (r) { return r.name; });
+    var tr = trendLines(names, hist);
+    var ctx = {
+      loaiBaoCao: o.title, kyBaoCao: o.period, tienDoThoiGianNam: r1(o.timePct) + '%',
+      tong: { soDonVi: rows.length, duToan: Math.round(gi), giaiNgan: Math.round(gn), tyLe: gi > 0 ? r1(gn / gi * 100) : null, daGui: sent, chuaGui: miss },
+      donVi: rows.slice(0, 90).map(function (r) { return { ten: r.name, duToan: Math.round(r.gi), giaiNgan: Math.round(r.gn), tyLe: r1(r.tl), daGui: !!r.submitted, giamSoVoiKyTruoc: !!r.giam }; }),
+      xuHuong: { ghiChu: 'tỷ lệ giải ngân (%) theo thứ tự các kỳ từ cũ đến mới; kỳ tạm tính là số chưa chốt', cacKy: tr.cacKy, theoDonVi: tr.lines.slice(0, 90) }
+    };
+    var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 100000);
+    return fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+      body: JSON.stringify({ messages: [{ role: 'system', content: SYS }, { role: 'user', content: 'Soạn phần nhận định và đề xuất cho báo cáo sau, dựa trên số liệu:\n' + JSON.stringify(ctx) }] })
+    }).then(function (r) { return r.json().then(function (d) { clearTimeout(timer); if (!r.ok) throw new Error(d && d.error ? d.error : 'HTTP ' + r.status); return d; }); })
+      .then(function (d) { if (!d.reply || !String(d.reply).trim()) throw new Error('AI không trả nội dung'); return String(d.reply).trim(); },
+            function (e) { clearTimeout(timer); throw (e && e.name === 'AbortError' ? new Error('quá thời gian chờ') : e); });
+  });
+}
+
+function box(text) {
+  var html = String(text).replace(/\r/g, '').split('\n').map(function (l) { return l.replace(/\*\*/g, '').replace(/^#+\s*/, '').trim(); }).filter(Boolean).map(function (l) {
+    if (/^\d\.\s+[^.]{2,60}$/.test(l)) return '<div style="margin-top:4px"><b>' + esc(l) + '</b></div>';
+    if (/^[-*•]\s+/.test(l)) return '<div style="padding-left:10px">– ' + esc(l.replace(/^[-*•]\s+/, '')) + '</div>';
+    return '<div>' + esc(l) + '</div>';
+  }).join('');
+  return '<div class="row"><div class="box" style="flex:1;border-color:#9fcdb8;background:#f7fbf9"><div class="t" style="color:#0b6b4f">Nhận định và đề xuất (AI hỗ trợ)</div><div class="note">' + html +
+    '<div style="margin-top:4px;font-size:7.8px;color:#6b7280"><i>Nội dung do AI hỗ trợ soạn từ số liệu hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.</i></div></div></div></div>';
+}
+
+window.gnAI = { assess: assess, box: box, loadingPage: loadingPage };
 })();
