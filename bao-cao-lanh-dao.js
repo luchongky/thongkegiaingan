@@ -616,7 +616,7 @@ function allRows() {
       delta: pc(gn, gi) - ptl,
       giam: (Number(b[1]) || 0) > 0 && gn < (Number(b[1]) || 0) - 0.0001,
       leader: leaderOf(u.name),
-      src: srcOf(u)
+      src: srcOf(u), mtqg: u.mtqg || {}, pgnAll: state.prevAt && u.prev && u.prev.all ? Number(u.prev.all[1]) || 0 : null
     };
   }).filter(function (r) { return r.gi > 0; });
 }
@@ -636,7 +636,8 @@ function srcOf(u) {
     if (!a) return;
     var gi = Number(a[0]) || 0, gn = Number(a[1]) || 0;
     if (gi === 0 && gn === 0) return;
-    out.push({ key: x[0], label: x[1], gi: gi, gn: gn, con: gi - gn, tl: pc(gn, gi) });
+    var pv = (u.prev || {})[x[0]];
+    out.push({ key: x[0], label: x[1], gi: gi, gn: gn, con: gi - gn, tl: pc(gn, gi), pgn: state.prevAt && pv ? Number(pv[1]) || 0 : null });
   });
   return out;
 }
@@ -659,7 +660,7 @@ function remindNotSent() {
 }
 
 /* biểu đồ thanh: tỷ lệ từng đơn vị + mốc bình quân tỉnh + mốc tiến độ thời gian */
-function barsQuick(rows, avg, tpc) {
+function barsQuick(rows, avg, tpc, lbl) {
   var dense = rows.length > 26;
   var H = dense ? 10.6 : 17, W = 460, LBL = 168, BW = W - LBL - 40;
   var FS = dense ? 7.4 : 7.8, BH = dense ? 6.6 : 9, BY = dense ? 1.9 : 2, TY = dense ? 7.2 : 9;
@@ -676,7 +677,7 @@ function barsQuick(rows, avg, tpc) {
   var hTot = rows.length * H + 2;
   svg += '<line x1="' + x0(avg) + '" y1="2" x2="' + x0(avg) + '" y2="' + hTot + '" stroke="#1e3a5f" stroke-width="1" stroke-dasharray="3 2"/>';
   svg += '<line x1="' + x0(tpc) + '" y1="2" x2="' + x0(tpc) + '" y2="' + hTot + '" stroke="#d68910" stroke-width="1" stroke-dasharray="1 2"/>';
-  svg += '<text x="' + LBL + '" y="' + (hTot + 14) + '" font-size="7.2" fill="#1e3a5f">--- Bình quân tỉnh ' + pcTxt(avg) + '</text>';
+  svg += '<text x="' + LBL + '" y="' + (hTot + 14) + '" font-size="7.2" fill="#1e3a5f">--- ' + (lbl || 'Bình quân tỉnh') + ' ' + pcTxt(avg) + '</text>';
   svg += '<text x="' + (LBL + 120) + '" y="' + (hTot + 14) + '" font-size="7.2" fill="#d68910">··· Tiến độ thời gian ' + pcTxt(tpc) + '</text>';
   return svg + '</svg>';
 }
@@ -719,27 +720,43 @@ function quickDetail(rows) {
 }
 
 /* Chi tiết từng nguồn vốn của từng đơn vị — mỗi đơn vị một khối, không giới hạn số trang */
-function quickBySource(rows) {
+function quickBySource(rows, bqSrc, bqk) {
+  /* Mẫu báo cáo Tĩnh Túc: mỗi nguồn có bình quân của chính nguồn đó và mức tăng/giảm so kỳ trước; vốn MTQG chi tiết từng chương trình. */
+  var MTN = { '1': 'CTMTQG xây dựng NTM, giảm nghèo bền vững và phát triển KT-XH vùng ĐBDTTS&MN', '2': 'CTMTQG về phát triển văn hóa', '3': 'CTMTQG phòng, chống ma túy' };
+  var hasPrev = !!state.prevAt;
+  function dl(cur, prev) { if (!hasPrev || prev == null) return '—'; var d = cur - prev; return Math.abs(d) < 0.5 ? '0' : (d > 0 ? '+' : '−') + n0(Math.abs(d)); }
+  function dc(cur, prev) { return hasPrev && prev != null && cur < prev - 0.5 ? ' lo' : ''; }
   var h = '';
   rows.forEach(function (r, i) {
     var cls = r.tl < 50 ? 'lo' : r.tl >= 90 ? 'hi' : '';
     h += '<table class="t-src"><thead>' +
-         '<tr class="uh"><th colspan="5">' + (i + 1) + '. ' + esc2(r.name) +
+         '<tr class="uh"><th colspan="7">' + (i + 1) + '. ' + esc2(r.name) +
            ' <span class="uh-s">· Tổng: ' + n0(r.gn) + ' / ' + n0(r.gi) + ' · <span class="' + cls + '">' + pcTxt(r.tl) + '</span>' +
            (r.leader ? ' · Lãnh đạo: ' + esc2(r.leader) : '') + '</span></th></tr>' +
-         '<tr class="ch"><th>Nguồn vốn</th><th class="r">Dự toán</th><th class="r">Đã giải ngân</th><th class="r">Còn lại</th><th class="r">Tỷ lệ</th></tr>' +
+         '<tr class="ch"><th>Nguồn vốn</th><th class="r">Dự toán</th><th class="r">Đã giải ngân</th><th class="r">Còn lại</th><th class="r">Tỷ lệ</th><th class="r">' + esc2(bqk || 'Bình quân') + '</th><th class="r">Tăng/giảm so ' + (hasPrev ? 'mốc ' + esc2(state.prevAt) : 'kỳ trước') + '</th></tr>' +
          '</thead><tbody>';
     if (!r.src.length) {
-      h += '<tr><td colspan="5" class="c">Chưa có số liệu theo nguồn vốn</td></tr>';
+      h += '<tr><td colspan="7" class="c">Chưa có số liệu theo nguồn vốn</td></tr>';
     } else {
       r.src.forEach(function (x) {
-        var c = x.gi <= 0 ? '' : x.tl < 50 ? 'lo' : x.tl >= 90 ? 'hi' : '';
+        var c = x.gi <= 0 || x.key === 'V' ? '' : x.tl < 50 ? 'lo' : x.tl >= 90 ? 'hi' : '';
+        var bq = bqSrc ? bqSrc[x.key] : null;
         h += '<tr><td>' + esc2(x.label) + '</td><td class="r">' + n0(x.gi) + '</td><td class="r">' + n0(x.gn) + '</td>' +
-             '<td class="r">' + n0(x.con) + '</td><td class="r b ' + c + '">' + (x.gi > 0 ? pcTxt(x.tl) : '—') + '</td></tr>';
+             '<td class="r">' + n0(x.con) + '</td><td class="r b ' + c + '">' + (x.gi > 0 ? pcTxt(x.tl) : '—') + '</td>' +
+             '<td class="r">' + (bq == null ? '—' : pcTxt(bq)) + '</td><td class="r' + dc(x.gn, x.pgn) + '">' + dl(x.gn, x.pgn) + '</td></tr>';
+        if (x.key === 'II') Object.keys(r.mtqg || {}).sort().forEach(function (k) {
+          var a = r.mtqg[k]; if (!a || !(Number(a[0]) > 0)) return;
+          var t = pc(Number(a[1]) || 0, Number(a[0]));
+          h += '<tr class="sub"><td>– ' + esc2(MTN[k] || 'Chương trình mã ' + k) + '</td><td class="r">' + n0(a[0]) + '</td><td class="r">' + n0(a[1]) + '</td>' +
+               '<td class="r">' + n0(a[0] - a[1]) + '</td><td class="r b' + (t <= 0 ? ' lo' : '') + '">' + pcTxt(t) + '</td><td></td><td></td></tr>';
+        });
       });
+      h += '<tr class="tot"><td>Tổng cộng</td><td class="r">' + n0(r.gi) + '</td><td class="r">' + n0(r.gn) + '</td><td class="r">' + n0(r.con) + '</td>' +
+           '<td class="r">' + pcTxt(r.tl) + '</td><td class="r"></td><td class="r' + dc(r.gn, r.pgnAll) + '">' + dl(r.gn, r.pgnAll) + '</td></tr>';
     }
     h += '</tbody></table>';
   });
+  if (rows.length) h += '<div class="foot" style="margin-top:-4px">Mục V Dự phòng ngân sách là nguồn dự trữ, không bắt buộc giải ngân hết nên không tô màu cảnh báo.</div>';
   return h;
 }
 
@@ -748,8 +765,12 @@ function buildQuickHtml(picked) {
   var set = {}; picked.forEach(function (n) { set[n] = 1; });
   var rows = all.filter(function (r) { return set[r.name]; }).sort(function (a, b) { return a.tl - b.tl; });
 
-  var tGi = 0, tGn = 0; all.forEach(function (r) { tGi += r.gi; tGn += r.gn; });
+  var xaOnly = rows.length > 0 && rows.every(function (r) { return r.kind === 'commune'; });
+  var baseRows = xaOnly ? all.filter(function (r) { return r.kind === 'commune'; }) : all;
+  var BQL = xaOnly ? 'bình quân ' + baseRows.length + ' xã, phường' : 'bình quân tỉnh', BQK = xaOnly ? 'BQ ' + baseRows.length + ' xã, phường' : 'Bình quân tỉnh';
+  var tGi = 0, tGn = 0; baseRows.forEach(function (r) { tGi += r.gi; tGn += r.gn; });
   var avg = pc(tGn, tGi);
+  var bqSrc = {}; SRC_LABELS.forEach(function (x) { var p = 0, d = 0; baseRows.forEach(function (r) { r.src.forEach(function (y) { if (y.key === x[0]) { p += y.gi; d += y.gn; } }); }); bqSrc[x[0]] = p > 0 ? pc(d, p) : null; });
   var gi = 0, gn = 0; rows.forEach(function (r) { gi += r.gi; gn += r.gn; });
   var tl = pc(gn, gi), tpc = timePct();
 
@@ -777,22 +798,22 @@ function buildQuickHtml(picked) {
   h += '<div class="kpi">' +
     '<div><div class="k">Dự toán nhóm</div><div class="v">' + n0(gi) + '</div><div class="n">' + rows.length + ' đơn vị</div></div>' +
     '<div><div class="k">Đã giải ngân</div><div class="v">' + n0(gn) + '</div><div class="n">lũy kế đến kỳ báo cáo</div></div>' +
-    '<div><div class="k">Tỷ lệ nhóm</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' bình quân tỉnh</div></div>' +
-    '<div><div class="k">Bình quân tỉnh</div><div class="v">' + pcTxt(avg) + '</div><div class="n">tiến độ thời gian ' + pcTxt(tpc) + '</div></div>' +
+    '<div><div class="k">Tỷ lệ nhóm</div><div class="v big">' + pcTxt(tl) + '</div><div class="n">' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' ' + BQL + '</div></div>' +
+    '<div><div class="k">' + BQK + '</div><div class="v">' + pcTxt(avg) + '</div><div class="n">tiến độ thời gian ' + pcTxt(tpc) + '</div></div>' +
     '<div><div class="k">Nộp báo cáo</div><div class="v">' + rows.filter(function (r) { return r.submitted; }).length + '/' + rows.filter(function (r) { return r.submitted || !r.exempt; }).length + '</div><div class="n">' +
       (nhac ? chuaGui.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
   var chartHtml = '<div class="row"><div class="box" style="flex:1"><div class="t">Tỷ lệ giải ngân từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
-         barsQuick(rows, avg, tpc) + '</div></div>';
+         barsQuick(rows, avg, tpc, BQK) + '</div></div>';
   if (rows.length <= 26) h += chartHtml;
 
   h += '<div class="row"><div class="box" style="flex:1"><div class="t">Nhận xét, đề nghị</div><div class="note">';
   h += '1. Tổng dự toán của ' + rows.length + ' đơn vị là <b>' + n0(gi) + ' triệu đồng</b>, đã giải ngân <b>' + n0(gn) +
-       ' triệu đồng</b>, đạt <b>' + pcTxt(tl) + '</b>, ' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' bình quân toàn tỉnh (' + pcTxt(avg) +
+       ' triệu đồng</b>, đạt <b>' + pcTxt(tl) + '</b>, ' + (tl >= avg ? 'cao hơn' : 'thấp hơn') + ' ' + BQL + ' (' + pcTxt(avg) +
        ') và ' + (tl >= tpc ? 'bảo đảm' : 'chậm so với') + ' tiến độ thời gian (' + pcTxt(tpc) + ').<br>';
   var i = 2;
-  h += i++ + '. Thấp hơn bình quân tỉnh: ' + (duoiBQ.length ? '<b>' + duoiBQ.length + ' đơn vị</b> – ' +
+  h += i++ + '. Thấp hơn ' + BQL + ': ' + (duoiBQ.length ? '<b>' + duoiBQ.length + ' đơn vị</b> – ' +
        esc2(duoiBQ.map(function (r) { return r.name + ' (' + pcTxt(r.tl) + ')'; }).join('; ')) +
        '. Đề nghị đẩy nhanh giải ngân, lập danh sách phần kinh phí còn lại và nêu rõ thời điểm dự kiến giải ngân.'
        : 'không có đơn vị nào.') + '<br>';
@@ -826,7 +847,7 @@ function buildQuickHtml(picked) {
        quickDetail(rows) + '</div>';
 
   h += (few ? '' : '<div class="pb"></div>') + '<div class="sec" style="margin-top:10px">Chi tiết từng nguồn vốn của từng đơn vị (đơn vị tính: triệu đồng)</div>' +
-       quickBySource(rows);
+       quickBySource(rows, bqSrc, BQK);
 
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. ' +
        'Cột "So kỳ trước" tính bằng điểm phần trăm tỷ lệ giải ngân.</div>';
@@ -847,7 +868,8 @@ function buildQuickHtml(picked) {
     '.t-src .uh-s .lo,.t-src .uh-s .hi{background:#fff;padding:0 4px;border-radius:3px;font-weight:700}' +
     '.t-src .ch th{background:#e8edf3;color:#1e3a5f;font-size:10.5px}' +
     '.t-src .ch th.r{text-align:right}' +
-    '.t-src th:first-child,.t-src td:first-child{width:43%}' +
+    '.t-src th:first-child,.t-src td:first-child{width:36%}' +
+    '.t-src tr.sub td{font-size:10.5px;color:#374151;padding-left:14px}.t-src tr.tot td{font-weight:700;background:#fff4dd}' +
     '.t-src td.c{text-align:center;color:#6b7280}' +
     '.sec{page-break-after:avoid;break-after:avoid}' +
     '.t-det td{padding:3.5px 4px}' +
@@ -869,7 +891,7 @@ function showQuick(picked, useAi) {
     if (w0) { w0.document.open(); w0.document.write(window.gnAI.loadingPage()); w0.document.close(); }
     var set = {}; picked.forEach(function (n) { set[n] = 1; });
     var rows0 = allRows().filter(function (r) { return set[r.name]; }), per0 = state.period || {};
-    window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: per0.label || '', timePct: timePct(), rows: rows0 })
+    window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: (per0.label || '') + (per0.closed ? ' (số liệu đã chốt)' : ' (số liệu tạm tính, kỳ chưa chốt)'), timePct: timePct(), sources: quickSourcesV2(picked, Math.round(timePct() * 10) / 10), rows: rows0 })
       .then(function (text) { AI_HTML = window.gnAI.box(text); },
             function (err) { AI_HTML = ''; alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + '\nBáo cáo vẫn được lập, không có phần này.'); })
       .then(function () {
