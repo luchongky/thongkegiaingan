@@ -467,8 +467,10 @@ const QFLAGS=[
  {key:'flat',label:'Không tăng so kỳ trước',test:v=>{const p=v.u.prev[state.program],c=v.pair;return !!(state.prevAt&&p&&c&&c[1]-p[1]<=0.0005&&v.rate!=null&&v.rate<99.95);}},
  {key:'down',label:'Số liệu giảm',test:v=>{const p=v.u.prev[state.program],c=v.pair;return !!(state.prevAt&&p&&c&&c[1]<p[1]-0.0005);}},
  {key:'zero',label:'Có nguồn 0%',test:v=>['I','II','III','IV'].some(k=>{const a=v.u.p[k];return !!(a&&a[0]>0&&!(a[1]>0));})},
- {key:'mtqg0',label:'MTQG chưa giải ngân',test:v=>Object.values(v.u.mtqg||{}).some(a=>!!(a&&a[0]>0&&!(a[1]>0)))}
+ {key:'mtqg0',label:'Có CT MTQG 0%',test:v=>Object.values(v.u.mtqg||{}).some(a=>!!(a&&a[0]>0&&!(a[1]>0)))},
+ ...['1','2','3'].map(k=>({key:'mtqg0_'+k,prog:k,get label(){return mtqgShort(k)+' 0%';},test:v=>{const a=(v.u.mtqg||{})[k];return !!(a&&a[0]>0&&!(a[1]>0));}}))
 ];
+function mtqgShort(k){const p=(state.mtqgPrograms||[]).find(x=>x.key===k),l=fold(p?p.label:'');return /nong thon moi|giam ngheo|dan toc/.test(l)?'CT NTM-GN-DTTS':/van hoa/.test(l)?'CT Văn hóa':/ma tuy/.test(l)?'CT Ma túy':'CT MTQG số '+k;}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fold=v=>String(v??'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
@@ -806,7 +808,7 @@ function renderCharts(){
 function amountHTML(v){return `<td class="r money num ${v!=null&&v<0?'negative':''}">${fmt(v)}</td>`;}
 function renderQuickChips(){
  const box=$('#quickChips');if(!box)return;const ready=state.hasData,base=scope();
- box.innerHTML='<span class="qc-label">Lọc nhanh:</span>'+QFLAGS.map(f=>{const n=ready?base.filter(f.test).length:0;const dis=!ready||(!n&&state.flag!==f.key)||((f.key==='flat'||f.key==='down')&&!state.prevAt);return `<button type="button" class="qchip" data-flag="${f.key}" aria-pressed="${state.flag===f.key}"${dis?' disabled':''}>${esc(f.label)} <b>${ready?n:'—'}</b></button>`;}).join('')+'<button type="button" class="qchip qchip-report" data-act="report" title="Mở hộp Báo cáo nhanh, chọn sẵn các đơn vị trong danh sách đang lọc">Báo cáo nhanh danh sách đang lọc</button>';
+ box.innerHTML='<span class="qc-label">Lọc nhanh:</span>'+QFLAGS.map(f=>{if(f.prog&&!(state.mtqgPrograms||[]).some(p=>p.key===f.prog)&&state.flag!==f.key)return '';const n=ready?base.filter(f.test).length:0;const dis=!ready||(!n&&state.flag!==f.key)||((f.key==='flat'||f.key==='down')&&!state.prevAt);return `<button type="button" class="qchip" data-flag="${f.key}" aria-pressed="${state.flag===f.key}"${dis?' disabled':''}>${esc(f.label)} <b>${ready?n:'—'}</b></button>`;}).join('')+'<button type="button" class="qchip qchip-report" data-act="report" title="Mở hộp Báo cáo nhanh, chọn sẵn các đơn vị trong danh sách đang lọc">Báo cáo nhanh danh sách đang lọc</button>';
 }
 function renderTable(){
  savePrefs();renderAssignmentFilterNote();renderQuickChips();
