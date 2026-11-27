@@ -63,7 +63,7 @@
 <nav><div class="shell nav" id="nav"><button data-tab="overview" class="active">Tổng quan</button><button data-tab="village">Báo cáo từng xã</button><button data-tab="tax">Khoản thu</button><button data-tab="assistant">Trợ lý AI</button></div></nav>
 <main class="shell"><div id="error" role="alert"></div>
   <section data-panel="overview"><div class="intro"><div><h2>Tổng quan điều hành</h2><p>Đọc nhanh số thu, dự toán và các điểm cần theo dõi</p></div><div class="actions"><button class="btn" id="refresh">Làm mới số liệu</button><a class="btn" target="_blank" rel="noopener noreferrer" href="https://script.google.com/a/macros/we.edu.vn/s/AKfycbzeRDOPbTSjzF6ZGiwvddkiCeuDbdabQF9z3x63OoAEQVHMSavv2SLozFpBwstqeI4/exec">Mở Apps Script để nhập số</a></div></div><div class="grid kpis" id="kpis"></div><div class="grid two section"><div class="card"><h3>Tiến độ so với dự toán</h3><p class="sub" id="paceNote"></p><div id="pace"></div></div><div class="card"><h3>Tiến độ thu nội địa của các xã, phường</h3><p class="sub">So với dự toán năm và tỷ lệ thời gian đã qua</p><div id="distribution"></div><div id="watch"></div></div></div><div class="grid two section"><div class="card"><h3>Khoản thu lớn toàn tỉnh</h3><p class="sub">Sắp theo số thu thực hiện; không cộng trùng các chỉ tiêu tổng</p><div id="topTax"></div></div><div class="card"><h3>Cách đọc số liệu</h3><div class="callout">Tỷ lệ hoàn thành = số thực hiện / dự toán HĐND. “Chậm tiến độ” chỉ có nghĩa tỷ lệ hoàn thành thấp hơn phần thời gian đã qua trong năm; đây không phải kết luận về nguyên nhân.</div><p class="note">Số cùng kỳ và cơ cấu từng xã chỉ hiển thị khi nguồn Apps Script đã xuất đủ các trường tương ứng.</p></div></div></section>
-  <section data-panel="village" hidden><div class="detail-head"><div><h2>Báo cáo theo từng xã, phường</h2><p>Tra cứu, so sánh và in báo cáo riêng từng đơn vị</p></div><div class="actions no-print"><button class="btn" id="copyVillage">Sao chép liên kết</button><button class="btn primary" id="printReport">In A4 / lưu PDF</button></div></div><div class="toolbar"><div class="field search"><label for="findVillage">Tìm đơn vị</label><input id="findVillage" placeholder="Nhập tên xã, phường…"></div><div class="field"><label for="pickVillage">Chọn xã, phường</label><select id="pickVillage"></select></div><div class="field"><label for="sortVillage">Sắp xếp danh sách</label><select id="sortVillage"><option value="low">Chậm tiến độ trước</option><option value="high">Số thu cao trước</option><option value="name">Theo tên</option></select></div></div><div class="card report" id="report"></div><div class="card section no-print"><h3>Danh sách 56 xã, phường</h3><p class="sub">Chọn tên đơn vị để xem báo cáo riêng</p><div class="table-wrap"><table><thead><tr><th>Đơn vị</th><th>Thu nội địa</th><th>Dự toán</th><th>Đạt dự toán</th><th>Đánh giá</th></tr></thead><tbody id="villageRows"></tbody></table></div></div></section>
+  <section data-panel="village" hidden><div class="detail-head"><div><h2>Báo cáo theo từng xã, phường</h2><p>Tra cứu, so sánh và in báo cáo riêng từng đơn vị</p></div><div class="actions no-print"><button class="btn" id="copyVillage">Sao chép liên kết</button><button class="btn" id="exportVillageExcel" type="button" disabled>Xuất Excel</button><button class="btn primary" id="printReport">In A4 / lưu PDF</button></div></div><p id="villageExcelStatus" class="callout warn no-print" role="status" hidden></p><div class="toolbar"><div class="field search"><label for="findVillage">Tìm đơn vị</label><input id="findVillage" placeholder="Nhập tên xã, phường…"></div><div class="field"><label for="pickVillage">Chọn xã, phường</label><select id="pickVillage"></select></div><div class="field"><label for="sortVillage">Sắp xếp danh sách</label><select id="sortVillage"><option value="low">Chậm tiến độ trước</option><option value="high">Số thu cao trước</option><option value="name">Theo tên</option></select></div></div><div class="card report" id="report"></div><div class="card section no-print"><h3>Danh sách 56 xã, phường</h3><p class="sub">Chọn tên đơn vị để xem báo cáo riêng</p><div class="table-wrap"><table><thead><tr><th>Đơn vị</th><th>Thu nội địa</th><th>Dự toán</th><th>Đạt dự toán</th><th>Đánh giá</th></tr></thead><tbody id="villageRows"></tbody></table></div></div></section>
   <section data-panel="tax" hidden><div class="intro"><div><h2>Phân tích các khoản thu</h2><p>Đơn vị: triệu đồng · Khoản thu cao được xếp theo số thực hiện</p></div><button class="btn primary" id="analyzeTax">✨ AI phân tích khoản thu cao</button></div><div class="grid two"><div class="card"><h3>10 khoản thu cao nhất</h3><div id="taxBars" class="mini-chart"></div></div><div class="card"><h3>Nhận định từ số liệu</h3><div id="taxInsights"></div><div class="callout" id="taxAI" hidden></div></div></div><div class="card section"><h3>Chi tiết theo sắc thuế</h3><div class="table-wrap"><table><thead><tr><th>Khoản thu</th><th>Thực hiện</th><th>Dự toán HĐND</th><th>Đạt dự toán</th><th>So tiến độ</th></tr></thead><tbody id="taxRows"></tbody></table></div></div></section>
   <section data-panel="assistant" hidden><div class="intro"><div><h2>Trợ lý phân tích AI</h2><p>Hỏi về tiến độ, xã hoặc khoản thu; câu trả lời dựa trên mốc số liệu đang công bố</p></div></div><div class="grid two"><div class="card chat"><h3>Hỏi đáp số liệu</h3><p class="sub" id="chatScope"></p><div class="messages" id="messages"><div class="bubble assistant">Bạn có thể hỏi: “Những xã nào chậm tiến độ?”, “Khoản thu nào lớn nhất?” hoặc “Đánh giá thu nội địa xã Bảo Lạc”.</div></div><form class="chat-form" id="chatForm"><input id="question" maxlength="500" required placeholder="Nhập câu hỏi về số thu…"><button class="btn primary" id="send">Gửi câu hỏi</button></form></div><div class="card"><h3>Gợi ý câu hỏi</h3><p class="sub">Chạm để điền nhanh</p><div class="actions" id="suggestions"><button class="btn" data-q="Đánh giá tiến độ thu nội địa của toàn tỉnh và những điểm cần chú ý.">Tiến độ toàn tỉnh</button><button class="btn" data-q="Những khoản thu có số thực hiện cao nhất và tỷ lệ đạt dự toán ra sao?">Khoản thu cao</button><button class="btn" data-q="Những xã, phường nào chậm so với tiến độ thời gian?">Xã chậm tiến độ</button></div><div class="callout">AI giúp tóm tắt và phân tích. Khi chưa có cùng kỳ hoặc chi tiết từng xã, AI sẽ nói rõ giới hạn dữ liệu. Kiểm tra con số trong bảng trước khi dùng cho văn bản chính thức.</div></div></div></section>
   <div class="footer"><span>Nguồn: Apps Script → dữ liệu tổng hợp GitHub → Cloudflare Pages</span><span id="updated"></span></div>
@@ -160,7 +160,7 @@ const printTaxIds = {
   84: 'st_xskt', 85: 'st_thuhoivon'
 };
 
-function renderPrintVillage(commune) {
+function buildVillageReport(commune) {
   const year = D.ngay.slice(0, 4);
   const budget = year === '2026' ? (printBudgets2026[commune.ten] ?? {}) : {};
   const province = {...budget, 53: commune.dt, 55: commune.budgetXa};
@@ -183,9 +183,6 @@ function renderPrintVillage(commune) {
   if (Number.isFinite(other) && Number.isFinite(publicLand)) {
     actual[0] = other + publicLand;
   }
-  const digits = value => Math.abs(value - Math.round(value * 100) / 100) < 1e-7 ? 2 : 3;
-  const formatted = value => Number.isFinite(value) ? fmt(value, digits(value)) : '—';
-  const percent = (value, estimate) => Number.isFinite(value) && estimate > 0 ? pct(rate(value, estimate), 2) : '—';
   const reportDate = date(D.ngay);
   const lines = printRows.filter(([code]) => {
     if ([84, 85].includes(code)) return (detail[code]?.actual ?? actual[code] ?? 0) !== 0;
@@ -195,24 +192,147 @@ function renderPrintVillage(commune) {
     const row = detail[code] ?? {};
     const p = row.province ?? province[code];
     const a = row.actual ?? actual[code];
-    const estimate = Number.isFinite(p) && p !== 0 ? formatted(p) : '';
-    const completion = percent(a, p);
-    const values = [estimate, estimate, formatted(a), completion, completion];
-    return '<tr class="' + style + '"><th scope="row">' + esc(label) + '</th>' +
-      values.map(value => '<td>' + value + '</td>').join('') + '</tr>';
+    return {label, style, estimate:Number.isFinite(p) && p !== 0 ? p : null,
+      actual:Number.isFinite(a) ? a : null};
   });
   const note = (year === '2026' ? 'Dự toán tỉnh giao đầu năm ở phần thu theo Quyết định số 2158/QĐ-UBND ngày 16/12/2025. ' : '') +
     'Ô dự toán để trống khi không có số giao. Dấu “—” biểu thị thiếu số liệu hoặc thiếu căn cứ tính tỷ lệ.' +
     ' Cột HĐND giao lấy bằng dự toán Tỉnh giao.' +
     ([81,82,83].some(code => Number.isFinite(detail[code]?.actual)) ? '' : ' Chưa có số thực hiện chi được xác nhận cho kỳ này.');
+  return { title:'ĐÁNH GIÁ THU, CHI NGÂN SÁCH ' + commune.ten.toLocaleUpperCase('vi'),
+    year, reportDate, lines, note };
+}
+
+function renderPrintVillage(commune) {
+  const report = buildVillageReport(commune);
+  const {title, year, reportDate, note} = report;
+  const digits = value => Math.abs(value - Math.round(value * 100) / 100) < 1e-7 ? 2 : 3;
+  const formatted = value => Number.isFinite(value) ? fmt(value, digits(value)) : '—';
+  const percent = (value, estimate) => Number.isFinite(value) && estimate > 0 ? pct(rate(value, estimate), 2) : '—';
+  const lines = report.lines.map(({label, style, estimate, actual}) => {
+    const budget = estimate == null ? '' : formatted(estimate);
+    const completion = percent(actual, estimate);
+    const values = [budget, budget, formatted(actual), completion, completion];
+    return '<tr class="' + style + '"><th scope="row">' + esc(label) + '</th>' +
+      values.map(value => '<td>' + value + '</td>').join('') + '</tr>';
+  });
   $('printVillageSheet').innerHTML =
-    '<h1>ĐÁNH GIÁ THU, CHI NGÂN SÁCH ' + esc(commune.ten.toLocaleUpperCase('vi')) + '<br>ĐẾN ' + reportDate + '</h1>' +
+    '<h1>' + esc(title) + '<br>ĐẾN ' + reportDate + '</h1>' +
     '<p class="units">Đơn vị tính: Triệu đồng</p><table>' +
     '<colgroup><col style="width:40%"><col span="3" style="width:13%"><col span="2" style="width:10.5%"></colgroup>' +
     '<thead><tr><th rowspan="2">CHỈ TIÊU</th><th colspan="2">DỰ TOÁN NĂM ' + esc(year) + '</th>' +
     '<th rowspan="2">THỰC HIỆN<br>ĐẾN ' + reportDate + '</th><th colspan="2">SO SÁNH THỰC HIỆN (%)</th></tr>' +
     '<tr><th>Tỉnh giao<br>đầu năm</th><th>HĐND<br>giao</th><th>Tỉnh giao</th><th>HĐND giao</th></tr></thead>' +
     '<tbody>' + lines.join('') + '</tbody></table><p class="print-note">' + note + '</p>';
+}
+
+const villageExcelButton = $('exportVillageExcel');
+villageExcelButton.onclick = exportVillageExcel;
+let exportingVillageExcel = false;
+
+function loadExcel() {
+  if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    script.onload = () => window.ExcelJS ? resolve(window.ExcelJS) : reject(new Error('ExcelJS unavailable'));
+    script.onerror = () => {
+      script.remove();
+      reject(new Error('ExcelJS download failed'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function buildVillageWorkbook(ExcelJS, report) {
+  const wb = new ExcelJS.Workbook();
+  const sheet = wb.addWorksheet('Báo cáo thu chi', {
+    views: [{state:'frozen', ySplit:5}],
+    pageSetup: {paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, printTitlesRow:'4:5'}
+  });
+  [56,15,15,16,13,13].forEach((width, i) => { sheet.getColumn(i+1).width = width; });
+  const top = [
+    [report.title], ['ĐẾN ' + report.reportDate], ['Đơn vị tính: Triệu đồng'],
+    ['CHỈ TIÊU', 'DỰ TOÁN NĂM ' + report.year, null, 'THỰC HIỆN\nĐẾN ' + report.reportDate, 'SO SÁNH THỰC HIỆN (%)'],
+    [null, 'Tỉnh giao đầu năm', 'HĐND giao', null, 'Tỉnh giao', 'HĐND giao']
+  ];
+  top.forEach((values, i) => {
+    values.forEach((value, j) => { sheet.getCell(i+1, j+1).value = value; });
+  });
+  ['A1:F1','A2:F2','A3:F3','A4:A5','B4:C4','D4:D5','E4:F4'].forEach(range => sheet.mergeCells(range));
+  [26,21,18,23,23].forEach((height, i) => { sheet.getRow(i+1).height = height; });
+  const font = {name:'Times New Roman', size:11};
+  const line = {style:'thin', color:{argb:'FF555555'}};
+  const box = {top:line, bottom:line, left:line, right:line};
+  for (let row = 1; row <= 5; row++) {
+    sheet.getRow(row).eachCell({includeEmpty:true}, cell => {
+      cell.font = {...font, size:row === 1 ? 14 : 11, bold:row !== 3, italic:row === 3};
+      cell.alignment = {horizontal:row === 3 ? 'right' : 'center', vertical:'middle', wrapText:true};
+      if (row >= 4) cell.border = box;
+    });
+  }
+  const numberFormat = value => Math.abs(value - Math.round(value * 100) / 100) < 1e-7 ? '#,##0.00' : '#,##0.000';
+  report.lines.forEach(({label, style, estimate, actual}) => {
+    const row = sheet.addRow();
+    [label, estimate, estimate, actual ?? '—', '—', '—'].forEach((value, i) => {
+      row.getCell(i+1).value = value;
+    });
+    if (actual != null && estimate > 0) {
+      const r = row.number;
+      ['B','C'].forEach((column, i) => {
+        row.getCell(5+i).value = {formula:'IF(AND(ISNUMBER(D'+r+'),'+column+r+'>0),D'+r+'/'+column+r+',"—")', result:actual/estimate};
+        row.getCell(5+i).numFmt = '0.00%';
+      });
+    }
+    row.height = label.length > 54 ? 29 : 17;
+    row.eachCell({includeEmpty:true}, (cell, i) => {
+      cell.font = {...font, bold:style === 'major', italic:i === 1 && style === 'sub'};
+      cell.border = box;
+      cell.alignment = {horizontal:i === 1 ? 'left' : 'right', vertical:'middle', wrapText:i === 1,
+        indent:i === 1 && style === 'sub' ? 1 : 0};
+      if (i >= 2 && i <= 4 && typeof cell.value === 'number') cell.numFmt = numberFormat(cell.value);
+    });
+  });
+  const footer = sheet.addRow();
+  footer.getCell(1).value = report.note;
+  sheet.mergeCells('A'+footer.number+':F'+footer.number);
+  footer.height = 30;
+  footer.getCell(1).font = {...font, size:10, italic:true};
+  footer.getCell(1).alignment = {vertical:'middle', wrapText:true};
+  sheet.pageSetup.printArea = 'A1:F'+footer.number;
+  return wb;
+}
+
+async function exportVillageExcel() {
+  const commune = D?.xa.find(x => x.ten === selected);
+  if (!commune || exportingVillageExcel || villageExcelButton.disabled) return;
+  const report = buildVillageReport(commune);
+  const unitName = normalizeVillageSearch(commune.ten).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const fileName = 'Bao_cao_thu_chi_' + unitName + '_' + D.ngay.slice(0,10) + '.xlsx';
+  const status = $('villageExcelStatus');
+  status.hidden = true;
+  exportingVillageExcel = true;
+  villageExcelButton.disabled = true;
+  villageExcelButton.textContent = 'Đang tạo Excel…';
+  try {
+    const ExcelJS = await loadExcel();
+    const buffer = await buildVillageWorkbook(ExcelJS, report).xlsx.writeBuffer();
+    const url = URL.createObjectURL(new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch {
+    status.textContent = 'Chưa xuất được Excel. Kiểm tra kết nối mạng rồi thử lại.';
+    status.hidden = false;
+  } finally {
+    exportingVillageExcel = false;
+    villageExcelButton.disabled = $('pickVillage').disabled;
+    villageExcelButton.textContent = 'Xuất Excel';
+  }
 }
 
 function normalizeVillageSearch(value) {
@@ -237,6 +357,7 @@ function renderVillage() {
 
   $('report').hidden = !x;
   $('printReport').disabled = !x;
+  villageExcelButton.disabled = !x || exportingVillageExcel;
   $('copyVillage').disabled = !x;
   if (!x) {
     $('printVillageSheet').innerHTML = '';
