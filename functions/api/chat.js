@@ -1,6 +1,6 @@
 import {BASE_LIMIT, limitFor, configured} from '../_lib/telegram-quota.js';
 // Cloudflare Pages Function - proxy chatbot, không để lộ API key ra trình duyệt.
-const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev'];
+const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev', 'https://baocaothu56xa.pages.dev'];
 const API_BASE = 'https://codex.fosta.app/v1';
 const WEEKLY_LIMIT = BASE_LIMIT;
 
@@ -20,7 +20,12 @@ function json(body, status = 200, origin = '') {
 function allowed(request) {
   const origin = request.headers.get('Origin') || '';
   const referer = request.headers.get('Referer') || '';
-  return ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.some((site) => referer.startsWith(site));
+  if (origin) return ALLOWED_ORIGINS.includes(origin);
+  try {
+    return ALLOWED_ORIGINS.includes(new URL(referer).origin);
+  } catch {
+    return false;
+  }
 }
 
 function weekId() {
@@ -49,11 +54,14 @@ export async function onRequest(context) {
   const { request, env } = context;
   const origin = request.headers.get('Origin') || '';
   if (request.method === 'OPTIONS') {
+    if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'Không có quyền truy cập chatbot' }, 403);
+
     return new Response(null, { status: 204, headers: {
       'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
+      'Vary': 'Origin',
     }});
   }
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
