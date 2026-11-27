@@ -1825,7 +1825,7 @@ BTN.addEventListener('click', pick);
     });
   }
   document.addEventListener('click', e => {
-    if (bypass) return;
+    if (bypass || window.__quickWord) return;
     const btn = e.target.closest && e.target.closest(IDS.map(i => '#' + i).join(','));
     if (!btn || btn.disabled || !state.hasData || !state.cur) return;
     e.preventDefault(); e.stopImmediatePropagation();
