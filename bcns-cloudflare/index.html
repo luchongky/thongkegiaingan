@@ -164,8 +164,13 @@ function buildVillageReport(commune) {
   const year = D.ngay.slice(0, 4);
   const budget = year === '2026' ? (printBudgets2026[commune.ten] ?? {}) : {};
   const province = {...budget, 53: commune.dt, 55: commune.budgetXa};
-  const actual = {53: commune.th, 55: commune.actualXa, 65: commune.phiLePhiXaHuong};
+  const actual = {
+    52: commune.tongThuNSNN, 53: commune.th, 55: commune.actualXa,
+    65: commune.phiLePhiXaHuong, 80: commune.thuVienTroDongGop
+  };
   if (year === '2026') {
+    // Decision 2158 assigns only domestic revenue in the commune revenue totals.
+    province[52] = commune.dt;
     // The 2026 decision assigns no lottery revenue to commune budgets.
     province[56] = commune.budgetK;
     actual[56] = commune.K;
