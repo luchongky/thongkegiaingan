@@ -84,7 +84,7 @@ export async function onRequest(context) {
 
   const safeMessages = messages.map((message) => ({
     role: message.role === 'assistant' ? 'assistant' : message.role === 'system' ? 'system' : 'user',
-    content: String(message.content || '').slice(0, 40000),
+    content: String(message.content || '').slice(0, 110000),
   }));
   const body = {
     model: env.FOSTA_MODEL || payload.model || 'gpt-6-luna',
