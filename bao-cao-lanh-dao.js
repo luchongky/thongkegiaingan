@@ -1025,7 +1025,7 @@ function openQuickPicker() {
     if (!btn) return;
     var ev = new MouseEvent('click', { bubbles: true });
     ev.__allowWord = true;
-    window.__quickWord = true; try { btn.click(); } finally { window.__quickWord = false; }
+    var pw = picked(); if (!pw.length) { document.body.appendChild(wrap); info.textContent = 'Chưa chọn đơn vị nào'; return; } if (!window.__exportQuickWord) { window.__quickWord = true; try { btn.click(); } finally { window.__quickWord = false; } return; } wordWithAi(pw, !!aiLab.querySelector('input').checked);
   });
   foot.appendChild(word);
 
@@ -1068,7 +1068,7 @@ window.openQuickViewReport = openQuickPicker;
 
 /* Chặn nút "Báo cáo nhanh" sẵn có: bấm 1 cái là hiện báo cáo, không tải file.
    Nút "Tải bản Word" trong hộp chọn vẫn gọi lại chức năng xuất Word gốc. */
-window.__showQuick = showQuick; function hookQuick() {
+window.__showQuick = showQuick; function wordWithAi(names, useAi) { if (!useAi || !window.gnAI) { window.__exportQuickWord(names, ''); return; } var set = {}; names.forEach(function (n) { set[n] = 1; }); var rows0 = allRows().filter(function (r) { return set[r.name]; }), per0 = state.period || {}; var toast = document.createElement('div'); toast.textContent = 'Đang soạn nhận định AI để đưa vào file Word (khoảng 20–60 giây)…'; toast.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;background:#0b6b4f;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25)'; document.body.appendChild(toast); window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: per0.label || '', timePct: timePct(), rows: rows0 }).then(function (text) { return text; }, function (err) { alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + '. File Word vẫn được lập, không có phần này.'); return ''; }).then(function (text) { toast.remove(); window.__exportQuickWord(names, text); }); } function hookQuick() {
   var btn = document.getElementById('quickReportBtn');
   if (!btn || btn.dataset.viewHooked) return;
   btn.dataset.viewHooked = '1';
