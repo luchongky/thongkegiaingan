@@ -164,7 +164,7 @@ function renderPrintVillage(commune) {
   const year = D.ngay.slice(0, 4);
   const budget = year === '2026' ? (printBudgets2026[commune.ten] ?? {}) : {};
   const province = {...budget, 53: commune.dt, 55: commune.budgetXa};
-  const actual = {53: commune.th, 55: commune.actualXa};
+  const actual = {53: commune.th, 55: commune.actualXa, 65: commune.phiLePhiXaHuong};
   if (year === '2026') {
     // The 2026 decision assigns no lottery revenue to commune budgets.
     province[56] = commune.budgetK;
@@ -215,17 +215,33 @@ function renderPrintVillage(commune) {
     '<tbody>' + lines.join('') + '</tbody></table><p class="print-note">' + note + '</p>';
 }
 
+function normalizeVillageSearch(value) {
+  return value.toLocaleLowerCase('vi').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim().replace(/\s+/g, ' ');
+}
+
 function renderVillage() {
   const pick = $('pickVillage');
-  pick.innerHTML = D.xa.map(x => `<option value="${esc(x.ten)}">${esc(x.ten)}</option>`).join('');
+  const search = $('findVillage');
+  const query = normalizeVillageSearch(search.value);
+  const matches = D.xa.filter(x => normalizeVillageSearch(x.ten).includes(query));
+  const x = matches.find(v => v.ten === selected) ?? matches[0];
+  if (x) selected = x.ten;
+  pick.innerHTML = matches.map(v => `<option value="${esc(v.ten)}">${esc(v.ten)}</option>`).join('');
   pick.value = selected;
+  pick.disabled = !x;
   pick.onchange = () => { selected = pick.value; renderVillage(); };
-  $('findVillage').oninput = renderVillageRows;
-  $('sortVillage').onchange = renderVillageRows;
-  renderVillageRows();
+  search.oninput = renderVillage;
+  $('sortVillage').onchange = () => renderVillageRows(matches);
+  renderVillageRows(matches);
 
-  const x = D.xa.find(v => v.ten === selected);
-  if (!x) return;
+  $('report').hidden = !x;
+  $('printReport').disabled = !x;
+  $('copyVillage').disabled = !x;
+  if (!x) {
+    $('printVillageSheet').innerHTML = '';
+    return;
+  }
   renderPrintVillage(x);
   $('copyVillage').textContent = 'Sao chép liên kết';
   $('copyVillage').onclick = async () => {
@@ -295,7 +311,24 @@ function renderVillage() {
     question: 'Đánh giá ba chỉ tiêu thu trên địa bàn, xã hưởng và xã hưởng trừ đất, xổ số. Nêu số vượt hoặc còn thiếu và so cùng kỳ nếu có.'
   }, $('villageAI'), $('analyzeVillage'));
 }
-function renderVillageRows(){if(!D)return;const q=$('findVillage').value.trim().toLocaleLowerCase('vi'),sort=$('sortVillage').value;let list=D.xa.filter(x=>x.ten.toLocaleLowerCase('vi').includes(q));list.sort((a,b)=>sort==='name'?a.ten.localeCompare(b.ten,'vi'):sort==='high'?b.th-a.th:(rate(a.th,a.dt)??Infinity)-(rate(b.th,b.dt)??Infinity));$('villageRows').innerHTML=list.map(x=>`<tr><td><a href="#village" data-village="${esc(x.ten)}">${esc(x.ten)}</a></td><td>${fmt(x.th)}</td><td>${fmt(x.dt)}</td><td>${pct(rate(x.th,x.dt))}</td><td>${badge(rate(x.th,x.dt))}</td></tr>`).join('');document.querySelectorAll('[data-village]').forEach(a=>a.onclick=e=>{e.preventDefault();selected=a.dataset.village;renderVillage();go('village');window.scrollTo({top:0,behavior:'smooth'})});}
+function renderVillageRows(matches) {
+  const sort = $('sortVillage').value;
+  const list = [...matches].sort((a,b) => sort === 'name' ? a.ten.localeCompare(b.ten, 'vi')
+    : sort === 'high' ? b.th - a.th
+    : (rate(a.th,a.dt) ?? Infinity) - (rate(b.th,b.dt) ?? Infinity));
+  $('villageRows').innerHTML = list.map(x =>
+    `<tr><td><a href="#village" data-village="${esc(x.ten)}">${esc(x.ten)}</a></td><td>${fmt(x.th)}</td><td>${fmt(x.dt)}</td><td>${pct(rate(x.th,x.dt))}</td><td>${badge(rate(x.th,x.dt))}</td></tr>`
+  ).join('') || '<tr><td colspan="5" role="status">Không tìm thấy xã, phường phù hợp.</td></tr>';
+  document.querySelectorAll('[data-village]').forEach(link => {
+    link.onclick = event => {
+      event.preventDefault();
+      selected = link.dataset.village;
+      renderVillage();
+      go('village');
+      window.scrollTo({top:0,behavior:'smooth'});
+    };
+  });
+}
 function renderTax(){let ks=[...D.khoan].sort((a,b)=>b.th-a.th),max=ks[0]?.th||1;$('taxBars').innerHTML=ks.slice(0,10).map(k=>`<div class="bar-row"><span title="${esc(k.ten)}">${esc(k.ten)}</span><div class="track"><i style="width:${100*Math.max(0,k.th)/max}%"></i></div><b class="num">${fmt(k.th)}<small class="tax-share">${pct(rate(k.th,D.nd.th))} nội địa</small></b></div>`).join('');$('taxRows').innerHTML=ks.map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${fmt(k.hd)}</td><td>${pct(rate(k.th,k.hd))}</td><td>${badge(rate(k.th,k.hd))}</td></tr>`).join('');const leaders=ks.slice(0,3);$('taxInsights').innerHTML=`<ul class="bullets"><li>Ba khoản thu có số thực hiện cao nhất: ${leaders.map(k=>`${esc(k.ten)} (${fmt(k.th)} triệu)`).join('; ')}.</li><li>${ks.filter(k=>k.hd>0&&rate(k.th,k.hd)<D.tienDo).length} khoản thu có tỷ lệ đạt dự toán thấp hơn tiến độ thời gian ${pct(D.tienDo)}.</li><li>Thu nội địa toàn tỉnh ${fmt(D.nd.th)} triệu đồng; từng khoản trong bảng là thành phần của số này.</li></ul>`;$('analyzeTax').onclick=()=>askAI({mode:'province',question:'Phân tích các khoản thu nội địa có số thu cao nhất, mức đạt dự toán và khoản cần theo dõi; nêu số liệu và không suy đoán nguyên nhân.'},$('taxAI'),$('analyzeTax'))}
 async function askAI(payload, box, button) {
   if (!D) return;
