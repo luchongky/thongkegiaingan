@@ -2,7 +2,7 @@ import {BASE_LIMIT, limitFor, configured} from '../_lib/telegram-quota.js';
 // Cloudflare Pages Function - proxy chatbot, không để lộ API key ra trình duyệt.
 const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev', 'https://baocaothu56xa.pages.dev'];
 const API_BASE = 'https://codex.fosta.app/v1';
-const WEEKLY_LIMIT = BASE_LIMIT;
+const WEEKLY_LIMIT = BASE_LIMIT; const UNLIMITED = true; // true: không giới hạn lượt AI; đổi thành false để bật lại hạn mức tuần
 
 function json(body, status = 200, origin = '') {
   const headers = {
@@ -39,7 +39,7 @@ function resetAt() {
 }
 
 async function consumeWeeklyLimit(request, env) {
-  if (!env.CHAT_LIMITS) return { allowed: true, remaining: WEEKLY_LIMIT };
+  if (UNLIMITED) return { allowed: true, remaining: 999999, resetAt: resetAt() }; if (!env.CHAT_LIMITS) return { allowed: true, remaining: WEEKLY_LIMIT };
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'anonymous';
   const key = `${weekId()}:${ip.slice(0, 120)}`;
   const count = Number.parseInt(await env.CHAT_LIMITS.get(key) || '0', 10) || 0;
