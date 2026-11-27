@@ -57,7 +57,31 @@ function renderVillage(){const xa=D.xa||[];const pick=$('pickVillage');pick.inne
 }
 function renderVillageRows(){if(!D)return;const q=$('findVillage').value.trim().toLocaleLowerCase('vi'),sort=$('sortVillage').value;let list=D.xa.filter(x=>x.ten.toLocaleLowerCase('vi').includes(q));list.sort((a,b)=>sort==='name'?a.ten.localeCompare(b.ten,'vi'):sort==='high'?b.th-a.th:(rate(a.th,a.dt)??Infinity)-(rate(b.th,b.dt)??Infinity));$('villageRows').innerHTML=list.map(x=>`<tr><td><a href="#village" data-village="${esc(x.ten)}">${esc(x.ten)}</a></td><td>${fmt(x.th)}</td><td>${fmt(x.dt)}</td><td>${pct(rate(x.th,x.dt))}</td><td>${badge(rate(x.th,x.dt))}</td></tr>`).join('');document.querySelectorAll('[data-village]').forEach(a=>a.onclick=e=>{e.preventDefault();selected=a.dataset.village;renderVillage();go('village');window.scrollTo({top:0,behavior:'smooth'})});}
 function renderTax(){let ks=[...D.khoan].sort((a,b)=>b.th-a.th),max=ks[0]?.th||1;$('taxBars').innerHTML=ks.slice(0,10).map(k=>`<div class="bar-row"><span title="${esc(k.ten)}">${esc(k.ten)}</span><div class="track"><i style="width:${100*k.th/max}%"></i></div><b class="num">${fmt(k.th)}</b></div>`).join('');$('taxRows').innerHTML=ks.map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${fmt(k.hd)}</td><td>${pct(rate(k.th,k.hd))}</td><td>${badge(rate(k.th,k.hd))}</td></tr>`).join('');const leaders=ks.slice(0,3);$('taxInsights').innerHTML=`<ul class="bullets"><li>Ba khoản thu có số thực hiện cao nhất: ${leaders.map(k=>`${esc(k.ten)} (${fmt(k.th)} triệu)`).join('; ')}.</li><li>${ks.filter(k=>rate(k.th,k.hd)<D.tienDo).length} khoản thu có tỷ lệ đạt dự toán thấp hơn tiến độ thời gian ${pct(D.tienDo)}.</li><li>Thu nội địa toàn tỉnh ${fmt(D.nd.th)} triệu đồng; từng khoản trong bảng là thành phần của số này.</li></ul>`;$('analyzeTax').onclick=()=>askAI({mode:'province',question:'Phân tích các khoản thu nội địa có số thu cao nhất, mức đạt dự toán và khoản cần theo dõi; nêu số liệu và không suy đoán nguyên nhân.'},$('taxAI'),$('analyzeTax'))}
-async function askAI(payload,box,button){if(!D)return;box.hidden=false;box.textContent='AI đang phân tích số liệu…';button.disabled=true;try{const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const o=await r.json();if(!r.ok)throw Error(o.error||'Không có phản hồi');box.textContent=o.reply+`\n\nSố liệu chốt ${date(o.ngay)}.`;return o.reply}catch(e){box.textContent=e.message;throw e}finally{button.disabled=false}}
+async function askAI(payload, box, button) {
+  if (!D) return;
+  box.hidden = false;
+  box.textContent = 'AI đang phân tích số liệu…';
+  button.disabled = true;
+  const headers = { 'Content-Type': 'application/json' };
+  try {
+    const prepared = await fetch('/api/ai', {
+      method: 'POST', headers, body: JSON.stringify(payload)
+    });
+    const context = await prepared.json();
+    if (!prepared.ok) throw Error(context.error || 'Chưa lấy được số liệu');
+    const response = await fetch('https://thongkegiaingan.pages.dev/api/chat', {
+      method: 'POST', headers, body: JSON.stringify({ messages: context.messages })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.reply) throw Error(result.error || 'API AI chưa có phản hồi');
+    box.textContent = result.reply + '\n\nSố liệu chốt ' + date(context.ngay) + '.';
+    return result.reply;
+  } catch (error) {
+    box.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
 $('chatForm').onsubmit=async e=>{e.preventDefault();let question=$('question').value.trim();if(!question||!D)return;let messages=$('messages'),bubble=document.createElement('div');bubble.className='bubble user';bubble.textContent=question;messages.appendChild(bubble);$('question').value='';let answer=document.createElement('div');answer.className='bubble assistant';answer.textContent='Đang phân tích…';messages.appendChild(answer);$('send').disabled=true;try{await askAI({mode:'province',question},answer,$('send'))}catch{}finally{$('send').disabled=false;messages.scrollTop=messages.scrollHeight}};
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{$('question').value=b.dataset.q;go('assistant');$('question').focus()});load();
 </script></body></html>
