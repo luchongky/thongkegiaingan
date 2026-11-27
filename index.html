@@ -1154,7 +1154,7 @@ function qrMainChart(rows, avg, time, labPrev, title) {
   labels.forEach(([t, x, y]) => { g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(x - 3, y - 9, g.measureText(t).width + 6, 18); g.fillStyle = '#162f28'; g.fillText(t, x, y); });
   return { data: c.toDataURL('image/png'), w: W, h: H };
 }
-function buildQuickDoc(D, data, picked) {
+function buildQuickDoc(D, data, picked, aiText) {
   const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ShadingType, VerticalAlign, ImageRun, Header, PageNumber } = D;
   const F = 'Times New Roman', C = AlignmentType.CENTER, R = AlignmentType.RIGHT, L = AlignmentType.LEFT, J = AlignmentType.JUSTIFIED;
   const n0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
@@ -1365,7 +1365,7 @@ function buildQuickDoc(D, data, picked) {
   adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
   if (adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
   body.push(P('Đề nghị đơn vị chịu trách nhiệm về tính đầy đủ, chính xác và kịp thời của số liệu; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
-  body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
+  if (aiText) { body.push(H('5. Nhận định, đề xuất chuyên sâu (AI hỗ trợ)')); String(aiText).split(String.fromCharCode(10)).forEach(function (l) { l = l.split('**').join('').trim(); while (l.charAt(0) === '#') l = l.slice(1); l = l.trim(); if (!l) return; if (l.charAt(0) === '-' || l.charAt(0) === '•' || l.charAt(0) === '*') body.push(B(l.slice(1).trim())); else body.push(P(l, { size: 13, ni: 1, al: J, after: 50 })); }); body.push(P('Nội dung do AI hỗ trợ soạn từ số liệu hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.', { it: 1, size: 12, before: 60, after: 80 })); } body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
   return new Document({ creator: 'Lục Hồng Kỳ', title: 'Báo cáo nhanh tình hình giải ngân ' + kN + ' ' + kindW + ' – kỳ ' + (P0.label || ''), styles: { default: { document: { run: { font: F, size: 28 } } } },
     sections: [{ properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } },
       headers: { default: new Header({ children: [new Paragraph({ alignment: C, children: [new TextRun({ children: [PageNumber.CURRENT], font: F, size: 26 })] })] }), first: new Header({ children: [new Paragraph({ children: [] })] }) }, children: body }] });
@@ -1492,17 +1492,17 @@ function pickUnits(names) {
     ov.addEventListener('click', e => { if (e.target === ov) done(null); });
   });
 }
-async function exportQuick() {
+async function exportQuick(pre, aiText) {
   const btn = document.getElementById('quickReportBtn');
   if (!state.hasData) { alert('Chưa có số liệu. Bấm "Cập nhật" rồi thử lại.'); return; }
   const names = state.units.filter(u => u.kind === 'commune' && u.p.all).map(u => u.name).sort((a, b) => a.localeCompare(b, 'vi'));
-  const picked = await pickUnits(names);
+  const picked = Array.isArray(pre) ? pre : await pickUnits(names);
   if (!picked) return;
   btn.disabled = true;
   try {
     await loadDocx();
     const data = reportData();
-    const doc = buildQuickDoc(window.docx, data, picked);
+    const doc = buildQuickDoc(window.docx, data, picked, Array.isArray(pre) ? aiText : '');
     const blob = await window.docx.Packer.toBlob(doc);
     const g = new Date(data.generatedAt), two = n => String(n).padStart(2, '0');
     const a = document.createElement('a');
@@ -1514,7 +1514,7 @@ async function exportQuick() {
     alert((e && e.message) || 'Không xuất được báo cáo nhanh.');
   } finally { btn.disabled = false; }
 }
-const qb = document.getElementById('quickReportBtn');
+window.__exportQuickWord = exportQuick; const qb = document.getElementById('quickReportBtn');
 if (qb) qb.addEventListener('click', exportQuick);
 })();
 </script>
