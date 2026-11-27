@@ -1464,7 +1464,7 @@ function pickUnits(names) {
       + '<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap">'
       + '<span style="margin-right:auto;font-size:13px">Đã chọn <b id="qrN">0</b></span>'
       + '<button type="button" id="qrClear" class="btn">Bỏ chọn</button><button type="button" id="qrCancel" class="btn">Hủy</button>'
-      + '<button type="button" id="qrAI" class="btn">Soạn nhận xét AI · quản trị</button><button type="button" id="qrOk" class="btn primary">Xuất Word</button></div></div>';
+      + '<button type="button" id="qrAI" class="btn">Xem báo cáo kèm nhận xét AI</button><button type="button" id="qrOk" class="btn primary">Xuất Word</button></div></div>';
     document.body.appendChild(ov);
     const order = [], boxes = () => Array.from(ov.querySelectorAll('#qrList input'));
     const sync = () => {
@@ -1486,7 +1486,7 @@ function pickUnits(names) {
     ov.querySelector('#qrCancel').onclick = () => done(null);
     ov.querySelector('#qrAI').onclick = () => {
       if (!order.length) { alert('Chọn ít nhất một xã, phường.'); return; }
-      if (submitAiQuickReport(order.slice())) done(null);
+      if (window.__showQuick) { window.__showQuick(order.slice(), true); done(null); }
     };
     ov.querySelector('#qrOk').onclick = () => { if (!order.length) { alert('Chọn ít nhất một xã, phường.'); return; } done(order.slice()); };
     ov.addEventListener('click', e => { if (e.target === ov) done(null); });
