@@ -17,13 +17,29 @@
     .chat{display:flex;flex-direction:column;min-height:450px}.messages{flex:1;min-height:280px;max-height:510px;overflow:auto;padding:12px;background:#f5f8f9;border-radius:10px}.bubble{max-width:92%;padding:11px 13px;margin:8px 0;border-radius:12px;white-space:pre-wrap;line-height:1.6}.bubble.user{margin-left:auto;background:#dff2f0}.bubble.assistant{background:white;border:1px solid var(--line)}.chat-form{display:flex;gap:8px;margin-top:12px}.chat-form input{flex:1;min-width:0}.footer{font-size:11px;color:var(--muted);margin-top:30px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
     @media(max-width:960px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}@media(max-width:600px){.shell{padding:0 13px}.header{padding:18px 0;align-items:start;flex-direction:column;gap:9px}.header h1{font-size:19px}.source-pill{padding:7px 11px}.intro{display:block}.actions{margin-top:12px}.card{padding:15px}.metric strong{font-size:20px}.fact-list{grid-template-columns:1fr 1fr}.bar-row{grid-template-columns:110px 1fr 80px}.rowline{grid-template-columns:minmax(0,1fr) 85px 75px;gap:5px;font-size:11px}.rowline b{font-size:11px}.toolbar .field{flex:1;min-width:135px}.chat-form{flex-wrap:wrap}.chat-form input{flex-basis:100%}}
     @media print{header,nav,.actions,.toolbar,.chat,.footer,.no-print{display:none!important}body{background:white}.shell{max-width:none;padding:0}.card{box-shadow:none;border:0;padding:0}.report{display:block!important}.report-title h2{font-size:20px}main{padding:0}section[data-panel]:not([data-panel="village"]){display:none!important}.detail-head{display:none}}
+    .pace-chart{margin:8px 0 15px}.pace-summary{display:flex;justify-content:space-between;gap:8px}
+    .pace-scale{height:11px;position:relative;margin:8px 0 5px;background:#e8eff1;border-radius:8px}
+    .pace-fill{display:block;height:100%;border-radius:8px;background:var(--teal)}
+    .pace-fill.late-fill,.segment.late-fill{background:var(--red)}
+    .pace-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:#213748}
+    .pace-marker.target{background:transparent;border-left:2px dashed #667782}
+    .pace-caption{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px}
+    .segments{display:flex;height:14px;border-radius:8px;overflow:hidden;background:#e8eff1;margin:10px 0}
+    .segment{background:var(--green)}.segment.pending{background:#bc842d}.segment.missing{background:#8799a4}
+    .distribution-legend{display:grid;gap:5px;margin:10px 0 16px;font-size:12px}
+    .distribution-legend span{display:flex;align-items:center;gap:8px}
+    .distribution-legend i{width:10px;height:10px;border-radius:2px}
+    .gap-list .bar-row{grid-template-columns:minmax(80px,1fr) minmax(30px,1fr) auto}
+    .gap-list a{color:var(--teal);font-weight:600;text-decoration:none}
+    .tax-share{display:block;color:var(--muted);font-size:11px;text-align:right}
+    @media print{.pace-chart{break-inside:avoid}.pace-scale,.pace-fill,.pace-marker{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
   </style>
 </head>
 <body>
 <header><div class="shell header"><div><div class="eyebrow">Cao Bằng · Điều hành ngân sách</div><h1>Theo dõi thu ngân sách nhà nước</h1><p>56 xã, phường · Số liệu nhập tại Apps Script, báo cáo tự cập nhật từ nguồn tổng hợp</p></div><div class="source-pill"><small>Số liệu lũy kế đến</small><strong id="asof">Đang tải…</strong></div></div></header>
 <nav><div class="shell nav" id="nav"><button data-tab="overview" class="active">Tổng quan</button><button data-tab="village">Báo cáo từng xã</button><button data-tab="tax">Khoản thu</button><button data-tab="assistant">Trợ lý AI</button></div></nav>
 <main class="shell"><div id="error" role="alert"></div>
-  <section data-panel="overview"><div class="intro"><div><h2>Tổng quan điều hành</h2><p>Đọc nhanh số thu, dự toán và các điểm cần theo dõi</p></div><div class="actions"><button class="btn" id="refresh">Làm mới số liệu</button><a class="btn" target="_blank" rel="noopener noreferrer" href="https://script.google.com/a/macros/we.edu.vn/s/AKfycbzeRDOPbTSjzF6ZGiwvddkiCeuDbdabQF9z3x63OoAEQVHMSavv2SLozFpBwstqeI4/exec">Mở Apps Script để nhập số</a></div></div><div class="grid kpis" id="kpis"></div><div class="grid two section"><div class="card"><h3>Tiến độ so với dự toán</h3><p class="sub" id="paceNote"></p><div id="pace"></div></div><div class="card"><h3>Đơn vị cần theo dõi</h3><p class="sub">Xếp theo mức thiếu so với tiến độ thời gian</p><div id="watch"></div></div></div><div class="grid two section"><div class="card"><h3>Khoản thu lớn toàn tỉnh</h3><p class="sub">Sắp theo số thu thực hiện; không cộng trùng các chỉ tiêu tổng</p><div id="topTax"></div></div><div class="card"><h3>Cách đọc số liệu</h3><div class="callout">Tỷ lệ hoàn thành = số thực hiện / dự toán HĐND. “Chậm tiến độ” chỉ có nghĩa tỷ lệ hoàn thành thấp hơn phần thời gian đã qua trong năm; đây không phải kết luận về nguyên nhân.</div><p class="note">Số cùng kỳ và cơ cấu từng xã chỉ hiển thị khi nguồn Apps Script đã xuất đủ các trường tương ứng.</p></div></div></section>
+  <section data-panel="overview"><div class="intro"><div><h2>Tổng quan điều hành</h2><p>Đọc nhanh số thu, dự toán và các điểm cần theo dõi</p></div><div class="actions"><button class="btn" id="refresh">Làm mới số liệu</button><a class="btn" target="_blank" rel="noopener noreferrer" href="https://script.google.com/a/macros/we.edu.vn/s/AKfycbzeRDOPbTSjzF6ZGiwvddkiCeuDbdabQF9z3x63OoAEQVHMSavv2SLozFpBwstqeI4/exec">Mở Apps Script để nhập số</a></div></div><div class="grid kpis" id="kpis"></div><div class="grid two section"><div class="card"><h3>Tiến độ so với dự toán</h3><p class="sub" id="paceNote"></p><div id="pace"></div></div><div class="card"><h3>Tiến độ thu nội địa của các xã, phường</h3><p class="sub">So với dự toán năm và tỷ lệ thời gian đã qua</p><div id="distribution"></div><div id="watch"></div></div></div><div class="grid two section"><div class="card"><h3>Khoản thu lớn toàn tỉnh</h3><p class="sub">Sắp theo số thu thực hiện; không cộng trùng các chỉ tiêu tổng</p><div id="topTax"></div></div><div class="card"><h3>Cách đọc số liệu</h3><div class="callout">Tỷ lệ hoàn thành = số thực hiện / dự toán HĐND. “Chậm tiến độ” chỉ có nghĩa tỷ lệ hoàn thành thấp hơn phần thời gian đã qua trong năm; đây không phải kết luận về nguyên nhân.</div><p class="note">Số cùng kỳ và cơ cấu từng xã chỉ hiển thị khi nguồn Apps Script đã xuất đủ các trường tương ứng.</p></div></div></section>
   <section data-panel="village" hidden><div class="detail-head"><div><h2>Báo cáo theo từng xã, phường</h2><p>Tra cứu, so sánh và in báo cáo riêng từng đơn vị</p></div><button class="btn no-print" id="printReport">In / lưu PDF xã đang chọn</button></div><div class="toolbar"><div class="field search"><label for="findVillage">Tìm đơn vị</label><input id="findVillage" placeholder="Nhập tên xã, phường…"></div><div class="field"><label for="pickVillage">Chọn xã, phường</label><select id="pickVillage"></select></div><div class="field"><label for="sortVillage">Sắp xếp danh sách</label><select id="sortVillage"><option value="low">Chậm tiến độ trước</option><option value="high">Số thu cao trước</option><option value="name">Theo tên</option></select></div></div><div class="card report" id="report"></div><div class="card section no-print"><h3>Danh sách 56 xã, phường</h3><p class="sub">Chọn tên đơn vị để xem báo cáo riêng</p><div class="table-wrap"><table><thead><tr><th>Đơn vị</th><th>Thu nội địa</th><th>Dự toán</th><th>Đạt dự toán</th><th>Đánh giá</th></tr></thead><tbody id="villageRows"></tbody></table></div></div></section>
   <section data-panel="tax" hidden><div class="intro"><div><h2>Phân tích các khoản thu</h2><p>Đơn vị: triệu đồng · Khoản thu cao được xếp theo số thực hiện</p></div><button class="btn primary" id="analyzeTax">✨ AI phân tích khoản thu cao</button></div><div class="grid two"><div class="card"><h3>10 khoản thu cao nhất</h3><div id="taxBars" class="mini-chart"></div></div><div class="card"><h3>Nhận định từ số liệu</h3><div id="taxInsights"></div><div class="callout" id="taxAI" hidden></div></div></div><div class="card section"><h3>Chi tiết theo sắc thuế</h3><div class="table-wrap"><table><thead><tr><th>Khoản thu</th><th>Thực hiện</th><th>Dự toán HĐND</th><th>Đạt dự toán</th><th>So tiến độ</th></tr></thead><tbody id="taxRows"></tbody></table></div></div></section>
   <section data-panel="assistant" hidden><div class="intro"><div><h2>Trợ lý phân tích AI</h2><p>Hỏi về tiến độ, xã hoặc khoản thu; câu trả lời dựa trên mốc số liệu đang công bố</p></div></div><div class="grid two"><div class="card chat"><h3>Hỏi đáp số liệu</h3><p class="sub" id="chatScope"></p><div class="messages" id="messages"><div class="bubble assistant">Bạn có thể hỏi: “Những xã nào chậm tiến độ?”, “Khoản thu nào lớn nhất?” hoặc “Đánh giá thu nội địa xã Bảo Lạc”.</div></div><form class="chat-form" id="chatForm"><input id="question" maxlength="500" required placeholder="Nhập câu hỏi về số thu…"><button class="btn primary" id="send">Gửi câu hỏi</button></form></div><div class="card"><h3>Gợi ý câu hỏi</h3><p class="sub">Chạm để điền nhanh</p><div class="actions" id="suggestions"><button class="btn" data-q="Đánh giá tiến độ thu nội địa của toàn tỉnh và những điểm cần chú ý.">Tiến độ toàn tỉnh</button><button class="btn" data-q="Những khoản thu có số thực hiện cao nhất và tỷ lệ đạt dự toán ra sao?">Khoản thu cao</button><button class="btn" data-q="Những xã, phường nào chậm so với tiến độ thời gian?">Xã chậm tiến độ</button></div><div class="callout">AI giúp tóm tắt và phân tích. Khi chưa có cùng kỳ hoặc chi tiết từng xã, AI sẽ nói rõ giới hạn dữ liệu. Kiểm tra con số trong bảng trước khi dùng cho văn bản chính thức.</div></div></div></section>
@@ -45,18 +61,80 @@ function render(){renderOverview();renderVillage();renderTax();if(location.hash&
 function metric(name,value,desc){return `<article class="card metric"><div class="label">${name}</div><strong>${fmt(value)} <small>triệu</small></strong><small>${desc}</small></article>`}
 function renderOverview(){const total=D.tongNSNN,nd=D.nd,xnk=D.xnk,xa=D.xa||[],withBudget=xa.filter(x=>x.dt>0),lag=withBudget.filter(x=>rate(x.th,x.dt)<D.tienDo);
  $('kpis').innerHTML=metric('Tổng thu NSNN trên địa bàn',total,'Bao gồm các khoản đóng góp theo biểu nguồn')+metric('Thu nội địa',nd.th,`${pct(rate(nd.th,nd.hd))} dự toán HĐND`)+metric('Thu xuất nhập khẩu',xnk.th,`${pct(rate(xnk.th,xnk.hd))} dự toán HĐND`)+`<article class="card metric"><div class="label">Xã, phường chậm tiến độ</div><strong>${lag.length} <small>/ ${withBudget.length} đơn vị</small></strong><small>So với ${pct(D.tienDo)} thời gian đã qua</small></article>`;
- $('paceNote').textContent=`Đến ${date(D.ngay)} đã qua ${pct(D.tienDo)} thời gian năm; vạch màu thể hiện mức đạt dự toán HĐND.`;
- $('pace').innerHTML=[['Thu nội địa',nd.th,nd.hd],['Thu XNK',xnk.th,xnk.hd],['Cân đối trừ đất, xổ số',D.canDoi?.truDat?.th,D.canDoi?.truDat?.hd]].map(([t,v,b])=>`<div class="rowline"><div><b>${t}</b><div class="track"><i style="width:${Math.min(100,rate(v,b)||0)}%"></i></div></div><div class="num">${pct(rate(v,b))}</div>${badge(rate(v,b))}</div>`).join('');
- const watch=lag.map(x=>({...x,gap:Math.max(0,x.dt*D.tienDo/100-x.th)})).sort((a,b)=>b.gap-a.gap).slice(0,6);$('watch').innerHTML=watch.length?watch.map(x=>`<div class="rowline"><b>${esc(x.ten)}</b><div class="num">${pct(rate(x.th,x.dt))}</div>${badge(rate(x.th,x.dt))}</div>`).join(''):'<p class="muted">Không có đơn vị chậm theo tiêu chí thời gian.</p>';
+ $('paceNote').textContent = `Mốc thời gian ${pct(D.tienDo)} · Vạch đứt là dự toán năm (100%).`;
+ const provinceMetrics = [
+   ['Thu nội địa', nd.th, nd.hd],
+   ['Thu XNK', xnk.th, xnk.hd],
+   ['Cân đối trừ đất, xổ số', D.canDoi?.truDat?.th, D.canDoi?.truDat?.hd]
+ ];
+ const scale = chartScale(provinceMetrics.map(([, value, budget]) => rate(value, budget)));
+ $('pace').innerHTML = provinceMetrics.map(([title, value, budget]) => paceChart(title, rate(value, budget), scale)).join('');
+ renderDistribution(xa, withBudget, lag);
+
  $('topTax').innerHTML=[...D.khoan].sort((a,b)=>b.th-a.th).slice(0,6).map(k=>`<div class="rowline"><b>${esc(k.ten)}</b><div class="num">${fmt(k.th)}</div>${badge(rate(k.th,k.hd))}</div>`).join('');}
+function chartScale(values) {
+  return Math.max(110, Math.ceil(Math.max(0, ...values) / 25) * 25);
+}
+
+function paceChart(title, completion, scale) {
+  if (completion == null) return `<p>${esc(title)} · Chưa có dự toán</p>`;
+  const days = Math.max(0, Math.min(100, D.tienDo));
+  const position = value => Math.max(0, Math.min(100, value / scale * 100));
+  return `<div class="pace-chart">
+    <div class="pace-summary"><b>${esc(title)}</b><strong>${pct(completion)}</strong></div>
+    <div class="pace-scale" role="img" aria-label="Thực hiện ${pct(completion)} dự toán, mốc thời gian ${pct(days)}, chỉ tiêu năm 100%">
+      <span class="pace-fill${completion < days ? ' late-fill' : ''}" style="width:${position(completion)}%"></span>
+      <i class="pace-marker" style="left:${position(days)}%" title="Thời gian đã qua ${pct(days)}"></i>
+      <i class="pace-marker target" style="left:${position(100)}%" title="Dự toán năm 100%"></i>
+    </div>
+    <div class="pace-caption"><span>0%</span><span>Thời gian đã qua ${pct(days)}</span><span>${scale}%</span></div>
+  </div>`;
+}
+
+function renderDistribution(villages, withBudget, lagging) {
+  const reached = withBudget.filter(x => x.th >= x.dt).length;
+  const groups = [
+    ['Đã đạt dự toán năm', reached, '', 'var(--green)'],
+    ['Đúng tiến độ, còn phải thu', withBudget.length - reached - lagging.length, 'pending', '#bc842d'],
+    ['Chậm so với thời gian', lagging.length, 'late-fill', 'var(--red)'],
+    ['Chưa có dự toán', villages.length - withBudget.length, 'missing', '#8799a4']
+  ];
+  const summary = groups.map(([label, count]) => `${label}: ${count}`).join('; ');
+  $('distribution').innerHTML = `<div class="segments" role="img" aria-label="${summary}">
+    ${groups.map(([, count, style]) => `<i class="segment ${style}" style="width:${100 * count / Math.max(1, villages.length)}%"></i>`).join('')}
+    </div><div class="distribution-legend">
+    ${groups.filter(([, count, style]) => count || style !== 'missing').map(([label, count,,color]) =>
+      `<span><i style="background:${color}"></i><b>${count}</b> ${label}</span>`).join('')}
+    </div>`;
+  const gaps = withBudget.filter(x => x.th < x.dt).map(x => ({name: x.ten, value: x.dt - x.th}))
+    .sort((a,b) => b.value - a.value).slice(0, 6);
+  const max = gaps[0]?.value || 1;
+  $('watch').innerHTML = gaps.length ? `<div class="gap-list">
+    <h3>Còn phải thu để đạt dự toán năm</h3><p class="sub">Các đơn vị còn thiếu nhiều nhất · Triệu đồng</p>
+    ${gaps.map(x => `<div class="bar-row">
+      <a href="#village" data-gap-village="${esc(x.name)}">${esc(x.name)}</a>
+      <div class="track" aria-hidden="true"><i style="width:${100 * x.value / max}%"></i></div>
+      <b class="num">${fmt(x.value)}</b>
+    </div>`).join('')}</div>` : '';
+  $('watch').querySelectorAll('[data-gap-village]').forEach(link => {
+    link.onclick = event => {
+      event.preventDefault();
+      selected = link.dataset.gapVillage;
+      renderVillage();
+      go('village');
+      window.scrollTo({top: 0});
+    };
+  });
+}
+
 function renderVillage(){const xa=D.xa||[];const pick=$('pickVillage');pick.innerHTML=xa.map(x=>`<option value="${esc(x.ten)}">${esc(x.ten)}</option>`).join('');pick.value=selected;pick.onchange=()=>{selected=pick.value;renderVillage();};$('findVillage').oninput=renderVillageRows;$('sortVillage').onchange=renderVillageRows;renderVillageRows();const x=xa.find(z=>z.ten===selected);if(!x)return;
  const r=rate(x.th,x.dt),ck=x.ck,net=x.K,netB=x.budgetK,top=(x.khoan||[]).filter(k=>Number.isFinite(k.th)&&k.th>0).sort((a,b)=>b.th-a.th),paceNeed=x.dt>0?Math.max(0,x.dt*D.tienDo/100-x.th):null;
  let notes=[`Thu nội địa đạt ${pct(r)} dự toán HĐND${x.dt>0?`, ${label(r)[0].toLowerCase()}`:'. Chưa có dự toán để đánh giá tiến độ'}.`,x.dt>0?(x.th>=x.dt?`Vượt dự toán ${fmt(x.th-x.dt)} triệu đồng.`:`Còn ${fmt(x.dt-x.th)} triệu đồng để đạt dự toán năm.`):'Chưa có mức dự toán hợp lệ.',paceNeed>0?`Để ngang tiến độ thời gian, cần thêm ${fmt(paceNeed)} triệu đồng.`:'',ck!=null&&ck>0?`So cùng kỳ: ${x.th>=ck?'tăng':'giảm'} ${fmt(Math.abs(x.th-ck))} triệu đồng (${pct(Math.abs((x.th/ck-1)*100))}).`:'Chưa có số cùng kỳ đúng ngày chốt để so sánh.'].filter(Boolean);
- $('report').innerHTML=`<div class="report-title"><small>BÁO CÁO THU NGÂN SÁCH THEO ĐƠN VỊ</small><h2>${esc(x.ten)}</h2><p>Lũy kế đến ${date(D.ngay)} · Đơn vị: triệu đồng</p></div><div class="fact-list"><div class="fact"><small>Thu nội địa</small><strong>${fmt(x.th)}</strong></div><div class="fact"><small>Dự toán HĐND</small><strong>${fmt(x.dt)}</strong></div><div class="fact"><small>Đạt dự toán</small><strong>${pct(r)}</strong></div><div class="fact"><small>Thu cân đối trừ đất, xổ số</small><strong>${fmt(net)}</strong></div><div class="fact"><small>Dự toán cân đối</small><strong>${fmt(netB)}</strong></div><div class="fact"><small>Thu cùng kỳ</small><strong>${fmt(ck)}</strong></div></div><h3>Đánh giá tiến độ</h3>${badge(r)}<ul class="bullets">${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><h3 style="margin-top:20px">Các khoản thu cao tại đơn vị</h3>${top.length?`<div class="table-wrap"><table><thead><tr><th>Khoản thu</th><th>Thực hiện</th><th>Tỷ trọng trong nội địa</th></tr></thead><tbody>${top.slice(0,8).map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${pct(rate(k.th,x.th))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Nguồn hiện chưa xuất cơ cấu sắc thuế theo xã; không thể xác định khoản thu cao riêng của đơn vị.</p>'}<div class="actions no-print" style="margin-top:16px"><button class="btn primary" id="analyzeVillage">✨ AI nhận định xã này</button></div><div class="callout" id="villageAI" hidden></div><p class="note">Nguồn dữ liệu tổng hợp từ Apps Script; tỷ lệ tiến độ chỉ là phép so với thời gian đã qua, không thay cho phân tích nguyên nhân.</p>`;
+ $('report').innerHTML=`<div class="report-title"><small>BÁO CÁO THU NGÂN SÁCH THEO ĐƠN VỊ</small><h2>${esc(x.ten)}</h2><p>Lũy kế đến ${date(D.ngay)} · Đơn vị: triệu đồng</p></div><div class="fact-list"><div class="fact"><small>Thu nội địa</small><strong>${fmt(x.th)}</strong></div><div class="fact"><small>Dự toán HĐND</small><strong>${fmt(x.dt)}</strong></div><div class="fact"><small>Đạt dự toán</small><strong>${pct(r)}</strong></div><div class="fact"><small>Thu cân đối trừ đất, xổ số</small><strong>${fmt(net)}</strong></div><div class="fact"><small>Dự toán cân đối</small><strong>${fmt(netB)}</strong></div><div class="fact"><small>Thu cùng kỳ</small><strong>${fmt(ck)}</strong></div></div><h3>Đánh giá tiến độ</h3>${badge(r)}${r == null ? '' : paceChart('Thu nội địa so với dự toán HĐND', r, chartScale([r]))}<ul class="bullets">${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><h3 style="margin-top:20px">Các khoản thu cao tại đơn vị</h3>${top.length?`<div class="table-wrap"><table><thead><tr><th>Khoản thu</th><th>Thực hiện</th><th>Tỷ trọng trong nội địa</th></tr></thead><tbody>${top.slice(0,8).map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${pct(rate(k.th,x.th))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Nguồn hiện chưa xuất cơ cấu sắc thuế theo xã; không thể xác định khoản thu cao riêng của đơn vị.</p>'}<div class="actions no-print" style="margin-top:16px"><button class="btn primary" id="analyzeVillage">✨ AI nhận định xã này</button></div><div class="callout" id="villageAI" hidden></div><p class="note">Nguồn dữ liệu tổng hợp từ Apps Script; tỷ lệ tiến độ chỉ là phép so với thời gian đã qua, không thay cho phân tích nguyên nhân.</p>`;
  $('analyzeVillage').onclick=()=>askAI({mode:'village',village:x.ten,question:`Đánh giá tiến độ thu nội địa của ${x.ten}, các khoản thu cao nếu có, và nêu hai điểm cần theo dõi.`},$('villageAI'),$('analyzeVillage'));
 }
 function renderVillageRows(){if(!D)return;const q=$('findVillage').value.trim().toLocaleLowerCase('vi'),sort=$('sortVillage').value;let list=D.xa.filter(x=>x.ten.toLocaleLowerCase('vi').includes(q));list.sort((a,b)=>sort==='name'?a.ten.localeCompare(b.ten,'vi'):sort==='high'?b.th-a.th:(rate(a.th,a.dt)??Infinity)-(rate(b.th,b.dt)??Infinity));$('villageRows').innerHTML=list.map(x=>`<tr><td><a href="#village" data-village="${esc(x.ten)}">${esc(x.ten)}</a></td><td>${fmt(x.th)}</td><td>${fmt(x.dt)}</td><td>${pct(rate(x.th,x.dt))}</td><td>${badge(rate(x.th,x.dt))}</td></tr>`).join('');document.querySelectorAll('[data-village]').forEach(a=>a.onclick=e=>{e.preventDefault();selected=a.dataset.village;renderVillage();go('village');window.scrollTo({top:0,behavior:'smooth'})});}
-function renderTax(){let ks=[...D.khoan].sort((a,b)=>b.th-a.th),max=ks[0]?.th||1;$('taxBars').innerHTML=ks.slice(0,10).map(k=>`<div class="bar-row"><span title="${esc(k.ten)}">${esc(k.ten)}</span><div class="track"><i style="width:${100*k.th/max}%"></i></div><b class="num">${fmt(k.th)}</b></div>`).join('');$('taxRows').innerHTML=ks.map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${fmt(k.hd)}</td><td>${pct(rate(k.th,k.hd))}</td><td>${badge(rate(k.th,k.hd))}</td></tr>`).join('');const leaders=ks.slice(0,3);$('taxInsights').innerHTML=`<ul class="bullets"><li>Ba khoản thu có số thực hiện cao nhất: ${leaders.map(k=>`${esc(k.ten)} (${fmt(k.th)} triệu)`).join('; ')}.</li><li>${ks.filter(k=>rate(k.th,k.hd)<D.tienDo).length} khoản thu có tỷ lệ đạt dự toán thấp hơn tiến độ thời gian ${pct(D.tienDo)}.</li><li>Thu nội địa toàn tỉnh ${fmt(D.nd.th)} triệu đồng; từng khoản trong bảng là thành phần của số này.</li></ul>`;$('analyzeTax').onclick=()=>askAI({mode:'province',question:'Phân tích các khoản thu nội địa có số thu cao nhất, mức đạt dự toán và khoản cần theo dõi; nêu số liệu và không suy đoán nguyên nhân.'},$('taxAI'),$('analyzeTax'))}
+function renderTax(){let ks=[...D.khoan].sort((a,b)=>b.th-a.th),max=ks[0]?.th||1;$('taxBars').innerHTML=ks.slice(0,10).map(k=>`<div class="bar-row"><span title="${esc(k.ten)}">${esc(k.ten)}</span><div class="track"><i style="width:${100*Math.max(0,k.th)/max}%"></i></div><b class="num">${fmt(k.th)}<small class="tax-share">${pct(rate(k.th,D.nd.th))} nội địa</small></b></div>`).join('');$('taxRows').innerHTML=ks.map(k=>`<tr><td>${esc(k.ten)}</td><td>${fmt(k.th)}</td><td>${fmt(k.hd)}</td><td>${pct(rate(k.th,k.hd))}</td><td>${badge(rate(k.th,k.hd))}</td></tr>`).join('');const leaders=ks.slice(0,3);$('taxInsights').innerHTML=`<ul class="bullets"><li>Ba khoản thu có số thực hiện cao nhất: ${leaders.map(k=>`${esc(k.ten)} (${fmt(k.th)} triệu)`).join('; ')}.</li><li>${ks.filter(k=>k.hd>0&&rate(k.th,k.hd)<D.tienDo).length} khoản thu có tỷ lệ đạt dự toán thấp hơn tiến độ thời gian ${pct(D.tienDo)}.</li><li>Thu nội địa toàn tỉnh ${fmt(D.nd.th)} triệu đồng; từng khoản trong bảng là thành phần của số này.</li></ul>`;$('analyzeTax').onclick=()=>askAI({mode:'province',question:'Phân tích các khoản thu nội địa có số thu cao nhất, mức đạt dự toán và khoản cần theo dõi; nêu số liệu và không suy đoán nguyên nhân.'},$('taxAI'),$('analyzeTax'))}
 async function askAI(payload, box, button) {
   if (!D) return;
   box.hidden = false;
