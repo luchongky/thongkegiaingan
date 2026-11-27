@@ -77,7 +77,7 @@ function collect(scope) {
 
 /* ---------- thống kê theo từng nguồn vốn ---------- */
 function sourceStats(scope) {
-  return (PROGRAMS || []).filter(function (p) { return p.key !== 'all'; }).map(function (p) {
+  return (PROGRAMS || []).filter(function (p) { return p.key !== 'all' && p.key !== 'noV'; }).map(function (p) {
     var gi = 0, gn = 0;
     (state.units || []).forEach(function (u) {
       if (!inScope(u, scope)) return;
