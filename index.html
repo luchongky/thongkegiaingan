@@ -1154,7 +1154,7 @@ function qrMainChart(rows, avg, time, labPrev, title) {
   labels.forEach(([t, x, y]) => { g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(x - 3, y - 9, g.measureText(t).width + 6, 18); g.fillStyle = '#162f28'; g.fillText(t, x, y); });
   return { data: c.toDataURL('image/png'), w: W, h: H };
 }
-function buildQuickDoc(D, data, picked, aiText) {
+function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt) { const o = { nd: [], kn: [] }; let cur = null; String(txt || '').split(String.fromCharCode(10)).forEach(function (l) { l = l.split('**').join('').trim(); while (l.charAt(0) === '#') l = l.slice(1); l = l.trim(); if (!l) return; const up = l.toUpperCase(); if (l.length < 40 && up.indexOf('NHẬN ĐỊNH') === 0) { cur = o.nd; return; } if (l.length < 40 && up.indexOf('KIẾN NGHỊ') === 0) { cur = o.kn; return; } if (cur) cur.push((l.charAt(0) === '-' || l.charAt(0) === '•' || l.charAt(0) === '*') ? l.slice(1).trim() : l); }); return o; })(aiText);
   const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ShadingType, VerticalAlign, ImageRun, Header, PageNumber } = D;
   const F = 'Times New Roman', C = AlignmentType.CENTER, R = AlignmentType.RIGHT, L = AlignmentType.LEFT, J = AlignmentType.JUSTIFIED;
   const n0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
@@ -1257,7 +1257,7 @@ function buildQuickDoc(D, data, picked, aiText) {
     const parts = [n + ' đạt ' + pc(r) + ', đã giải ngân ' + money(u.disbursed || 0) + ' trên tổng dự toán ' + money(u.planned || 0) + ', còn lại ' + money(left) + '.'];
     if (Math.abs(r - BQ.x) < 0.0005) parts.push('Kết quả tương đương bình quân ' + bqName + ' (' + pc(BQ.x) + ').');
     else parts.push('Tỷ lệ ' + (r > BQ.x ? 'cao hơn ' : 'thấp hơn ') + bqName + ' ' + Math.abs((r - BQ.x) * 100).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' điểm %.');
-    parts.push('So với tiến độ thời gian của năm, đơn vị đang ' + (r >= TIME ? 'bám sát hoặc cao hơn' : 'chậm hơn') + ' ' + pc(TIME) + ' thời gian đã qua.');
+    parts.push('So với tiến độ thời gian của năm (' + pc(TIME) + '), tỷ lệ giải ngân ' + (r >= TIME ? 'bám sát hoặc cao hơn' : 'thấp hơn ' + Math.abs((r - TIME) * 100).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' điểm %') + '.');
     const w = weak(u);
     if (w.length) parts.push('Nguồn cần tập trung rà soát: ' + qrJoin(w) + '.');
     if (r < 0.3) parts.push('Đây là nhóm cần ưu tiên cao, vì phần kinh phí chưa giải ngân còn lớn so với kết quả đạt được.');
@@ -1281,7 +1281,7 @@ function buildQuickDoc(D, data, picked, aiText) {
   const worst = lo.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, 2);
   const k1 = '**Kết quả:** ' + kN + ' ' + kindW + ' đạt **' + pc(SUM.x) + '** (' + ty(SUM.d) + '/' + ty(SUM.p).replace(' tỷ đồng', '') + ' tỷ), ' + cmpAvg(SUM.x, BQ.x) + ' bình quân tỉnh (' + pc(BQ.x) + '); đã qua ' + pc(TIME) + ' thời gian năm.';
   const k2 = '**Cần chú ý:** ' + (worst.length ? worst.map(u => nm(u.name) + ' (' + pc(ratio(u)) + ', hạng ' + rankOf(u) + '/' + N + (weak(u).length ? '; chậm ' + qrJoin(weak(u)) : '') + (leaderOf(u.name) ? '; ' + leaderOf(u.name) + ' phụ trách' : '') + ')').join('; ') : 'không có đơn vị thấp hơn bình quân tỉnh') + (decU.length ? '; ' + qrJoin(decU.map(x => nm(x.u.name))) + ' giảm số giải ngân so với kỳ trước' : '') + '.';
-  const k3 = '**Kiến nghị:** ' + s5.slice(0, 2).map((t, i) => (i ? lowFirst(t) : t).replace(/\.$/, '')).join('; ') + '.';
+  const k3 = '**Kiến nghị:** ' + s5.slice(0, 2).map((t, i) => (t).replace(/\.$/, '')).join('; ') + '.';
   const kp = t => P(t, { size: 13, ni: 1, al: J, after: 40, line: 276 });
   body.push(new Table({ width: { size: TW, type: WidthType.DXA }, columnWidths: [TW],
     borders: { top: LINE, bottom: LINE, left: LINE, right: LINE, insideHorizontal: LINE, insideVertical: LINE },
@@ -1327,8 +1327,8 @@ function buildQuickDoc(D, data, picked, aiText) {
   body.push(H('1.1. Nhận định sâu theo đơn vị'));
   body.push(P('Nhận định dưới đây kết hợp tỷ lệ giải ngân, so sánh với bình quân các xã, phường, tiến độ thời gian của năm, nguồn vốn có tỷ lệ thấp, phần kinh phí còn lại và tình trạng gửi báo cáo:', { it: 1, size: 12, ni: 1, al: J, after: 60 }));
   const assessmentLimit = 24;
-  byR.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, assessmentLimit).forEach(u => body.push(B(unitAssessment(u))));
-  if (byR.length > assessmentLimit) body.push(B('Các đơn vị còn lại được đánh giá theo cùng nguyên tắc; đề nghị đối chiếu bảng số liệu chi tiết để xác định nguồn vốn và mốc xử lý cụ thể.'));
+  if (aiParts.nd.length) aiParts.nd.forEach(t => body.push(B(t))); else byR.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, assessmentLimit).forEach(u => body.push(B(unitAssessment(u))));
+  if (!aiParts.nd.length && byR.length > assessmentLimit) body.push(B('Các đơn vị còn lại được đánh giá theo cùng nguyên tắc; đề nghị đối chiếu bảng số liệu chi tiết để xác định nguồn vốn và mốc xử lý cụ thể.'));
   // ---- 2. Theo nguồn vốn (bảng tô màu) ----
   body.push(H('2. Tỷ lệ giải ngân theo nguồn vốn'));
   const cw = Math.floor((TW - 2600) / (sel.length + 1)), widths2 = [TW - cw * (sel.length + 1)].concat(sel.map(() => cw), [cw]);
@@ -1354,18 +1354,18 @@ function buildQuickDoc(D, data, picked, aiText) {
   if (pend.length) s4.push(qrJoin(pend.map(nm)) + ' chưa gửi; ' + (closed ? 'số liệu trên là số đơn vị đang nhập tại thời điểm chốt kỳ.' : 'số liệu trên là số đang nhập, có thể thay đổi đến hạn chốt ' + deadline + '.'));
   else s4.push('cả ' + two(sel.length - full.length) + ' đơn vị phải báo cáo đã gửi báo cáo kỳ này.');
   if (full.length) s4.push(qrJoin(full.map(nm)) + ' đã giải ngân 100% kinh phí được giao, không phải tiếp tục cập nhật số liệu nên không tính vào số đơn vị chưa gửi.');
-  body.push(B(s4.join('. ').replace(/^./, c => c.toUpperCase())));
+  body.push(B(s4.map(x => x.charAt(0).toUpperCase() + x.slice(1)).join('. ')));
   // ---- 4. Đề xuất, kiến nghị ----
   body.push(H('4. Đề xuất, kiến nghị đối với đơn vị'));
-  body.push(P('Đề nghị các đơn vị thực hiện các nội dung dưới đây, cập nhật kết quả và khó khăn, vướng mắc vào kỳ báo cáo tiếp theo:', { size: 13, ni: 1, al: J, after: 50 }));
+  body.push(P((sel.length > 1 ? 'Đề nghị các đơn vị' : 'Đề nghị đơn vị') + ' thực hiện các nội dung dưới đây, cập nhật kết quả và khó khăn, vướng mắc vào kỳ báo cáo tiếp theo:', { size: 13, ni: 1, al: J, after: 50 }));
   s5.forEach(t => body.push(B(t)));
   body.push(P('Kiến nghị cụ thể theo đơn vị', { bold: 1, ni: 1, al: L, size: 13, before: 100, after: 50, kn: 1 }));
   const adviceRows = sel.slice().sort((a, b) => (ratio(a) == null ? -1 : ratio(a)) - (ratio(b) == null ? -1 : ratio(b)));
   const adviceLimit = 24;
-  adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
-  if (adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
+  if (aiParts.kn.length) aiParts.kn.forEach(t => body.push(B(t))); else adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
+  if (!aiParts.kn.length && adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
   body.push(P('Đề nghị đơn vị chịu trách nhiệm về tính đầy đủ, chính xác và kịp thời của số liệu; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
-  if (aiText) { body.push(H('5. Nhận định, đề xuất chuyên sâu (AI hỗ trợ)')); String(aiText).split(String.fromCharCode(10)).forEach(function (l) { l = l.split('**').join('').trim(); while (l.charAt(0) === '#') l = l.slice(1); l = l.trim(); if (!l) return; if (l.charAt(0) === '-' || l.charAt(0) === '•' || l.charAt(0) === '*') body.push(B(l.slice(1).trim())); else body.push(P(l, { size: 13, ni: 1, al: J, after: 50 })); }); body.push(P('Nội dung do AI hỗ trợ soạn từ số liệu hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.', { it: 1, size: 12, before: 60, after: 80 })); } body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
+  if (aiParts.nd.length || aiParts.kn.length) body.push(P('Các nhận định, kiến nghị ở mục 1.1 và mục 4 do AI hỗ trợ soạn trên cơ sở số liệu và quy tắc của hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.', { it: 1, size: 12, before: 60, after: 80 })); body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
   return new Document({ creator: 'Lục Hồng Kỳ', title: 'Báo cáo nhanh tình hình giải ngân ' + kN + ' ' + kindW + ' – kỳ ' + (P0.label || ''), styles: { default: { document: { run: { font: F, size: 28 } } } },
     sections: [{ properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } },
       headers: { default: new Header({ children: [new Paragraph({ alignment: C, children: [new TextRun({ children: [PageNumber.CURRENT], font: F, size: 26 })] })] }), first: new Header({ children: [new Paragraph({ children: [] })] }) }, children: body }] });
