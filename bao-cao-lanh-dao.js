@@ -910,9 +910,9 @@ function showQuick(picked, useAi) {
 }
 
 /* ---------- hộp chọn đơn vị ---------- */
-function openQuickPicker() {
+function openQuickPicker(pre) {
   var old = document.getElementById('quickViewPicker');
-  if (old) { old.remove(); return; }
+  if (old) { old.remove(); if (!Array.isArray(pre)) return; }
   var rows = allRows().sort(function (a, b) { return a.name.localeCompare(b.name, 'vi'); });
 
   var wrap = document.createElement('div');
@@ -1012,6 +1012,7 @@ function openQuickPicker() {
     list.appendChild(lab);
   });
   card.appendChild(list);
+  if (Array.isArray(pre)) { var preSet = {}; pre.forEach(function (n) { preSet[n] = 1; }); list.querySelectorAll('input[type=checkbox]').forEach(function (cb) { cb.checked = !!preSet[cb.value]; }); }
 
   search.addEventListener('input', function () {
     var q = search.value.toLowerCase();
@@ -1091,7 +1092,7 @@ window.openQuickViewReport = openQuickPicker;
 
 /* Chặn nút "Báo cáo nhanh" sẵn có: bấm 1 cái là hiện báo cáo, không tải file.
    Nút "Tải bản Word" trong hộp chọn vẫn gọi lại chức năng xuất Word gốc. */
-window.__showQuick = showQuick; function quickStamp() { var g = new Date(state.generatedAt || Date.now()), p = function (n) { return String(n).padStart(2, '0'); }; var closed = !!(state.cur && state.cur.period && state.cur.period.closed); return 'số liệu ' + (closed ? 'chốt' : 'tạm tính, kỳ chưa chốt') + ' đến ' + p(g.getHours()) + ':' + p(g.getMinutes()) + ' ngày ' + p(g.getDate()) + '/' + p(g.getMonth() + 1) + '/' + g.getFullYear(); } function quickSources(names) { var set = {}; names.forEach(function (n) { set[n] = 1; }); var com = state.units.filter(function (u) { return u.kind === 'commune' && u.p && u.p.all; }); var keys = [['I', 'I. Dự toán đầu năm'], ['II', 'II. Chương trình MTQG'], ['III', 'III. Bổ sung có mục tiêu'], ['IV', 'IV. KH+CN (NQ 57-NQ/TW)'], ['V', 'V. Dự phòng ngân sách']]; function pct(p, d) { return p > 0 ? Math.round(d / p * 1000) / 10 : null; } var bq = {}, tp = 0, td = 0; com.forEach(function (u) { tp += u.p.all[0]; td += u.p.all[1]; }); keys.forEach(function (k) { var p = 0, d = 0; com.forEach(function (u) { var a = u.p[k[0]]; if (a) { p += a[0]; d += a[1]; } }); bq[k[1]] = { duToan: Math.round(p), giaiNgan: Math.round(d), tyLe: pct(p, d) }; }); return { ghiChu: 'Số liệu từng nguồn vốn của từng đơn vị (triệu đồng); binhQuan56Xa là bình quân gộp của 56 xã, phường theo từng nguồn', binhQuan56Xa: Object.assign({ tongCacNguon: { duToan: Math.round(tp), giaiNgan: Math.round(td), tyLe: pct(tp, td) } }, bq), theoDonVi: com.filter(function (u) { return set[u.name]; }).map(function (u) { var o = { ten: u.name }; keys.forEach(function (k) { var a = u.p[k[0]]; if (a && a[0] > 0) o[k[1]] = { duToan: Math.round(a[0]), giaiNgan: Math.round(a[1]), conLai: Math.round(a[0] - a[1]), tyLe: pct(a[0], a[1]) }; }); return o; }) }; } function quickSourcesV2(names, tdtg) {
+window.__showQuick = showQuick; window.__openQuickPicker = openQuickPicker; function quickStamp() { var g = new Date(state.generatedAt || Date.now()), p = function (n) { return String(n).padStart(2, '0'); }; var closed = !!(state.cur && state.cur.period && state.cur.period.closed); return 'số liệu ' + (closed ? 'chốt' : 'tạm tính, kỳ chưa chốt') + ' đến ' + p(g.getHours()) + ':' + p(g.getMinutes()) + ' ngày ' + p(g.getDate()) + '/' + p(g.getMonth() + 1) + '/' + g.getFullYear(); } function quickSources(names) { var set = {}; names.forEach(function (n) { set[n] = 1; }); var com = state.units.filter(function (u) { return u.kind === 'commune' && u.p && u.p.all; }); var keys = [['I', 'I. Dự toán đầu năm'], ['II', 'II. Chương trình MTQG'], ['III', 'III. Bổ sung có mục tiêu'], ['IV', 'IV. KH+CN (NQ 57-NQ/TW)'], ['V', 'V. Dự phòng ngân sách']]; function pct(p, d) { return p > 0 ? Math.round(d / p * 1000) / 10 : null; } var bq = {}, tp = 0, td = 0; com.forEach(function (u) { tp += u.p.all[0]; td += u.p.all[1]; }); keys.forEach(function (k) { var p = 0, d = 0; com.forEach(function (u) { var a = u.p[k[0]]; if (a) { p += a[0]; d += a[1]; } }); bq[k[1]] = { duToan: Math.round(p), giaiNgan: Math.round(d), tyLe: pct(p, d) }; }); return { ghiChu: 'Số liệu từng nguồn vốn của từng đơn vị (triệu đồng); binhQuan56Xa là bình quân gộp của 56 xã, phường theo từng nguồn', binhQuan56Xa: Object.assign({ tongCacNguon: { duToan: Math.round(tp), giaiNgan: Math.round(td), tyLe: pct(tp, td) } }, bq), theoDonVi: com.filter(function (u) { return set[u.name]; }).map(function (u) { var o = { ten: u.name }; keys.forEach(function (k) { var a = u.p[k[0]]; if (a && a[0] > 0) o[k[1]] = { duToan: Math.round(a[0]), giaiNgan: Math.round(a[1]), conLai: Math.round(a[0] - a[1]), tyLe: pct(a[0], a[1]) }; }); return o; }) }; } function quickSourcesV2(names, tdtg) {
   var KEYS = [['I', 'I. Dự toán đầu năm'], ['II', 'II. Vốn Chương trình MTQG'], ['III', 'III. Bổ sung có mục tiêu'],
               ['IV', 'IV. KH&CN, chuyển đổi số (NQ 57-NQ/TW)'], ['V', 'V. Dự phòng ngân sách']];
   var MT = { '1': 'CTMTQG xây dựng NTM, giảm nghèo bền vững và phát triển KT-XH vùng ĐBDTTS&MN', '2': 'CTMTQG về phát triển văn hóa', '3': 'CTMTQG phòng, chống ma túy' };
