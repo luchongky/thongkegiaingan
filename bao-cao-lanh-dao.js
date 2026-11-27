@@ -483,7 +483,7 @@ function openMenu() {
 
   var aiRow = document.createElement('label');
   aiRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 20–60 giây, mỗi lần dùng trừ 1 lượt AI trong tuần. Không áp dụng cho Mục VI.</span></span>';
+  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 20–60 giây. Không áp dụng cho Mục VI.</span></span>';
   card.appendChild(aiRow);
 
   SCOPES.forEach(function (s) {
@@ -1005,7 +1005,7 @@ function openQuickPicker() {
 
   var aiLab = document.createElement('label');
   aiLab.style.cssText = 'display:flex;gap:7px;align-items:flex-start;margin-top:10px;padding:7px 9px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 20–60 giây, trừ 1 lượt AI trong tuần)</span></span>';
+  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 20–60 giây)</span></span>';
   card.appendChild(aiLab);
 
   function count() {
