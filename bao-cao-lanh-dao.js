@@ -615,9 +615,30 @@ function allRows() {
       gi: gi, gn: gn, con: gi - gn, tl: pc(gn, gi),
       delta: pc(gn, gi) - ptl,
       giam: (Number(b[1]) || 0) > 0 && gn < (Number(b[1]) || 0) - 0.0001,
-      leader: leaderOf(u.name)
+      leader: leaderOf(u.name),
+      src: srcOf(u)
     };
   }).filter(function (r) { return r.gi > 0; });
+}
+
+/* Số liệu từng nguồn vốn của một đơn vị (I–V): [dự toán, đã giải ngân] */
+var SRC_LABELS = [
+  ['I', 'I. Dự toán đầu năm'],
+  ['II', 'II. Chương trình mục tiêu quốc gia'],
+  ['III', 'III. Bổ sung có mục tiêu'],
+  ['IV', 'IV. Sự nghiệp khoa học công nghệ (NQ 57-NQ/TW)'],
+  ['V', 'V. Dự phòng ngân sách']
+];
+function srcOf(u) {
+  var out = [];
+  SRC_LABELS.forEach(function (x) {
+    var a = (u.p || {})[x[0]];
+    if (!a) return;
+    var gi = Number(a[0]) || 0, gn = Number(a[1]) || 0;
+    if (gi === 0 && gn === 0) return;
+    out.push({ key: x[0], label: x[1], gi: gi, gn: gn, con: gi - gn, tl: pc(gn, gi) });
+  });
+  return out;
 }
 
 function timePct() {
@@ -693,6 +714,31 @@ function quickDetail(rows) {
          '<td>' + esc2(r.leader || '—') + '</td></tr>';
   });
   return h + '</tbody></table>';
+}
+
+/* Chi tiết từng nguồn vốn của từng đơn vị — mỗi đơn vị một khối, không giới hạn số trang */
+function quickBySource(rows) {
+  var h = '';
+  rows.forEach(function (r, i) {
+    var cls = r.tl < 50 ? 'lo' : r.tl >= 90 ? 'hi' : '';
+    h += '<table class="t-src"><thead>' +
+         '<tr class="uh"><th colspan="5">' + (i + 1) + '. ' + esc2(r.name) +
+           ' <span class="uh-s">· Tổng: ' + n0(r.gn) + ' / ' + n0(r.gi) + ' · <span class="' + cls + '">' + pcTxt(r.tl) + '</span>' +
+           (r.leader ? ' · Lãnh đạo: ' + esc2(r.leader) : '') + '</span></th></tr>' +
+         '<tr class="ch"><th>Nguồn vốn</th><th class="r">Dự toán</th><th class="r">Đã giải ngân</th><th class="r">Còn lại</th><th class="r">Tỷ lệ</th></tr>' +
+         '</thead><tbody>';
+    if (!r.src.length) {
+      h += '<tr><td colspan="5" class="c">Chưa có số liệu theo nguồn vốn</td></tr>';
+    } else {
+      r.src.forEach(function (x) {
+        var c = x.gi <= 0 ? '' : x.tl < 50 ? 'lo' : x.tl >= 90 ? 'hi' : '';
+        h += '<tr><td>' + esc2(x.label) + '</td><td class="r">' + n0(x.gi) + '</td><td class="r">' + n0(x.gn) + '</td>' +
+             '<td class="r">' + n0(x.con) + '</td><td class="r b ' + c + '">' + (x.gi > 0 ? pcTxt(x.tl) : '—') + '</td></tr>';
+      });
+    }
+    h += '</tbody></table>';
+  });
+  return h;
 }
 
 function buildQuickHtml(picked) {
@@ -776,10 +822,30 @@ function buildQuickHtml(picked) {
   h += '<div style="margin-top:7px"><div class="sec">Chi tiết từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
        quickDetail(rows) + '</div>';
 
+  h += '<div class="pb"></div><div class="sec">Chi tiết từng nguồn vốn của từng đơn vị (đơn vị tính: triệu đồng)</div>' +
+       quickBySource(rows);
+
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. ' +
        'Cột "So kỳ trước" tính bằng điểm phần trăm tỷ lệ giải ngân.</div>';
 
   var css = BASE_CSS +
+    '@page{size:A4 portrait;margin:12mm 11mm}' +
+    'body{font-size:12.5px;line-height:1.45}' +
+    '.hd .org{font-size:12px}.hd h1{font-size:19px}.hd .sub{font-size:11.5px}' +
+    '.kpi .k{font-size:9.5px}.kpi .v{font-size:17px}.kpi .n{font-size:9.5px}' +
+    '.box>.t{font-size:11px}.note{font-size:11.5px;line-height:1.55}' +
+    '.sec{font-size:12.5px;margin:8px 0 6px}' +
+    '.t-det{font-size:10.5px}.t-det th{font-size:10px;padding:4px 4px}.t-det td{padding:3px 4px}' +
+    '.t-det tr,.t-src tr{page-break-inside:avoid}.t-det thead{display:table-header-group}' +
+    '.t-src{width:100%;border-collapse:collapse;font-size:11.5px;margin:0 0 10px;page-break-inside:avoid;break-inside:avoid}' +
+    '.t-src th{padding:3px 6px;text-align:left}' +
+    '.t-src .uh th{background:#1e3a5f;color:#fff;font-size:12px}' +
+    '.t-src .uh-s{font-weight:400;font-size:11px}' +
+    '.t-src .uh-s .lo,.t-src .uh-s .hi{background:#fff;padding:0 4px;border-radius:3px;font-weight:700}' +
+    '.t-src .ch th{background:#e8edf3;color:#1e3a5f;font-size:10.5px}' +
+    '.t-src .ch th.r{text-align:right}' +
+    '.t-src td{padding:3px 6px;border-bottom:.5px solid #d7dce3}' +
+    '.foot{font-size:10px}.sign div{font-size:11px}' +
     '@media screen{body{background:#eef1f5;padding:14px 0}' +
       '.doc{background:#fff;width:210mm;max-width:96vw;margin:0 auto;padding:10mm 9mm;box-shadow:0 3px 16px rgba(0,0,0,.14)}}' +
     '.bar{background:#1e3a5f;color:#fff;padding:7px 10px;margin:-10mm -9mm 8px;font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}' +
@@ -977,8 +1043,18 @@ function openQuickPicker() {
   card.appendChild(foot);
   count();
   wrap.appendChild(card);
-  wrap.addEventListener('click', function (e) { if (e.target === wrap) wrap.remove(); });
+  /* Chỉ đóng khi bấm xuống VÀ nhả chuột đều ở nền ngoài khung; bôi đen/kéo chuột từ ô tìm kiếm ra ngoài không làm tắt bảng */
+  var downOnBg = false;
+  wrap.addEventListener('mousedown', function (e) { downOnBg = (e.target === wrap); });
+  wrap.addEventListener('touchstart', function (e) { downOnBg = (e.target === wrap); }, { passive: true });
+  wrap.addEventListener('click', function (e) {
+    var ok = downOnBg && e.target === wrap;
+    downOnBg = false;
+    if (ok) wrap.remove();
+  });
+  card.addEventListener('keydown', function (e) { e.stopPropagation(); });
   document.body.appendChild(wrap);
+  setTimeout(function () { try { search.focus(); } catch (err) {} }, 0);
 }
 
 window.openQuickViewReport = openQuickPicker;

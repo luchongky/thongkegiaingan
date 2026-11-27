@@ -22,7 +22,7 @@ export async function onRequest({request,env}) {
   const record={id,key,week:weekId(),status:'sending',createdAt:Date.now()};
   await env.CHAT_LIMITS.put(recordKey,JSON.stringify(record),{expirationTtl:TTL});
   try {
-    const message=await telegram(env,'sendMessage',{chat_id:env.TELEGRAM_CHAT_ID,text:`ĐỀ NGHỊ TĂNG HẠN MỨC AI\nNgười đề nghị: ${name}\nĐơn vị: ${unit}\nLý do: ${reason}\nĐã dùng: ${count}/20 lượt\nĐề nghị: thêm 20 lượt đến hết kỳ hiện tại.\nLưu ý: hạn mức hiện tính theo địa chỉ mạng (IP), có thể dùng chung trong cùng cơ quan.`,reply_markup:{inline_keyboard:[[{text:'Duyệt +20 lượt',callback_data:'quota:a:'+id},{text:'Từ chối',callback_data:'quota:r:'+id}]]}});
+    const message=await telegram(env,'sendMessage',{chat_id:env.TELEGRAM_CHAT_ID,text:`ĐỀ NGHỊ TĂNG HẠN MỨC AI\nNgười đề nghị: ${name}\nĐơn vị: ${unit}\nLý do: ${reason}\nĐã dùng: ${count}/${BASE_LIMIT} lượt\nĐề nghị: thêm 20 lượt đến hết kỳ hiện tại.\nLưu ý: hạn mức hiện tính theo địa chỉ mạng (IP), có thể dùng chung trong cùng cơ quan.`,reply_markup:{inline_keyboard:[[{text:'Duyệt +20 lượt',callback_data:'quota:a:'+id},{text:'Từ chối',callback_data:'quota:r:'+id}]]}});
     record.status='pending';record.messageId=message.message_id;
     await env.CHAT_LIMITS.put(recordKey,JSON.stringify(record),{expirationTtl:TTL});
     return reply({status:'pending'});

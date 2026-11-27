@@ -1,4 +1,4 @@
-export const BASE_LIMIT = 20;
+export const BASE_LIMIT = 50;
 export const EXTRA_LIMIT = 20;
 export const TTL = 8 * 86400;
 export const SITE = 'https://thongkegiaingan.pages.dev';

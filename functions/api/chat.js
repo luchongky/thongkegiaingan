@@ -1,8 +1,8 @@
-import {limitFor, configured} from '../_lib/telegram-quota.js';
+import {BASE_LIMIT, limitFor, configured} from '../_lib/telegram-quota.js';
 // Cloudflare Pages Function - proxy chatbot, không để lộ API key ra trình duyệt.
 const ALLOWED_ORIGINS = ['https://thongkegiaingan.pages.dev'];
 const API_BASE = 'https://codex.fosta.app/v1';
-const WEEKLY_LIMIT = 20;
+const WEEKLY_LIMIT = BASE_LIMIT;
 
 function json(body, status = 200, origin = '') {
   const headers = {
