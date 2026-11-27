@@ -1068,7 +1068,7 @@ window.openQuickViewReport = openQuickPicker;
 
 /* Chặn nút "Báo cáo nhanh" sẵn có: bấm 1 cái là hiện báo cáo, không tải file.
    Nút "Tải bản Word" trong hộp chọn vẫn gọi lại chức năng xuất Word gốc. */
-function hookQuick() {
+window.__showQuick = showQuick; function hookQuick() {
   var btn = document.getElementById('quickReportBtn');
   if (!btn || btn.dataset.viewHooked) return;
   btn.dataset.viewHooked = '1';
