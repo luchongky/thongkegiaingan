@@ -1025,7 +1025,7 @@ function openQuickPicker() {
     if (!btn) return;
     var ev = new MouseEvent('click', { bubbles: true });
     ev.__allowWord = true;
-    btn.dispatchEvent(ev);
+    window.__quickWord = true; try { btn.click(); } finally { window.__quickWord = false; }
   });
   foot.appendChild(word);
 
@@ -1073,7 +1073,7 @@ function hookQuick() {
   if (!btn || btn.dataset.viewHooked) return;
   btn.dataset.viewHooked = '1';
   btn.addEventListener('click', function (e) {
-    if (e.__allowWord) return;
+    if (e.__allowWord || window.__quickWord) return;
     e.stopImmediatePropagation();
     e.preventDefault();
     if (!state.hasData) { alert('Chưa có số liệu. Bấm "Cập nhật" rồi thử lại.'); return; }
