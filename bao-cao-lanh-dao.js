@@ -819,10 +819,11 @@ function buildQuickHtml(picked) {
   h += AI_HTML;
   h += kienNghiBox('all');
 
-  h += '<div style="margin-top:7px"><div class="sec">Chi tiết từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
+  var few = rows.length <= 12;
+  h += (few ? '' : '<div class="pb"></div>') + '<div style="margin-top:8px;' + (few ? 'page-break-inside:avoid;break-inside:avoid' : '') + '"><div class="sec">Chi tiết từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
        quickDetail(rows) + '</div>';
 
-  h += '<div class="pb"></div><div class="sec">Chi tiết từng nguồn vốn của từng đơn vị (đơn vị tính: triệu đồng)</div>' +
+  h += (few ? '' : '<div class="pb"></div>') + '<div class="sec" style="margin-top:10px">Chi tiết từng nguồn vốn của từng đơn vị (đơn vị tính: triệu đồng)</div>' +
        quickBySource(rows);
 
   h += '<div class="foot">Nguồn: Hệ thống theo dõi giải ngân vốn thường xuyên – Sở Tài chính tỉnh Cao Bằng. ' +
@@ -844,6 +845,10 @@ function buildQuickHtml(picked) {
     '.t-src .uh-s .lo,.t-src .uh-s .hi{background:#fff;padding:0 4px;border-radius:3px;font-weight:700}' +
     '.t-src .ch th{background:#e8edf3;color:#1e3a5f;font-size:10.5px}' +
     '.t-src .ch th.r{text-align:right}' +
+    '.t-src th:first-child,.t-src td:first-child{width:43%}' +
+    '.t-src td.c{text-align:center;color:#6b7280}' +
+    '.sec{page-break-after:avoid;break-after:avoid}' +
+    '.t-det td{padding:3.5px 4px}' +
     '.t-src td{padding:3px 6px;border-bottom:.5px solid #d7dce3}' +
     '.foot{font-size:10px}.sign div{font-size:11px}' +
     '@media screen{body{background:#eef1f5;padding:14px 0}' +
