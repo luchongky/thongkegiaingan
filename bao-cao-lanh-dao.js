@@ -660,16 +660,18 @@ function remindNotSent() {
 
 /* biểu đồ thanh: tỷ lệ từng đơn vị + mốc bình quân tỉnh + mốc tiến độ thời gian */
 function barsQuick(rows, avg, tpc) {
-  var H = 17, W = 460, LBL = 168, BW = W - LBL - 40;
+  var dense = rows.length > 26;
+  var H = dense ? 10.6 : 17, W = 460, LBL = 168, BW = W - LBL - 40;
+  var FS = dense ? 7.4 : 7.8, BH = dense ? 6.6 : 9, BY = dense ? 1.9 : 2, TY = dense ? 7.2 : 9;
   var x0 = function (p) { return LBL + BW * Math.min(Math.max(p, 0), 100) / 100; };
-  var svg = '<svg viewBox="0 0 ' + W + ' ' + (rows.length * H + 22) + '" width="100%">';
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + (rows.length * H + 22) + '" width="100%"' + (dense ? ' style="max-height:228mm"' : '') + '>';
   rows.forEach(function (r, i) {
     var y = i * H + 4, w = Math.max(1.5, BW * Math.min(r.tl, 100) / 100);
     var col = r.tl < avg ? '#c0392b' : r.tl < 90 ? '#2d7dd2' : '#1e8449';
-    svg += '<text x="0" y="' + (y + 9) + '" font-size="7.8" fill="#1f2937">' + esc2(r.name) + '</text>';
-    svg += '<rect x="' + LBL + '" y="' + (y + 2) + '" width="' + BW + '" height="9" rx="2" fill="#e8ebef"/>';
-    svg += '<rect x="' + LBL + '" y="' + (y + 2) + '" width="' + w + '" height="9" rx="2" fill="' + col + '"/>';
-    svg += '<text x="' + (LBL + BW + 3) + '" y="' + (y + 9.5) + '" font-size="7.8" font-weight="700" fill="' + col + '">' + pcTxt(r.tl) + '</text>';
+    svg += '<text x="0" y="' + (y + TY) + '" font-size="' + FS + '" fill="#1f2937">' + esc2(r.name) + '</text>';
+    svg += '<rect x="' + LBL + '" y="' + (y + BY) + '" width="' + BW + '" height="' + BH + '" rx="2" fill="#e8ebef"/>';
+    svg += '<rect x="' + LBL + '" y="' + (y + BY) + '" width="' + w + '" height="' + BH + '" rx="2" fill="' + col + '"/>';
+    svg += '<text x="' + (LBL + BW + 3) + '" y="' + (y + TY + .4) + '" font-size="' + FS + '" font-weight="700" fill="' + col + '">' + pcTxt(r.tl) + '</text>';
   });
   var hTot = rows.length * H + 2;
   svg += '<line x1="' + x0(avg) + '" y1="2" x2="' + x0(avg) + '" y2="' + hTot + '" stroke="#1e3a5f" stroke-width="1" stroke-dasharray="3 2"/>';
@@ -781,10 +783,9 @@ function buildQuickHtml(picked) {
       (nhac ? chuaGui.length + ' đơn vị chưa gửi' : 'đã gửi đến thời điểm báo cáo') + '</div></div>' +
     '</div>';
 
-  if (rows.length <= 26) {
-    h += '<div class="row"><div class="box" style="flex:1"><div class="t">Tỷ lệ giải ngân từng đơn vị</div>' +
+  var chartHtml = '<div class="row"><div class="box" style="flex:1"><div class="t">Tỷ lệ giải ngân từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
          barsQuick(rows, avg, tpc) + '</div></div>';
-  }
+  if (rows.length <= 26) h += chartHtml;
 
   h += '<div class="row"><div class="box" style="flex:1"><div class="t">Nhận xét, đề nghị</div><div class="note">';
   h += '1. Tổng dự toán của ' + rows.length + ' đơn vị là <b>' + n0(gi) + ' triệu đồng</b>, đã giải ngân <b>' + n0(gn) +
@@ -818,6 +819,7 @@ function buildQuickHtml(picked) {
 
   h += AI_HTML;
   h += kienNghiBox('all');
+  if (rows.length > 26) h += '<div class="pb"></div>' + chartHtml;
 
   var few = rows.length <= 12;
   h += (few ? '' : '<div class="pb"></div>') + '<div style="margin-top:8px;' + (few ? 'page-break-inside:avoid;break-inside:avoid' : '') + '"><div class="sec">Chi tiết từng đơn vị (xếp theo tỷ lệ từ thấp đến cao)</div>' +
