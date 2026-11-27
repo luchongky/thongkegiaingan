@@ -1203,6 +1203,42 @@ function loadingPage() {
     '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 20–60 giây, không đóng cửa sổ này.</div></div></body></html>';
 }
 
+/* Quy tắc hệ thống (không phụ thuộc AI): xã, phường đã gửi báo cáo, thấp hơn bình quân 56 xã, phường và không tăng qua 2 kỳ liên tiếp
+   thì bắt buộc có việc "Chủ tịch UBND trực tiếp chỉ đạo". Người lập: Lục Hồng Kỳ. */
+function chiDaoFlags(src, trLines) {
+  var out = [];
+  if (!src || !Array.isArray(src.donViChiTiet)) return out;
+  var hist = {};
+  (trLines || []).forEach(function (l) { var i = l.indexOf(': '); if (i > 0) hist[l.slice(0, i)] = l.slice(i + 2).split(' > ').map(function (v) { return v === '-' ? null : Number(v); }); });
+  src.donViChiTiet.forEach(function (u) {
+    var t = u.tongCong || {}, v = (hist[u.ten] || []).filter(function (x) { return x != null && isFinite(x); });
+    if (!u.daGuiBaoCao || u.khongPhaiGui || t.tyLe == null || t.binhQuan == null || !(t.tyLe < t.binhQuan) || v.length < 3) return;
+    var n = v.length;
+    if (v[n - 1] <= v[n - 2] + 0.05 && v[n - 2] <= v[n - 3] + 0.05) out.push({ ten: u.tenNgan || u.ten, chuoi: v.slice(-3).map(function (x) { return String(x).replace('.', ',') + '%'; }).join(' → ') });
+  });
+  return out;
+}
+function enforceChiDao(text, flags) {
+  if (!flags.length) return text;
+  var lines = String(text).replace(/\r/g, '').split('\n');
+  var k = lines.findIndex(function (l) { return /^\s*KIẾN NGHỊ\s*:?\s*$/i.test(l.replace(/\*/g, '')); });
+  flags.forEach(function (f) {
+    var viec = 'Chủ tịch UBND ' + f.ten + ' trực tiếp chỉ đạo (tỷ lệ thấp hơn bình quân 56 xã, phường và không tăng qua 2 kỳ liên tiếp: ' + f.chuoi + '): giao việc rõ người, rõ việc, rõ thời hạn, rõ kết quả cho từng nguồn còn chậm; báo cáo kết quả trong kỳ báo cáo tiếp theo.';
+    var low = f.ten.toLowerCase();
+    if (lines.some(function (l) { return /trực tiếp chỉ đạo/i.test(l) && l.toLowerCase().indexOf(low) >= 0; })) return;
+    var head = -1;
+    for (var i = Math.max(0, k); i < lines.length; i++) if (/Đề nghị UBND/i.test(lines[i]) && lines[i].toLowerCase().indexOf(low) >= 0) { head = i; break; }
+    if (head < 0) { lines.push('- ' + viec); return; }
+    var end = head + 1;
+    while (end < lines.length && /^\s*-?\s*\(\d+\)/.test(lines[end])) end++;
+    if (end === head + 1 && /\(\d+\)/.test(lines[head])) { lines[head] = lines[head].replace(/\s*$/, '') + ' (bổ sung) ' + viec; return; }
+    var last = end - 1, m = lines[last] && /^(\s*-?\s*)\((\d+)\)(.*)$/.exec(lines[last]);
+    if (m && /cập nhật số liệu/i.test(m[3])) { lines.splice(last, 0, m[1] + '(' + m[2] + ') ' + viec); lines[last + 1] = m[1] + '(' + (Number(m[2]) + 1) + ')' + m[3]; }
+    else { var nn = m ? Number(m[2]) + 1 : 1; lines.splice(end, 0, '- (' + nn + ') ' + viec); }
+  });
+  return lines.join('\n');
+}
+
 function assess(o) {
   var rows = o.rows || [], gi = 0, gn = 0, sent = 0, miss = 0;
   rows.forEach(function (r) { gi += r.gi; gn += r.gn; if (r.submitted) sent++; else if (!r.exempt) miss++; });
@@ -1232,7 +1268,7 @@ function assess(o) {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
       body: JSON.stringify({ messages: [{ role: 'system', content: (o.kind === 'nhanh' ? SYS_NHANH : SYS) }, { role: 'user', content: 'Soạn phần nhận định và đề xuất cho báo cáo sau, dựa trên số liệu:\n' + JSON.stringify(ctx) }] })
     }).then(function (r) { return r.json().then(function (d) { clearTimeout(timer); if (!r.ok) throw new Error(d && d.error ? d.error : 'HTTP ' + r.status); return d; }); })
-      .then(function (d) { if (!d.reply || !String(d.reply).trim()) throw new Error('AI không trả nội dung'); return String(d.reply).trim(); },
+      .then(function (d) { if (!d.reply || !String(d.reply).trim()) throw new Error('AI không trả nội dung'); var txt = String(d.reply).trim(); try { if (o.kind === 'nhanh') txt = enforceChiDao(txt, chiDaoFlags(o.sources, tr.lines)); } catch (e) {} return txt; },
             function (e) { clearTimeout(timer); throw (e && e.name === 'AbortError' ? new Error('quá thời gian chờ') : e); });
   });
 }
