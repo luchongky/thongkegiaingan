@@ -1197,6 +1197,11 @@ function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt
   const H = t => P(t, { bold: 1, ni: 1, al: L, before: 160, after: 80, kn: 1 });
   const B = t => P('- ' + t, {});
   const cap = t => P(t, { it: 1, size: 12, al: C, ni: 1, after: 120 });
+  // Dòng AI theo mẫu báo cáo Tĩnh Túc: nhãn trước dấu hai chấm in đậm; "(1) ..." thụt đầu dòng, không gạch đầu dòng.
+  const AIL = t => { t = String(t).trim(); const m = /^([^:]{2,70}):\s*(.*)$/.exec(t); const lb = m && !/\d$/.test(m[1]) ? '**' + m[1] + ':** ' + m[2] : t;
+    if (/^\(\d+\)/.test(t)) { const n = /^(\(\d+\))\s*(.*)$/.exec(t), r = /^([^:]{2,90}):\s*(.*)$/.exec(n[2]); return P(n[1] + ' ' + (r ? '**' + r[1] + ':** ' + r[2] : n[2]), {}); }
+    if (/^Đề nghị UBND/i.test(t)) return P(t, { first: 567 });
+    return B(lb); };
   const img = ch => new Paragraph({ alignment: C, keepNext: true, spacing: { before: 80, after: 40 }, children: [new ImageRun({ data: qrPng(ch.data), transformation: { width: 600, height: Math.round(600 * ch.h / ch.w) } })] });
   const LINE = { style: BorderStyle.SINGLE, size: 4, color: '7F7F7F' };
   const SZ = sel.length > 5 ? 10 : 11;
@@ -1211,7 +1216,7 @@ function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt
   const hi = byR.filter(u => ratio(u) >= BQ.x - 1e-9), lo = byR.filter(u => ratio(u) < BQ.x - 1e-9);
   const bqSec = {}; QR_SEC.forEach(([k]) => { let p = 0, d = 0; base.forEach(u => { const s = (u.sections || {})[k]; if (s) { p += Number(s.planned) || 0; d += Number(s.disbursed) || 0; } }); bqSec[k] = p > 0 ? d / p : null; });
   const secs = QR_SEC.filter(([k]) => bqSec[k] != null || sel.some(u => secR(u, k) != null));
-  const weak = u => secs.filter(([k]) => { const r = secR(u, k); return r != null && bqSec[k] != null && r < bqSec[k] - 1e-9; }).map(([k]) => QR_SEC_LOW[k]);
+  const weak = u => secs.filter(([k]) => { if (k === 'V') return false; /* dự phòng: không đôn đốc giải ngân hết */ const r = secR(u, k); return r != null && bqSec[k] != null && r < bqSec[k] - 1e-9; }).map(([k]) => QR_SEC_LOW[k]);
   const prevName = data.prevName || (data.prevLabel ? 'kỳ ' + data.prevLabel : '');
   const hasPrev = !!prevName;
   const leaderOf = typeof data.leaderOf === 'function' ? data.leaderOf : () => '';
@@ -1327,7 +1332,7 @@ function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt
   body.push(H('1.1. Nhận định sâu theo đơn vị'));
   body.push(P('Nhận định dưới đây kết hợp tỷ lệ giải ngân, so sánh với bình quân các xã, phường, tiến độ thời gian của năm, nguồn vốn có tỷ lệ thấp, phần kinh phí còn lại và tình trạng gửi báo cáo:', { it: 1, size: 12, ni: 1, al: J, after: 60 }));
   const assessmentLimit = 24;
-  if (aiParts.nd.length) aiParts.nd.forEach(t => body.push(B(t))); else byR.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, assessmentLimit).forEach(u => body.push(B(unitAssessment(u))));
+  if (aiParts.nd.length) aiParts.nd.forEach(t => body.push(AIL(t))); else byR.slice().sort((a, b) => ratio(a) - ratio(b)).slice(0, assessmentLimit).forEach(u => body.push(B(unitAssessment(u))));
   if (!aiParts.nd.length && byR.length > assessmentLimit) body.push(B('Các đơn vị còn lại được đánh giá theo cùng nguyên tắc; đề nghị đối chiếu bảng số liệu chi tiết để xác định nguồn vốn và mốc xử lý cụ thể.'));
   // ---- 2. Theo nguồn vốn (bảng tô màu) ----
   body.push(H('2. Tỷ lệ giải ngân theo nguồn vốn'));
@@ -1338,13 +1343,38 @@ function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt
   body.push(P('Màu ô: xanh – từ 60% trở lên; vàng – từ 30% đến dưới 60%; đỏ – dưới 30%; chữ đậm – thấp hơn bình quân của nguồn; “—” – không có dự toán.', { it: 1, size: 12, ni: 1, al: L, before: 40, after: 100 }));
   secs.forEach(([k]) => {
     const bq = bqSec[k];
-    if (bq == null) return;
+    if (bq == null || k === 'V') return;
     const lw = sel.filter(u => secR(u, k) != null && secR(u, k) < bq - 1e-9).sort((a, b) => secR(a, k) - secR(b, k));
     if (!lw.length) return;
     const z = lw.filter(u => secR(u, k) <= 0), nz = lw.filter(u => secR(u, k) > 0), pp = [];
     if (z.length) pp.push(qrJoin(z.map(nm)) + ' chưa giải ngân');
     if (nz.length) pp.push(qrJoin(nz.map(u => nm(u.name) + ' ' + pc(secR(u, k)))) + ' thấp hơn bình quân');
     body.push(B(QR_SEC_TEXT[k] + ': ' + pp.join('; ') + ' (bình quân ' + pc(bq) + ').'));
+  });
+  // ---- 2.1. Chi tiết nguồn vốn từng đơn vị (mẫu báo cáo Tĩnh Túc) ----
+  const SRC_FULL = { I: 'I. Dự toán đầu năm', II: 'II. Vốn Chương trình MTQG', III: 'III. Bổ sung có mục tiêu', IV: 'IV. KH&CN, chuyển đổi số (NQ 57)', V: 'V. Dự phòng ngân sách' };
+  const MT_NAME = { '1': 'CTMTQG xây dựng NTM, giảm nghèo bền vững và phát triển KT-XH vùng ĐBDTTS&MN', '2': 'CTMTQG về phát triển văn hóa', '3': 'CTMTQG phòng, chống ma túy đến năm 2030' };
+  const n3 = v => (Number(v) || 0).toLocaleString('vi-VN', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const dlt = v => v == null ? '—' : Math.abs(v) < 0.0005 ? '0' : (v > 0 ? '+' : '−') + n3(Math.abs(v));
+  body.push(H('2.1. Chi tiết nguồn vốn từng đơn vị'));
+  body.push(P('Đơn vị tính: triệu đồng', { it: 1, size: 12, ni: 1, al: R, after: 40, kn: 1 }));
+  sel.forEach((u, ui) => {
+    const ks = QR_SEC.map(([k]) => k).filter(k => u.sections && u.sections[k] && Number(u.sections[k].planned) > 0);
+    const rk = rankOf(u);
+    body.push(P('**' + (ui + 1) + '. ' + u.name + '** – đạt ' + pc(ratio(u)) + (rk ? ', xếp thứ ' + rk + '/' + N : '') + '; ' + status(u).toLowerCase() + (u.updated ? ' (cập nhật ' + u.updated + ')' : '') + '.', { ni: 1, al: L, before: 80, after: 40, kn: 1 }));
+    const rows = ks.map(k => { const s = u.sections[k], r = secR(u, k), pd = s.prevDisbursed;
+      return [cell(SRC_FULL[k]), cell(n3(s.planned), { al: R }), cell(n3(s.disbursed), { al: R }), cell(pc(r), { al: C, fill: k === 'V' ? undefined : heat(r) }), cell(n3(s.planned - s.disbursed), { al: R }), cell(pc(bqSec[k]), { al: C }),
+        cell(hasPrev && pd != null ? dlt(s.disbursed - pd) : '—', { al: R, color: hasPrev && pd != null && s.disbursed < pd - 0.0005 ? 'C00000' : undefined })]; });
+    const pt = hasPrev && u.prevDisbursed != null ? (Number(u.disbursed) || 0) - Number(u.prevDisbursed) : null;
+    rows.push([cell('Tổng cộng', { bold: 1, fill: TOT }), cell(n3(u.planned), { al: R, bold: 1, fill: TOT }), cell(n3(u.disbursed), { al: R, bold: 1, fill: TOT }), cell(pc(ratio(u)), { al: C, bold: 1, fill: TOT }),
+      cell(n3(u.planned - u.disbursed), { al: R, bold: 1, fill: TOT }), cell(pc(BQ.x), { al: C, bold: 1, fill: TOT }), cell(dlt(pt), { al: R, bold: 1, fill: TOT, color: pt != null && pt < -0.0005 ? 'C00000' : undefined })]);
+    body.push(table([2271, 1250, 1250, 850, 1250, 900, 1300], ['Nguồn vốn', 'Kế hoạch giao', 'Đã giải ngân', 'Tỷ lệ', 'Còn lại', 'BQ ' + N + ' xã', hasPrev ? 'Tăng/giảm so ' + prevName : 'Tăng/giảm so kỳ trước'], rows));
+    const mt = Object.keys(u.mtqg || {}).filter(k => Number(u.mtqg[k][0]) > 0);
+    if (mt.length) {
+      body.push(P('Chi tiết vốn Chương trình MTQG (mục II):', { it: 1, size: 12, ni: 1, al: L, before: 60, after: 30, kn: 1 }));
+      body.push(table([4871, 1400, 1400, 1400], ['Chương trình', 'Kế hoạch giao', 'Đã giải ngân', 'Tỷ lệ'], mt.map(k => { const a = u.mtqg[k], r = a[0] > 0 ? a[1] / a[0] : null;
+        return [cell(MT_NAME[k] || 'Chương trình mã ' + k), cell(n3(a[0]), { al: R }), cell(n3(a[1]), { al: R }), cell(pc(r), { al: C, color: r != null && r <= 0 ? 'C00000' : undefined, bold: r != null && r <= 0 })]; })));
+    }
   });
   // ---- 3. Tình hình gửi báo cáo ----
   body.push(H('3. Tình hình gửi báo cáo kỳ ' + (P0.label || '')));
@@ -1362,9 +1392,9 @@ function buildQuickDoc(D, data, picked, aiText) { const aiParts = (function (txt
   body.push(P('Kiến nghị cụ thể theo đơn vị', { bold: 1, ni: 1, al: L, size: 13, before: 100, after: 50, kn: 1 }));
   const adviceRows = sel.slice().sort((a, b) => (ratio(a) == null ? -1 : ratio(a)) - (ratio(b) == null ? -1 : ratio(b)));
   const adviceLimit = 24;
-  if (aiParts.kn.length) aiParts.kn.forEach(t => body.push(B(t))); else adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
+  if (aiParts.kn.length) aiParts.kn.forEach(t => body.push(AIL(t))); else adviceRows.slice(0, adviceLimit).forEach(u => body.push(B(unitAdvice(u))));
   if (!aiParts.kn.length && adviceRows.length > adviceLimit) body.push(B('Các đơn vị còn lại tiếp tục thực hiện theo nhóm tỷ lệ giải ngân và tình trạng báo cáo nêu trên; khi cần, đối chiếu bảng chi tiết kèm theo để giao việc cụ thể.'));
-  body.push(P('Đề nghị đơn vị chịu trách nhiệm về tính đầy đủ, chính xác và kịp thời của số liệu; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
+  body.push(P('Các đơn vị chịu trách nhiệm trước UBND tỉnh về tính chính xác, trung thực, đầy đủ và kịp thời của số liệu nhập trên hệ thống; trường hợp tỷ lệ thấp hoặc số giải ngân giảm cần nêu rõ nguyên nhân, biện pháp khắc phục và thời hạn hoàn thành.', { it: 1, size: 12, before: 80, after: 80 }));
   if (aiParts.nd.length || aiParts.kn.length) body.push(P('Các nhận định, kiến nghị ở mục 1.1 và mục 4 do AI hỗ trợ soạn trên cơ sở số liệu và quy tắc của hệ thống, mang tính tham khảo; cần rà soát, xác minh trước khi sử dụng.', { it: 1, size: 12, before: 60, after: 80 })); body.push(P('Nguồn số liệu: Hệ thống theo dõi giải ngân xã, phường tỉnh Cao Bằng, trích xuất lúc ' + at(gen) + '. Người lập: Lục Hồng Kỳ.', { it: 1, size: 12, before: 120 }));
   return new Document({ creator: 'Lục Hồng Kỳ', title: 'Báo cáo nhanh tình hình giải ngân ' + kN + ' ' + kindW + ' – kỳ ' + (P0.label || ''), styles: { default: { document: { run: { font: F, size: 28 } } } },
     sections: [{ properties: { titlePage: true, page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } },
@@ -1380,9 +1410,9 @@ const parseVN = s => { const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/.e
 function reportData() {
   const units = state.units.filter(u => u.kind === 'commune').map(u => {
     const a = u.p.all, sections = {};
-    ['I', 'II', 'III', 'IV', 'V'].forEach(k => { if (u.p[k]) sections[k] = { planned: u.p[k][0], disbursed: u.p[k][1] }; });
+    ['I', 'II', 'III', 'IV', 'V'].forEach(k => { if (u.p[k]) sections[k] = { planned: u.p[k][0], disbursed: u.p[k][1], prevDisbursed: state.prevAt && u.prev && u.prev[k] ? u.prev[k][1] : null }; });
     return { name: u.name, kind: 'xa', planned: a ? a[0] : 0, disbursed: a ? a[1] : 0, sections,
-      submittedAt: u.submitted === true ? (parseVN(u.updated) || 'x') : null, exempt: u.status === 'exempt', late: u.status === 'late', explained: u.decreaseCount || 0,
+      submittedAt: u.submitted === true ? (parseVN(u.updated) || 'x') : null, exempt: u.status === 'exempt', late: u.status === 'late', explained: u.decreaseCount || 0, mtqg: u.mtqg || {}, updated: u.updated || '',
       prevDisbursed: state.prevAt && u.prev.all ? u.prev.all[1] : null, prevPlanned: state.prevAt && u.prev.all ? u.prev.all[0] : null };
   });
   const p = state.period || {};
