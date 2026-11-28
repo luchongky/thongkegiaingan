@@ -1933,6 +1933,18 @@ BTN.addEventListener('click', pick);
   #gnChatWidget.keyboard-open #gnChatToggle{visibility:hidden}
   #gnChatWidget.keyboard-open .gn-chat-scope{display:none}
 }
+.gn-chat-head{padding:8px 12px}
+.gn-chat-typing{padding:2px 14px 10px}.gn-chat-typing:after{content:none}
+.gn-think{display:flex;align-items:center;gap:10px}
+.gn-think-bulb{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:50%;background:#e8f4ef;animation:gnPulse 1.6s ease-in-out infinite}
+.gn-think-bulb svg{width:16px;height:16px;stroke:var(--brand);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;animation:gnSpin 3s linear infinite}
+.gn-think-txt{font-size:12.5px;font-weight:600;background:linear-gradient(90deg,#6b7f78,var(--brand),#6b7f78);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gnShimmer 1.6s linear infinite}
+.gn-chat-msg.bot{animation:gnMsgIn .35s ease both}
+@keyframes gnPulse{0%,100%{box-shadow:0 0 0 0 #0b8a6855}50%{box-shadow:0 0 0 7px #0b8a6800}}
+@keyframes gnSpin{to{transform:rotate(360deg)}}
+@keyframes gnShimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes gnMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.gn-think-bulb,.gn-think-bulb svg,.gn-think-txt,.gn-chat-msg.bot{animation:none}.gn-think-txt{color:var(--brand)}}
 @media(prefers-reduced-motion:reduce){#gnChatToggle,#gnChatToggle.is-loading .gn-chat-mascot,.gn-chat-typing:after{animation:none}}
 
 .gn-quota{padding:10px 12px;background:var(--tint);border-top:1px solid var(--line);flex-shrink:0;max-height:60%;overflow:auto;font-size:12px}
@@ -1947,7 +1959,7 @@ BTN.addEventListener('click', pick);
 </style>
 <div id="gnChatWidget" class="no-print">
   <section id="gnChatPanel" hidden aria-label="Trợ lý giải ngân">
-    <header class="gn-chat-head"><div class="gn-chat-brand"><span class="gn-chat-avatar"><img class="gn-chat-mascot" src="/assets/gn-chat-mascot.png" alt=""/></span><div><strong>Trợ lý giải ngân</strong><small>Thử nghiệm · không giới hạn lượt</small></div></div><button class="gn-chat-close" type="button" aria-label="Đóng chatbot">×</button></header>
+    <header class="gn-chat-head"><div class="gn-chat-brand"><span class="gn-chat-avatar"><img class="gn-chat-mascot" src="/assets/gn-chat-mascot.png" alt=""/></span><div><strong>Trợ lý giải ngân</strong></div></div><button class="gn-chat-close" type="button" aria-label="Đóng chatbot">×</button></header>
     <div class="gn-chat-scope"><b>Có thể hỗ trợ:</b> tra cứu số liệu trên trang, nhắc việc, cảnh báo và đề xuất giải pháp liên quan.</div>
     <div id="gnChatMessages" class="gn-chat-messages" aria-live="polite"><div class="gn-chat-msg bot">Xin chào. Tôi có thể tra cứu số liệu giải ngân trên trang, nhắc các việc cần theo dõi và gợi ý hướng xử lý phù hợp.</div></div>
     <div id="gnChatTyping" class="gn-chat-typing" hidden>Đang soạn trả lời…</div>
@@ -2019,7 +2031,10 @@ BTN.addEventListener('click', pick);
   toggle.onclick=()=>panel.hidden?open():hide();close.onclick=hide;
   panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();hide()}});
 
-  form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;input.value='';add(q,'user');history.push({role:'user',content:q});typing.textContent='Đang tra cứu số liệu';typing.hidden=false;send.disabled=true;toggle.classList.add('is-loading');try{await loadHist();const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:system+'\n\nNGỮ CẢNH TRANG:\n'+context()},...history.slice(-10)]})});const d=await r.json();if(!r.ok){if(d.code==='WEEKLY_LIMIT'&&d.requestEnabled){quotaBox.hidden=false;quotaOpen.hidden=false;quotaStatus.textContent=d.error;}throw new Error(d.error||'Không gọi được chatbot');}quotaBox.hidden=true;const answer=String(d.reply||'Mình chưa nhận được câu trả lời.');history.push({role:'assistant',content:answer});add(answer,'bot')}catch(err){add(err.message||'Có lỗi kết nối. Vui lòng thử lại.','bot',true)}finally{typing.hidden=true;send.disabled=false;toggle.classList.remove('is-loading');if(window.matchMedia('(min-width:1025px) and (pointer:fine)').matches)input.focus()}});
+  const THINK_MSGS=['Đang đọc số liệu giải ngân…','Đang so sánh với các kỳ trước…','Đang tìm đơn vị cần nhắc nhở…','Đang soạn câu trả lời…'];let thinkTimer=null;
+  function startThink(){clearInterval(thinkTimer);typing.innerHTML='<div class="gn-think"><span class="gn-think-bulb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><span class="gn-think-txt">'+THINK_MSGS[0]+'</span></div>';typing.hidden=false;let k=0;thinkTimer=setInterval(()=>{k=(k+1)%THINK_MSGS.length;const e=typing.querySelector('.gn-think-txt');if(e)e.textContent=THINK_MSGS[k]},1800)}
+  function stopThink(){clearInterval(thinkTimer);thinkTimer=null;typing.hidden=true}
+  form.addEventListener('submit',async e=>{e.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;input.value='';add(q,'user');history.push({role:'user',content:q});startThink();send.disabled=true;toggle.classList.add('is-loading');try{await loadHist();const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:system+'\n\nNGỮ CẢNH TRANG:\n'+context()},...history.slice(-10)]})});const d=await r.json();if(!r.ok){if(d.code==='WEEKLY_LIMIT'&&d.requestEnabled){quotaBox.hidden=false;quotaOpen.hidden=false;quotaStatus.textContent=d.error;}throw new Error(d.error||'Không gọi được chatbot');}quotaBox.hidden=true;const answer=String(d.reply||'Mình chưa nhận được câu trả lời.');history.push({role:'assistant',content:answer});add(answer,'bot')}catch(err){add(err.message||'Có lỗi kết nối. Vui lòng thử lại.','bot',true)}finally{stopThink();send.disabled=false;toggle.classList.remove('is-loading');if(window.matchMedia('(min-width:1025px) and (pointer:fine)').matches)input.focus()}});
   input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
 })();
 </script>
