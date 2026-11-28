@@ -482,8 +482,8 @@ function openMenu() {
                    '<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Bản rút gọn 2 trang A4, có biểu đồ, phục vụ lãnh đạo tỉnh.</div>';
 
   var aiRow = document.createElement('label');
-  aiRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiRow.innerHTML = '<input type="checkbox" id="leaderAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 20–60 giây. Không áp dụng cho Mục VI.</span></span>';
+  aiRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;padding:8px 10px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35';
+  aiRow.innerHTML = '<span style="margin-top:1px">✨</span><span><b style="color:#0b6b4f">Có nhận định, đề xuất do AI hỗ trợ</b><br><span style="color:#6b7280">AI đọc số liệu các kỳ và soạn nhận định, giải pháp, nhắc nhở. Chờ khoảng 20–60 giây. Không áp dụng cho Mục VI.</span></span>';
   card.appendChild(aiRow);
 
   SCOPES.forEach(function (s) {
@@ -493,7 +493,7 @@ function openMenu() {
     b.innerHTML = '<span style="font-weight:700;color:#1e3a5f">' + s.label + '</span><br><span style="font-size:11px;color:#6b7280">' + s.note + '</span>';
     b.addEventListener('mouseenter', function () { b.style.background = '#eef2f7'; });
     b.addEventListener('mouseleave', function () { b.style.background = '#fafbfc'; });
-    b.addEventListener('click', function () { var ai = !!(document.getElementById('leaderAiChk') && document.getElementById('leaderAiChk').checked); wrap.remove(); printLeaderReport(s.key, ai); });
+    b.addEventListener('click', function () { var ai = true; wrap.remove(); printLeaderReport(s.key, ai); });
     card.appendChild(b);
   });
 
@@ -1028,8 +1028,8 @@ function openQuickPicker(pre) {
   foot.appendChild(info);
 
   var aiLab = document.createElement('label');
-  aiLab.style.cssText = 'display:flex;gap:7px;align-items:flex-start;margin-top:10px;padding:7px 9px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35;cursor:pointer';
-  aiLab.innerHTML = '<input type="checkbox" id="quickAiChk" style="margin-top:2px"><span><b style="color:#0b6b4f">Thêm phần nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 20–60 giây)</span></span>';
+  aiLab.style.cssText = 'display:flex;gap:7px;align-items:flex-start;margin-top:10px;padding:7px 9px;border:1px solid #bcd9cb;border-radius:8px;background:#f1f8f4;font-size:12px;line-height:1.35';
+  aiLab.innerHTML = '<span style="margin-top:1px">✨</span><span><b style="color:#0b6b4f">Có nhận định, đề xuất do AI hỗ trợ</b> <span style="color:#6b7280">(chờ khoảng 20–60 giây)</span></span>';
   card.appendChild(aiLab);
 
   function count() {
@@ -1049,7 +1049,7 @@ function openQuickPicker(pre) {
     if (!btn) return;
     var ev = new MouseEvent('click', { bubbles: true });
     ev.__allowWord = true;
-    var pw = picked(); if (!pw.length) { document.body.appendChild(wrap); info.textContent = 'Chưa chọn đơn vị nào'; return; } if (!window.__exportQuickWord) { window.__quickWord = true; try { btn.click(); } finally { window.__quickWord = false; } return; } wordWithAi(pw, !!aiLab.querySelector('input').checked);
+    var pw = picked(); if (!pw.length) { document.body.appendChild(wrap); info.textContent = 'Chưa chọn đơn vị nào'; return; } if (!window.__exportQuickWord) { window.__quickWord = true; try { btn.click(); } finally { window.__quickWord = false; } return; } wordWithAi(pw, true);
   });
   foot.appendChild(word);
 
@@ -1059,7 +1059,7 @@ function openQuickPicker(pre) {
   go.addEventListener('click', function () {
     var p = picked();
     if (!p.length) { info.textContent = 'Chưa chọn đơn vị nào'; return; }
-    var ai = !!(document.getElementById('quickAiChk') && document.getElementById('quickAiChk').checked);
+    var ai = true;
     wrap.remove();
     showQuick(p, ai);
   });
@@ -1129,7 +1129,7 @@ window.__showQuick = showQuick; window.__openQuickPicker = openQuickPicker; func
   return { ghiChu: 'Đơn vị tiền: triệu đồng; tỷ lệ: %; binhQuanNguon là bình quân gộp 56 xã, phường của chính nguồn đó',
     kyTruoc: hasPrev ? 'mốc ' + state.prevAt : 'không có', hanChot: (state.period && state.period.cutoffText) || '',
     soNgayConLai: Math.max(0, Math.round((end - now) / 864e5)), binhQuan56Xa: bq, donViChiTiet: donVi };
-} function waitBox(msg) { if (!document.getElementById('wbStyle')) { var st = document.createElement('style'); st.id = 'wbStyle'; st.textContent = '@keyframes wbSpin{to{transform:rotate(360deg)}}@keyframes wbBar{0%{left:-40%}100%{left:100%}}'; document.head.appendChild(st); } var el = document.createElement('div'); el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:16px'; el.innerHTML = '<div style="background:#fff;color:#111;border-radius:14px;padding:22px 26px;max-width:380px;width:100%;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.3)"><div style="width:46px;height:46px;margin:0 auto 12px;border:4px solid #d6eadf;border-top-color:#0b6b4f;border-radius:50%;animation:wbSpin .9s linear infinite"></div><div style="font-weight:700;font-size:15px;color:#0b6b4f">' + msg + '</div><div style="font-size:12.5px;color:#6b7280;margin-top:6px">Vui lòng giữ nguyên trang, không tắt cửa sổ. File Word sẽ tự tải về khi xong.</div><div style="position:relative;height:6px;border-radius:3px;background:#e5efe9;overflow:hidden;margin-top:14px"><div style="position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:#0b6b4f;animation:wbBar 1.3s ease-in-out infinite"></div></div><div class="wbT" style="font-size:12px;color:#6b7280;margin-top:8px">Đã chờ 0 giây</div></div>'; document.body.appendChild(el); var t0 = Date.now(), iv = setInterval(function () { var s = Math.round((Date.now() - t0) / 1000), n = el.querySelector('.wbT'); if (n) n.textContent = 'Đã chờ ' + s + ' giây'; }, 1000); var r0 = el.remove.bind(el); el.remove = function () { clearInterval(iv); r0(); }; return el; } function wordWithAi(names, useAi) { if (!useAi || !window.gnAI) { window.__exportQuickWord(names, ''); return; } var set = {}; names.forEach(function (n) { set[n] = 1; }); var rows0 = allRows().filter(function (r) { return set[r.name]; }), per0 = state.period || {}; var toast = document.createElement('div'); toast = waitBox('Đang soạn nhận định AI để đưa vào file Word'); window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: (per0.label || '') + ' (' + quickStamp() + ')', timePct: timePct(), sources: quickSourcesV2(names, Math.round(timePct() * 10) / 10), rows: rows0 }).then(function (text) { return text; }, function (err) { alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + ' File Word vẫn được lập, không có phần này.'); return ''; }).then(function (text) { toast.remove(); window.__exportQuickWord(names, text); }); } function hookQuick() {
+} function waitBox(msg) { if (!document.getElementById('wbStyle')) { var st = document.createElement('style'); st.id = 'wbStyle'; st.textContent = '@keyframes wbSpin{to{transform:rotate(360deg)}}@keyframes wbBar{0%{left:-40%}100%{left:100%}}@keyframes wbPulse{0%,100%{box-shadow:0 0 0 0 #0b8a6855}50%{box-shadow:0 0 0 10px #0b8a6800}}'; document.head.appendChild(st); } var el = document.createElement('div'); el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:16px'; el.innerHTML = '<div style="background:#fff;color:#111;border-radius:14px;padding:22px 26px;max-width:380px;width:100%;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.3)"><div style="width:46px;height:46px;margin:0 auto 12px;border-radius:50%;background:#e8f4ef;display:grid;place-items:center;animation:wbPulse 1.6s ease-in-out infinite"><svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:#0b6b4f;fill:none;stroke-width:1.8;stroke-linecap:round;animation:wbSpin 3s linear infinite"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div><div class="wbM" style="font-weight:700;font-size:15px;color:#0b6b4f">' + msg + '</div><div style="font-size:12.5px;color:#6b7280;margin-top:6px">Vui lòng giữ nguyên trang, không tắt cửa sổ. File Word sẽ tự tải về khi xong.</div><div style="position:relative;height:6px;border-radius:3px;background:#e5efe9;overflow:hidden;margin-top:14px"><div style="position:absolute;top:0;bottom:0;width:40%;border-radius:3px;background:#0b6b4f;animation:wbBar 1.3s ease-in-out infinite"></div></div><div class="wbT" style="font-size:12px;color:#6b7280;margin-top:8px">Đã chờ 0 giây</div></div>'; document.body.appendChild(el); var t0 = Date.now(), iv = setInterval(function () { var s = Math.round((Date.now() - t0) / 1000), n = el.querySelector('.wbT'); if (n) n.textContent = 'Đã chờ ' + s + ' giây'; var mm = el.querySelector('.wbM'), W = ['Đang đọc số liệu giải ngân…', 'Đang so sánh với các kỳ trước…', 'Đang tìm đơn vị cần nhắc nhở…', 'Đang soạn nhận định, đề xuất…']; if (mm && s > 0 && s % 2 === 0) mm.textContent = W[(s / 2) % W.length]; }, 1000); var r0 = el.remove.bind(el); el.remove = function () { clearInterval(iv); r0(); }; return el; } function wordWithAi(names, useAi) { if (!useAi || !window.gnAI) { window.__exportQuickWord(names, ''); return; } var set = {}; names.forEach(function (n) { set[n] = 1; }); var rows0 = allRows().filter(function (r) { return set[r.name]; }), per0 = state.period || {}; var toast = document.createElement('div'); toast = waitBox('Đang soạn nhận định AI để đưa vào file Word'); window.gnAI.assess({ kind: 'nhanh', title: 'Báo cáo nhanh – nhóm ' + rows0.length + ' đơn vị được chọn', period: (per0.label || '') + ' (' + quickStamp() + ')', timePct: timePct(), sources: quickSourcesV2(names, Math.round(timePct() * 10) / 10), rows: rows0 }).then(function (text) { return text; }, function (err) { alert('Chưa tạo được phần AI hỗ trợ: ' + ((err && err.message) || 'lỗi không xác định') + ' File Word vẫn được lập, không có phần này.'); return ''; }).then(function (text) { toast.remove(); window.__exportQuickWord(names, text); }); } function hookQuick() {
   var btn = document.getElementById('quickReportBtn');
   if (!btn || btn.dataset.viewHooked) return;
   btn.dataset.viewHooked = '1';
@@ -1199,10 +1199,19 @@ function trendLines(names, hist) {
 }
 
 function loadingPage() {
-  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Đang lập báo cáo…</title></head>' +
-    '<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1e3a5f;background:#f4f7fa">' +
-    '<div style="text-align:center"><div style="font-size:18px;font-weight:700">Đang lập báo cáo có AI hỗ trợ…</div>' +
-    '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 20–60 giây, không đóng cửa sổ này.</div></div></body></html>';
+  return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Đang lập báo cáo…</title><style>' +
+    'body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1e3a5f;background:#f4f7fa}' +
+    '.b{width:54px;height:54px;margin:0 auto 16px;border-radius:50%;background:#e8f4ef;display:grid;place-items:center;animation:p 1.6s ease-in-out infinite}' +
+    '.b svg{width:30px;height:30px;stroke:#0b6b4f;fill:none;stroke-width:1.8;stroke-linecap:round;animation:r 3s linear infinite}' +
+    '.t{font-size:18px;font-weight:700;background:linear-gradient(90deg,#6b7f78,#0b6b4f,#6b7f78);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:s 1.6s linear infinite}' +
+    '@keyframes p{0%,100%{box-shadow:0 0 0 0 #0b8a6855}50%{box-shadow:0 0 0 12px #0b8a6800}}@keyframes r{to{transform:rotate(360deg)}}@keyframes s{from{background-position:200% 0}to{background-position:-200% 0}}' +
+    '@media(prefers-reduced-motion:reduce){.b,.b svg,.t{animation:none}.t{color:#0b6b4f}}</style></head>' +
+    '<body><div style="text-align:center"><div class="b"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div>' +
+    '<div class="t" id="m">Đang đọc số liệu giải ngân…</div>' +
+    '<div style="margin-top:8px;color:#6b7280;font-size:14px">Vui lòng chờ khoảng 20–60 giây, không đóng cửa sổ này. <span id="e">0</span> giây</div></div>' +
+    '<script>var M=["Đang đọc số liệu giải ngân…","Đang so sánh với các kỳ trước…","Đang tìm đơn vị cần nhắc nhở…","Đang soạn nhận định, đề xuất…"],k=0,t0=Date.now();' +
+    'setInterval(function(){k=(k+1)%M.length;document.getElementById("m").textContent=M[k]},2000);' +
+    'setInterval(function(){document.getElementById("e").textContent=Math.round((Date.now()-t0)/1000)},1000);<\/script></body></html>';
 }
 
 /* Quy tắc hệ thống (không phụ thuộc AI): xã, phường đã gửi báo cáo, thấp hơn bình quân 56 xã, phường và không tăng qua 2 kỳ liên tiếp
